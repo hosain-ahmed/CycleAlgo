@@ -1,0 +1,288 @@
+{
+  "metadata": {
+    "crop_count": 8,
+    "location_focus": "Rajshahi pilot, Bangladesh"
+  },
+  "crops": {
+    "aman_br11": {
+      "identity": {
+        "crop_id": "aman_br11",
+        "family": "Poaceae"
+      },
+      "planting_window": {
+        "preferred_start_mmdd": "07-10",
+        "preferred_end_mmdd": "07-24",
+        "supported_late_end_mmdd": "",
+        "crosses_year": false
+      },
+      "duration": {
+        "variety": {
+          "min_days": 0,
+          "max_days": 0
+        }
+      },
+      "environment": {
+        "temperature": {
+          "tolerance_min_c": 0.0,
+          "tolerance_max_c": 0.0
+        },
+        "soil": {
+          "ph_optimal_min": 0.0,
+          "ph_optimal_max": 0.0
+        }
+      },
+      "water": {
+        "fao_crop_water_need_min_mm": 450.0,
+        "fao_crop_water_need_max_mm": 700.0
+      },
+      "decision_support": {
+        "overall_data_confidence": "HIGH"
+      }
+    },
+    "boro_brri_dhan28": {
+      "identity": {
+        "crop_id": "boro_brri_dhan28",
+        "family": "Poaceae"
+      },
+      "planting_window": {
+        "preferred_start_mmdd": "12-25",
+        "preferred_end_mmdd": "01-10",
+        "supported_late_end_mmdd": "02-28",
+        "crosses_year": false
+      },
+      "duration": {
+        "variety": {
+          "min_days": 0,
+          "max_days": 0
+        }
+      },
+      "environment": {
+        "temperature": {
+          "tolerance_min_c": 0.0,
+          "tolerance_max_c": 0.0
+        },
+        "soil": {
+          "ph_optimal_min": 0.0,
+          "ph_optimal_max": 0.0
+        }
+      },
+      "water": {
+        "fao_crop_water_need_min_mm": 450.0,
+        "fao_crop_water_need_max_mm": 700.0
+      },
+      "decision_support": {
+        "overall_data_confidence": "HIGH_MEDIUM"
+      }
+    },
+    "wheat_bari_gom33": {
+      "identity": {
+        "crop_id": "wheat_bari_gom33",
+        "family": "Poaceae"
+      },
+      "planting_window": {
+        "preferred_start_mmdd": "11-15",
+        "preferred_end_mmdd": "11-30",
+        "supported_late_end_mmdd": "12-20",
+        "crosses_year": false
+      },
+      "duration": {
+        "variety": {
+          "min_days": 0,
+          "max_days": 0
+        }
+      },
+      "environment": {
+        "temperature": {
+          "tolerance_min_c": 0.0,
+          "tolerance_max_c": 0.0
+        },
+        "soil": {
+          "ph_optimal_min": 0.0,
+          "ph_optimal_max": 0.0
+        }
+      },
+      "water": {
+        "fao_crop_water_need_min_mm": 450.0,
+        "fao_crop_water_need_max_mm": 650.0
+      },
+      "decision_support": {
+        "overall_data_confidence": "VERY_HIGH"
+      }
+    },
+    "mustard_binasarisha9": {
+      "identity": {
+        "crop_id": "mustard_binasarisha9",
+        "family": "Brassicaceae"
+      },
+      "planting_window": {
+        "preferred_start_mmdd": "10-25",
+        "preferred_end_mmdd": "11-15",
+        "supported_late_end_mmdd": "12-21",
+        "crosses_year": false
+      },
+      "duration": {
+        "variety": {
+          "min_days": 0,
+          "max_days": 0
+        }
+      },
+      "environment": {
+        "temperature": {
+          "tolerance_min_c": 0.0,
+          "tolerance_max_c": 0.0
+        },
+        "soil": {
+          "ph_optimal_min": 0.0,
+          "ph_optimal_max": 0.0
+        }
+      },
+      "water": {
+        "fao_crop_water_need_min_mm": 0.0,
+        "fao_crop_water_need_max_mm": 0.0
+      },
+      "decision_support": {
+        "overall_data_confidence": "HIGH"
+      }
+    },
+    "lentil_binamasur9": {
+      "identity": {
+        "crop_id": "lentil_binamasur9",
+        "family": "Fabaceae"
+      },
+      "planting_window": {
+        "preferred_start_mmdd": "10-25",
+        "preferred_end_mmdd": "11-14",
+        "supported_late_end_mmdd": "",
+        "crosses_year": false
+      },
+      "duration": {
+        "variety": {
+          "min_days": 0,
+          "max_days": 0
+        }
+      },
+      "environment": {
+        "temperature": {
+          "tolerance_min_c": 0.0,
+          "tolerance_max_c": 0.0
+        },
+        "soil": {
+          "ph_optimal_min": 0.0,
+          "ph_optimal_max": 0.0
+        }
+      },
+      "water": {
+        "fao_crop_water_need_min_mm": 0.0,
+        "fao_crop_water_need_max_mm": 0.0
+      },
+      "decision_support": {
+        "overall_data_confidence": "HIGH"
+      }
+    },
+    "mung_bari_mung6_kharif1": {
+      "identity": {
+        "crop_id": "mung_bari_mung6_kharif1",
+        "family": "Fabaceae"
+      },
+      "planting_window": {
+        "preferred_start_mmdd": "03-15",
+        "preferred_end_mmdd": "03-25",
+        "supported_late_end_mmdd": "",
+        "crosses_year": false
+      },
+      "duration": {
+        "variety": {
+          "min_days": 0,
+          "max_days": 0
+        }
+      },
+      "environment": {
+        "temperature": {
+          "tolerance_min_c": 0.0,
+          "tolerance_max_c": 0.0
+        },
+        "soil": {
+          "ph_optimal_min": 0.0,
+          "ph_optimal_max": 0.0
+        }
+      },
+      "water": {
+        "fao_crop_water_need_min_mm": 0.0,
+        "fao_crop_water_need_max_mm": 0.0
+      },
+      "decision_support": {
+        "overall_data_confidence": "MEDIUM_HIGH"
+      }
+    },
+    "maize_rabi_bari_hybrid13": {
+      "identity": {
+        "crop_id": "maize_rabi_bari_hybrid13",
+        "family": "Poaceae"
+      },
+      "planting_window": {
+        "preferred_start_mmdd": "10-15",
+        "preferred_end_mmdd": "11-15",
+        "supported_late_end_mmdd": "",
+        "crosses_year": false
+      },
+      "duration": {
+        "variety": {
+          "min_days": 0,
+          "max_days": 0
+        }
+      },
+      "environment": {
+        "temperature": {
+          "tolerance_min_c": 0.0,
+          "tolerance_max_c": 0.0
+        },
+        "soil": {
+          "ph_optimal_min": 0.0,
+          "ph_optimal_max": 0.0
+        }
+      },
+      "water": {
+        "fao_crop_water_need_min_mm": 500.0,
+        "fao_crop_water_need_max_mm": 800.0
+      },
+      "decision_support": {
+        "overall_data_confidence": "VERY_HIGH"
+      }
+    },
+    "potato_bari_alu41": {
+      "identity": {
+        "crop_id": "potato_bari_alu41",
+        "family": "Solanaceae"
+      },
+      "planting_window": {
+        "preferred_start_mmdd": "11-01",
+        "preferred_end_mmdd": "11-07",
+        "supported_late_end_mmdd": "",
+        "crosses_year": false
+      },
+      "duration": {
+        "variety": {
+          "min_days": 0,
+          "max_days": 0
+        }
+      },
+      "environment": {
+        "temperature": {
+          "tolerance_min_c": 0.0,
+          "tolerance_max_c": 0.0
+        },
+        "soil": {
+          "ph_optimal_min": 0.0,
+          "ph_optimal_max": 0.0
+        }
+      },
+      "water": {
+        "fao_crop_water_need_min_mm": 500.0,
+        "fao_crop_water_need_max_mm": 700.0
+      },
+      "decision_support": {
+        "overall_data_confidence": "HIGH_MEDIUM"
+      }
+    }
+  }
+}
