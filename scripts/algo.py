@@ -75,7 +75,8 @@ def add_days(date_string, dayss):
 
 def calculate_harvest_range(input, crops):
     current_crop = input["current_crop"]
-    crop_profile = crops["crops"]["crop_id"]
+    crop_id = current_crop["crop_id"]          # Grabs "aman_br11"
+    crop_profile = crops["crops"][crop_id]     # Looks up crops["crops"]["aman_br11"]
     if current_crop.get("actual_harvest_date") is not None:
         actualDate= current_crop["actual_harvest_date"]
         return {
@@ -90,4 +91,11 @@ def calculate_harvest_range(input, crops):
         "latest": add_days(plantingDate,max_days)
     }
 
+
+def calculate_field_ready_range(harvest_range,turnaround_days):
+    return{
+        "earliest":add_days(harvest_range.get("earliest"),turnaround_days),
+        "latest": add_days(harvest_range.get("latest"),turnaround_days)
+    }
+    ##some work needs to be done here as this has some risks
         
