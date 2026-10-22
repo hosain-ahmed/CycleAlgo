@@ -2,7 +2,7 @@ import json
 from datetime import date, timedelta
 
 dfile_path = r"Q:\CycleAlgo\Data\fosol_cycle_rajshahi_crop_dataset.json"
-ifile_path = r"Q:\CycleAlgo\Data\fosol_cycle_rajshahi_crop_dataset.json"
+ifile_path = r"Q:\CycleAlgo\Data\input.json"
 
 with open(dfile_path,"r",encoding="utf-8") as file:
     crops = json.load(file)
