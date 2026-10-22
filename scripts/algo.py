@@ -11,7 +11,7 @@ with open(ifile_path, 'r', encoding='utf-8') as file:
     input = json.load(file)  
 
 
-#1 Input Validator
+#3 Timeline and Window Guard Engine
 
 def is_valid_iso_date(date_string):
     # Check if the string is empty or None first
@@ -136,4 +136,33 @@ def evaluate_window(field_ready_range, window):
         return{
             "status":"OUTSIDE_SUPPORTED_WINDOW",
             "possiblePlantingDate":ready
+        }
+        
+#4 Biophysical Checks
+
+def evaluate_soil_ph(soil_ph,candidate_crop_profile):
+    opt_min = candidate_crop_profile["environment"]["soil"]["ph_optimal_min"]
+    opt_max=candidate_crop_profile["environment"]["soil"]["ph_optimal_max"]
+    tol_min=candidate_crop_profile["environment"]["soil"]["ph_tolerance_min"]
+    tol_max=candidate_crop_profile["environment"]["soil"]["ph_tolerance_max"]
+    
+    if soil_ph is None:
+        return{
+            "status":"UNKNOWN",
+            "score":None
+        }
+    if opt_min <= soil_ph <= opt_max:
+        return{
+            "status":"OPTIMAL",
+            "score":100
+        }
+    elif tol_min <= soil_ph <= tol_max:
+        return{
+            "status":"TOLERATED",
+            "score":60
+        }
+    else:
+        return{
+            "status": "OUTSIDE_TOLERANCE",
+            "score": 0
         }
