@@ -166,3 +166,60 @@ def evaluate_soil_ph(soil_ph,candidate_crop_profile):
             "status": "OUTSIDE_TOLERANCE",
             "score": 0
         }
+
+def water_demand_class(candidate_crop_profile):
+    cropwater=candidate_crop_profile["water"]
+    min_mm=cropwater.get("fao_crop_water_need_min_mm")
+    max_mm=cropwater.get("fao_crop_water_need_max_mm")
+    
+    if min_mm is None and max_mm is None:
+        return "UNKNOWN"
+    max_val = max_mm or 0
+    
+    if max_val >=700: #Note: if max_mm happens to be None, default it to 0 using max_val = max_mm or 0 before comparing!
+        return "HIGH"
+    
+    elif max_val >= 550 :
+        return "MEDIUM"
+    
+    else:
+        return "LOW"
+def evaluate_water(candidate_crop_profile,irrigation_level):
+    demand = water_demand_class(candidate_crop_profile)
+    if demand=="UNKNOWN":
+        return {
+            "status":"UNKNOWN",
+            "score": None
+        }
+    if irrigation_level =="adequate" or irrigation_level =="high" :
+        return {
+            "status":"PASS",
+            "score": 100
+        }
+    elif irrigation_level == "limited" or irrigation_level == "medium":
+        if demand == "HIGH":
+            return{
+                "status": "CAUTION",
+                "score": 60
+            }
+        else:
+            return{
+                "status" : "PASS",
+                "score": 85
+            }
+    else:
+        if demand=="HIGH":
+            return {
+                "status": "POOR_MATCH",
+                "score" : 25
+            }
+        elif demand == "MEDIUM":
+            return{
+                "status":"CAUTION",
+                "score" : 55
+            }
+        else:
+            return {
+                "status" : "PASS",
+                "score" : 85
+            }
