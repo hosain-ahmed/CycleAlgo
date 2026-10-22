@@ -115,3 +115,25 @@ def build_planting_window(candidate_crop_profile, season_start_year):
         "preferredEnd": adder(w.get("preferred_end_mmdd"), season_start_year, crosses, True),
         "lateEnd": adder(w.get("supported_late_end_mmdd"), season_start_year, crosses, True)
     }
+
+def evaluate_window(field_ready_range, window):
+    ready= field_ready_range["latest"]
+    if ready <= window["preferredEnd"]:
+        if ready<window["preferredStart"]:
+            plant_date = window["preferredStart"]
+        else:
+            plant_date = ready
+        return{
+            "status":"SAFE",
+            "possiblePlantingDate": plant_date
+        }
+    elif window["lateEnd"] is not None and ready <= window["lateEnd"] :
+        return{
+            "status":"COMPRESSED",
+            "possiblePlantingDate": ready
+        }
+    else:
+        return{
+            "status":"OUTSIDE_SUPPORTED_WINDOW",
+            "possiblePlantingDate":ready
+        }
