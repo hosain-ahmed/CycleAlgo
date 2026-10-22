@@ -98,4 +98,20 @@ def calculate_field_ready_range(harvest_range,turnaround_days):
         "latest": add_days(harvest_range.get("latest"),turnaround_days)
     }
     ##some work needs to be done here as this has some risks
-        
+    
+
+def adder(mmdd,year,crosses_year,is_end):
+    if mmdd is None:
+        return None
+    if crosses_year is True and is_end is True:
+        year = year+1
+    return f"{year}-{mmdd}"
+def build_planting_window(candidate_crop_profile, season_start_year):
+    w = candidate_crop_profile["planting_window"]
+    crosses = w.get("crosses_year", False)
+    
+    return {
+        "preferredStart": adder(w.get("preferred_start_mmdd"), season_start_year, crosses, False),
+        "preferredEnd": adder(w.get("preferred_end_mmdd"), season_start_year, crosses, True),
+        "lateEnd": adder(w.get("supported_late_end_mmdd"), season_start_year, crosses, True)
+    }
