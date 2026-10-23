@@ -223,3 +223,36 @@ def evaluate_water(candidate_crop_profile,irrigation_level):
                 "status" : "PASS",
                 "score" : 85
             }
+
+def evaluate_rotation(current_crop_profile,candidate_crop_profile):
+    score = 50
+    curr_id = current_crop_profile["identity"]["crop_id"]
+    cand_id = candidate_crop_profile["identity"]["crop_id"]
+    
+    curr_fam = current_crop_profile["identity"]["family"]
+    cand_fam = candidate_crop_profile["identity"]["family"]
+    
+    if curr_id == cand_id :
+        score = score - 35
+    elif curr_fam == cand_fam :
+        score -= 20
+    else: 
+        score +=20
+    
+    soil_effect = candidate_crop_profile.get("rotation",{}).get("soil_effect",{})
+    if soil_effect.get("fixes_nitrogen") is True:
+        score += 25
+    
+    score = max(0,min(100,score))
+    
+    if score >= 70 :
+        status = "GOOD_ROTATION"
+    elif score >=45:
+        status = "NEUTRAL_ROTATION"
+    else:
+        status = "POOR_ROTATION"
+    
+    return {
+        "status": status,
+        "score" : score
+    }
