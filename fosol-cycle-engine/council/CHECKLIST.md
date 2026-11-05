@@ -61,7 +61,7 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 ## E. Build-order milestones (spec §18 + mission Step 1)
 
 - [x] E1 Crop-profile loader and normalizer (no guessed fields).
-- [ ] E2 Request validation and error contract (§14.2, §14.3).
+- [x] E2 Request validation and error contract (§14.2, §14.3).
 - [ ] E3 Environmental loading, caching, missing-value handling (§15).
 - [ ] E4 Calendar evaluator (§6.1, §17.1–5).
 - [ ] E5 Soil/land and water checks (§7, §8).
