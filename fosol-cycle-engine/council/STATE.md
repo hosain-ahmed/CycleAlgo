@@ -1,32 +1,32 @@
 # Council State
 
-Last updated: 2026-11-07 (E7 accepted; E8 guard PASS; E8 preflight next)
+Last updated: 2026-11-07 (E7 accepted; E8 guard PASS; E8 preflight delivered, awaiting decisions)
 
 ## RESUME HERE
-1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
+1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
+   `council/reports/E8-preflight.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 225 tests, OK).
-3. E7 PASS; E8 preflight guard PASS. Next: **E8 metrics, economics, rankings,
-   preferences** (spec §12, §13) — report/decisions before code.
-4. Local CSV guard: `tests/test_local_power_data.py` locks the 24× 1990
-   PRECTOTCORR and the 2026-09 stale-B drift; live fixture proves A/24 = API.
-4. E7 code: `src/seasonal_replay.py`, `src/outlook_config.py`,
-   `src/outlook_indicators.py`, `src/outlook.py`; reports `E7-W1-*`, `E7-W2-*`,
-   `E7-W3-*`, `E7-final-spec-integrity.md`, `E7-mustard-audit.md`.
-5. E7 warnings all OFF by config: wheat hidden (35/35 weak); mustard held (corrected
-   1/35 after the local 24× precipitation bug). Statistics only until sourced
-   stage-specific windows/thresholds are approved.
-6. Local 1990 CSV `PRECTOTCORR` is 24× the API/2000 file; never use raw. See
-   `docs/ENVIRONMENTAL_DATA.md` and `E7-mustard-audit.md`.
-7. §6.2 current-season climate exposure is still unimplemented; do not claim it.
-5. §6.2 climate exposure is still pending; do not claim complete crop checks.
-6. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
-   Rerun `python tools/appeears_login.py` when it expires; never commit it.
-4. Evidence gaps: no local soil measurements; preparation blank; max waiting unset;
-   duration reference stage unconfirmed. Keep timing/prep `unknown`/conditional, never zero.
-   §6.2 climate exposure is still pending; do not claim complete checks.
-5. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
-   Rerun `python tools/appeears_login.py` when it expires; never commit it.
+   (expect 225 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
+   conditional / 15 exclusions.
+3. E7 accepted; E8 preflight guard PASS (commit `2e01a65`). No E8 code yet.
+4. Awaiting user decisions:
+   - economics: A (recommended) completion+diversity only, all economic/resource
+     metrics unavailable; B supply sourced prices/costs/cash-flow; C reference
+     yields alone (still unavailable).
+   - completion range endpoints: A (recommended) earliest−earliest / latest−latest,
+     rank by latest; B widest corner span; C enumerate realizations.
+   - irrigation ranking: display qualitative guidance only vs supplied comparable
+     classification; no text heuristic.
+   - labor/equipment/upfront cash unavailable unless supplied; no annualization;
+     diversity = family count with legume presence separate.
+5. After decisions: W1 completion -> W2 diversity -> W3 resources -> W4 economics
+   unavailable -> W5 ranking. One function per worker, different reviewer; tests,
+   mutation, code+spec, E6 smoke, commit/push after each.
+6. E7 warnings all OFF: wheat 35/35 hidden; mustard held at corrected 1/35.
+7. Local 1990 CSV `PRECTOTCORR` is 24× the API/2000 file; never use raw. The guard
+   `tests/test_local_power_data.py` locks this and the 2026-09 stale-B drift.
+8. §6.2 current-season climate exposure is still unimplemented; do not claim it.
+9. SMAP token expiry is operational; rerun `tools/appeears_login.py` when needed.
 
 ## Current
 - E1–E5 PASS. Commits: `4711b3e`, `fc92802`, `68220d1`, `a528c26`, `8fdbd5d`.
@@ -71,7 +71,10 @@ Last updated: 2026-11-07 (E7 accepted; E8 guard PASS; E8 preflight next)
   added; E7 historical-only. Report `E7-final-spec-integrity.md`.
 - E8 preflight guard PASS: `tests/test_local_power_data.py` locks the 24× 1990
   PRECTOTCORR and the 2026-09 stale-B drift; live fixture proves A/24 = API.
-  225 tests; E6 smoke 420/0/420/15. Reports `E8-preflight-guard*.md`.
+  225 tests; E6 smoke 420/0/420/15. Reports `E8-preflight-guard*.md`. Commit `2e01a65`.
+- E8 preflight delivered (`council/reports/E8-preflight.md`): all economic inputs
+  missing; recommend completion+diversity only, economics unavailable; completion
+  endpoint pairing and irrigation ranking need user decisions. No E8 code yet.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -113,6 +116,9 @@ Last updated: 2026-11-07 (E7 accepted; E8 guard PASS; E8 preflight next)
   remain `unknown`/`null`/"Economic estimate unavailable" unless supplied.
 - Duration reference point preserved but unconfirmed.
 - AppEEARS token expiry is operational (48h); code raises a clear rerun hint.
+- E8 decisions pending: economics A/B (recommend A: completion+diversity only,
+  economic metrics unavailable), completion endpoint pairing A/B/C, irrigation
+  ranking display-only vs supplied classification. See `reports/E8-preflight.md`.
 
 ## Standing notes
 - `v1.md` is modified/uncommitted user work; source of truth, do not commit/revert.
@@ -137,4 +143,4 @@ Last updated: 2026-11-07 (E7 accepted; E8 guard PASS; E8 preflight next)
 | E7 W2 | PASS | PASS | PASS | PASS | PASS | 1fafb61 |
 | E7 W3 | PASS | PASS | PASS | PASS | PASS | cff97bc |
 | E7 final | PASS | PASS | PASS | PASS | PASS | d454b96 |
-| E8 guard | PASS | PASS | PASS | PASS | PASS | 596c27c |
+| E8 guard | PASS | PASS | PASS | PASS | PASS | 2e01a65 |
