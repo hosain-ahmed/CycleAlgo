@@ -1,12 +1,15 @@
 # Council State
 
-Last updated: 2026-11-06 (E7 PASS; next E8)
+Last updated: 2026-11-07 (E7 accepted; E8 guard PASS; E8 preflight next)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 224 tests, OK).
-3. E7 PASS. Next: **E8 metrics, economics, rankings, preferences** (spec §12, §13).
+   (expect 225 tests, OK).
+3. E7 PASS; E8 preflight guard PASS. Next: **E8 metrics, economics, rankings,
+   preferences** (spec §12, §13) — report/decisions before code.
+4. Local CSV guard: `tests/test_local_power_data.py` locks the 24× 1990
+   PRECTOTCORR and the 2026-09 stale-B drift; live fixture proves A/24 = API.
 4. E7 code: `src/seasonal_replay.py`, `src/outlook_config.py`,
    `src/outlook_indicators.py`, `src/outlook.py`; reports `E7-W1-*`, `E7-W2-*`,
    `E7-W3-*`, `E7-final-spec-integrity.md`, `E7-mustard-audit.md`.
@@ -66,6 +69,9 @@ Last updated: 2026-11-06 (E7 PASS; next E8)
 - E7 final gate PASS: spec/integrity, 224 tests, E6 smoke 420/0/420/15. Warnings OFF
   (wheat 35/35 hidden; mustard corrected 1/35 held); no SMAP/soil/water/prep/duration
   added; E7 historical-only. Report `E7-final-spec-integrity.md`.
+- E8 preflight guard PASS: `tests/test_local_power_data.py` locks the 24× 1990
+  PRECTOTCORR and the 2026-09 stale-B drift; live fixture proves A/24 = API.
+  225 tests; E6 smoke 420/0/420/15. Reports `E8-preflight-guard*.md`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -131,3 +137,4 @@ Last updated: 2026-11-06 (E7 PASS; next E8)
 | E7 W2 | PASS | PASS | PASS | PASS | PASS | 1fafb61 |
 | E7 W3 | PASS | PASS | PASS | PASS | PASS | cff97bc |
 | E7 final | PASS | PASS | PASS | PASS | PASS | d454b96 |
+| E8 guard | PASS | PASS | PASS | PASS | PASS | 596c27c |
