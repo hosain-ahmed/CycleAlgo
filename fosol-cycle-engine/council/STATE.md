@@ -1,14 +1,18 @@
 # Council State
 
-Last updated: 2026-11-06 (E6 PASS; next E7)
+Last updated: 2026-11-06 (E7 W1 PASS; W2 waiting on warning-indicator decision)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 188 tests, OK).
-3. E6 PASS. Next: **E7 historical seasonal replay + coverage** (spec §9).
-4. §6.2 climate exposure is still pending; do not claim complete crop checks.
-5. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
+   (expect 201 tests, OK).
+3. E7 W1 PASS. Next: **W2 indicators** — but first the user must decide whether to
+   expose wheat warnings (`wheat_tmax_gt_30c` 35/35, `wheat_tmin_lt_15c` 35/35,
+   both flagged weakly informative) and mustard heavy rain (29/35, 82.9%).
+4. W1 code: `src/seasonal_replay.py` (`map_schedule_to_seasons`); reports
+   `E7-W1-builder.md`, `E7-W1-review.md`.
+5. §6.2 climate exposure is still pending; do not claim complete crop checks.
+6. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
    Rerun `python tools/appeears_login.py` when it expires; never commit it.
 4. Evidence gaps: no local soil measurements; preparation blank; max waiting unset;
    duration reference stage unconfirmed. Keep timing/prep `unknown`/conditional, never zero.
@@ -40,6 +44,10 @@ Last updated: 2026-11-06 (E6 PASS; next E7)
   `E6-final-spec-integrity-round2.md`.
 - E6 wording fix PASS: `_limit_error` now states product relevance cutoff, not a
   scientifically safe maximum / biological impossibility; 188 tests; smoke 420/15.
+- E7 W1 PASS: `map_schedule_to_seasons` maps E6 union spans to 1991–2025, 90%/100%
+  coverage, cross-year/leap handling, `last_complete_data_date` parameter. 201 tests;
+  6/6 mutations; E6 smoke 420/0/420/15. Pending warning-indicator decision:
+  wheat max 35/35, wheat min 35/35 (both weakly informative), mustard heavy rain 29/35.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -53,6 +61,8 @@ Last updated: 2026-11-06 (E6 PASS; next E7)
 - E6 timeline/prep/waiting/rotation/3-crop expansion PASS: 187 tests total.
   Fixes: next-season roll, all-path rotation repeats, sequence uniqueness,
   Option A null-latest, candidate `next_planting` pass guard.
+- E7 W1 season mapping PASS: 13 focused tests, 201 total; 6/6 mutations; E6 smoke
+  unchanged. Reports `E7-W1-builder.md`, `E7-W1-review.md`.
 - Entry points:
   - `src/crop_profiles.py` -> `load_crop_profiles(path)`
   - `src/request_validation.py` -> `validate_explore_request(payload, known_crop_ids)`
@@ -92,4 +102,5 @@ Last updated: 2026-11-06 (E6 PASS; next E7)
 | E6 fix 1 | PASS | PASS | PASS | PASS | PASS | 5f6cef0 |
 | E6 fix 2 | PASS | PASS | PASS | PASS | PASS | f867dd5 |
 | E6 fix 3 | PASS | PASS | PASS | PASS | PASS | 9b99cc1 |
-| E6 final | PASS | PASS | PASS | PASS | PASS | 89404d0 |
+| E6 final | PASS | PASS | PASS | PASS | PASS | 609cdf0 |
+| E7 W1 | PASS | PASS | PASS | PASS | PASS | 78cc023 |
