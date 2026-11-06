@@ -1,13 +1,13 @@
 # Council State
 
-Last updated: 2026-11-06 (E6 fix 2 PASS; fix 3 pending; testing policy amended)
+Last updated: 2026-11-06 (E6 fixes 1–3 PASS; final E6 gate pending)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 178 tests, OK).
-3. E6 fixes 1–2 PASS and committed. Next: **fix 3 sequence uniqueness**, then re-run
-   the E6 gate (mutation + spec/integrity + smoke report).
+   (expect 181 tests, OK).
+3. E6 fixes 1–3 PASS. Next: re-run the E6 milestone gate (mutation + spec/integrity +
+   smoke report), then resolve any remaining gate failure before E7.
 4. Evidence gaps: no local soil measurements; preparation blank; max waiting unset;
    duration reference stage unconfirmed. Keep timing/prep `unknown`/conditional, never zero.
    §6.2 climate exposure is still pending; do not claim complete checks.
@@ -25,7 +25,9 @@ Last updated: 2026-11-06 (E6 fix 2 PASS; fix 3 pending; testing policy amended)
 - E6 fix 2 PASS: rotation compares all prior positions; 150 position-1/3 family-repeat
   branches now caution (was 81 pass / 69 caution), 0 `FAMILY_DIVERGIFIED`; total branches
   still 420, exclusions still 15. Reports `E6-fix2-builder.md`, `E6-fix2-review.md`.
-- E6 fix 3 (sequence uniqueness) still pending; E6 gate not final.
+- E6 fix 3 PASS: sequence/branch-ID uniqueness check added; 420 branches, 420 unique
+  sequences/IDs, 0 duplicates; branches not collapsed. Reports `E6-fix3-builder.md`,
+  `E6-fix3-review.md`. E6 gate not final.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -76,4 +78,4 @@ Last updated: 2026-11-06 (E6 fix 2 PASS; fix 3 pending; testing policy amended)
 | E5 | PASS | PASS | PASS | PASS | PASS | 8fdbd5d |
 | E6 fix 1 | PASS | PASS | pending | pending | PASS | 5f6cef0 |
 | E6 fix 2 | PASS | PASS | PASS | pending | PASS | pending |
-| E6 fix 3 | pending | pending | pending | pending | pending | pending |
+| E6 fix 3 | PASS | PASS | pending | pending | PASS | 2af8e52 |

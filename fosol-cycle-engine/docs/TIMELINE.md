@@ -57,3 +57,11 @@ guaranteed nitrogen credit. The CSV text is advisory (`rule_machine_readable=fal
 and never blocks a branch. Only the two transitions inside the three-crop path
 are evaluated: the third-to-first transition is outside v1 scope and is not
 claimed as a validated repeatable rotation.
+
+## Branch uniqueness
+
+`expand_branches` adds `uniqueness`: `branch_count`, `branch_ids_unique`,
+`duplicate_branch_ids`, `sequence_count`, `duplicate_sequences` (each with
+`crop_ids`, `branch_ids`, `window_keys`) and the §14.4 rule. The same crop
+sequence with different ordered windows is two branches; duplicate branch IDs
+are a hard failure. Duplicate sequences are reported, never collapsed.

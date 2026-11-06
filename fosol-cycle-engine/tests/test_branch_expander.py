@@ -6,6 +6,7 @@ import re
 import unittest
 from pathlib import Path
 
+import src.branch_expander as branch_expander
 from src.branch_expander import expand_branches
 from src.crop_profiles import load_crop_profiles
 
@@ -16,6 +17,21 @@ REAL_CSV = (
 )
 SRC_DIR = Path(__file__).resolve().parents[1] / "src"
 SUBSET = ("mustard_binasarisha9", "boro_brri_dhan28", "aman_br11")
+
+
+def _synthetic_branch(branch_id, ranges, crop_ids=("crop_a", "crop_b", "crop_c")):
+    return {
+        "branch_id": branch_id,
+        "crops": [
+            {
+                "position": index + 1,
+                "crop_id": crop_id,
+                "planting_range": {"earliest": window[0], "latest": window[1]},
+            }
+            for index, (crop_id, window) in enumerate(zip(crop_ids, ranges))
+        ],
+        "transitions": [],
+    }
 
 
 class BranchExpanderTests(unittest.TestCase):
@@ -68,6 +84,84 @@ class BranchExpanderTests(unittest.TestCase):
         self.assertEqual(
             [branch["branch_id"] for branch in first["branches"]],
             [branch["branch_id"] for branch in second["branches"]],
+        )
+
+    def test_uniqueness_contract_is_present(self) -> None:
+        """Spec §14.4 | Bug it catches: response omits uniqueness, so duplicate IDs/sequences go unchecked."""
+        result = self._run(max_waiting_days=365, max_branches=5)
+        uniqueness = result["uniqueness"]
+        self.assertEqual(uniqueness["branch_count"], 5)
+        self.assertTrue(uniqueness["branch_ids_unique"])
+        self.assertEqual(uniqueness["duplicate_branch_ids"], [])
+        self.assertEqual(uniqueness["sequence_count"], 5)
+        self.assertEqual(uniqueness["duplicate_sequences"], [])
+        self.assertIn("unique for the selected request", uniqueness["rule"])
+
+    def test_uniqueness_allows_same_sequence_with_different_windows(self) -> None:
+        """Spec §14.4 | Bug it catches: same crop sequence with different windows collapsed or rejected."""
+        branches = [
+            _synthetic_branch(
+                "b_000000000001",
+                [
+                    ("2027-01-01", "2027-01-02"),
+                    ("2027-02-01", "2027-02-02"),
+                    ("2027-03-01", "2027-03-02"),
+                ],
+            ),
+            _synthetic_branch(
+                "b_000000000002",
+                [
+                    ("2027-04-01", "2027-04-02"),
+                    ("2027-05-01", "2027-05-02"),
+                    ("2027-06-01", "2027-06-02"),
+                ],
+            ),
+        ]
+        result = branch_expander.check_branch_uniqueness(branches)
+        self.assertEqual(result["branch_count"], 2)
+        self.assertTrue(result["branch_ids_unique"])
+        self.assertEqual(result["duplicate_branch_ids"], [])
+        self.assertEqual(result["sequence_count"], 1)
+        self.assertEqual(len(result["duplicate_sequences"]), 1)
+        duplicate = result["duplicate_sequences"][0]
+        self.assertEqual(duplicate["crop_ids"], ["crop_a", "crop_b", "crop_c"])
+        self.assertEqual(
+            duplicate["branch_ids"],
+            ["b_000000000001", "b_000000000002"],
+        )
+        self.assertEqual(len(duplicate["window_keys"]), 2)
+        self.assertNotEqual(duplicate["window_keys"][0], duplicate["window_keys"][1])
+        self.assertIn("ordered crop/window choices", result["rule"])
+
+    def test_uniqueness_flags_duplicate_branch_ids(self) -> None:
+        """Spec §14.4 | Bug it catches: duplicate branch_id accepted as unique."""
+        branches = [
+            _synthetic_branch(
+                "b_000000000001",
+                [
+                    ("2027-01-01", "2027-01-02"),
+                    ("2027-02-01", "2027-02-02"),
+                    ("2027-03-01", "2027-03-02"),
+                ],
+            ),
+            _synthetic_branch(
+                "b_000000000001",
+                [
+                    ("2027-04-01", "2027-04-02"),
+                    ("2027-05-01", "2027-05-02"),
+                    ("2027-06-01", "2027-06-02"),
+                ],
+            ),
+        ]
+        result = branch_expander.check_branch_uniqueness(branches)
+        self.assertEqual(result["branch_count"], 2)
+        self.assertFalse(result["branch_ids_unique"])
+        self.assertEqual(result["duplicate_branch_ids"], ["b_000000000001"])
+        self.assertEqual(result["sequence_count"], 1)
+        self.assertEqual(len(result["duplicate_sequences"]), 1)
+        self.assertEqual(
+            result["duplicate_sequences"][0]["branch_ids"],
+            ["b_000000000001", "b_000000000001"],
         )
 
     def test_first_crop_roots_exclude_unknown_and_unsupported(self) -> None:

@@ -242,7 +242,85 @@ def expand_branches(
         },
         "branches": branches,
         "excluded_paths": excluded.as_list(),
+        "uniqueness": check_branch_uniqueness(branches),
     }
+
+
+def check_branch_uniqueness(branches: list[dict] | tuple[dict, ...]) -> dict:
+    """Report duplicate crop sequences and branch IDs without collapsing branches.
+
+    §14.4 makes ``branch_id`` unique for the selected request and ordered
+    crop/window choices. The same crop sequence with different ordered windows
+    is therefore two branches, not one; duplicate sequences are reported, while
+    duplicate branch IDs are a hard failure.
+    """
+    if not isinstance(branches, (list, tuple)):
+        raise TypeError("branches must be a list or tuple of branch dicts")
+
+    branch_ids: list[object] = []
+    sequences: dict[tuple, list[dict]] = {}
+    for branch in branches:
+        if not isinstance(branch, dict):
+            raise TypeError("each branch must be a dict")
+        crops = branch.get("crops")
+        if not isinstance(crops, (list, tuple)):
+            raise ValueError("each branch must contain a crops list")
+        branch_ids.append(branch.get("branch_id"))
+        sequence = tuple(
+            crop.get("crop_id") if isinstance(crop, dict) else None
+            for crop in crops
+        )
+        sequences.setdefault(sequence, []).append(branch)
+
+    id_counts: dict[object, int] = {}
+    for branch_id in branch_ids:
+        id_counts[branch_id] = id_counts.get(branch_id, 0) + 1
+    duplicate_branch_ids = [
+        branch_id for branch_id, count in id_counts.items() if count > 1
+    ]
+
+    duplicate_sequences = []
+    for sequence, grouped in sequences.items():
+        if len(grouped) < 2:
+            continue
+        duplicate_sequences.append(
+            {
+                "crop_ids": list(sequence),
+                "branch_ids": [branch.get("branch_id") for branch in grouped],
+                "window_keys": [
+                    _branch_window_key(branch) for branch in grouped
+                ],
+            }
+        )
+
+    return {
+        "branch_count": len(branches),
+        "branch_ids_unique": not duplicate_branch_ids,
+        "duplicate_branch_ids": duplicate_branch_ids,
+        "sequence_count": len(sequences),
+        "duplicate_sequences": duplicate_sequences,
+        "rule": (
+            "v1.md §14.4: branch_id is deterministic and unique for the "
+            "selected request and ordered crop/window choices. The same crop "
+            "sequence with different ordered windows is two branches with "
+            "distinct branch_ids, not one; duplicate crop sequences are "
+            "reported without collapsing branches. Duplicate branch_ids are "
+            "a hard failure."
+        ),
+    }
+
+
+def _branch_window_key(branch: dict) -> str:
+    crops = branch.get("crops")
+    ranges = (
+        [
+            crop.get("planting_range") if isinstance(crop, dict) else None
+            for crop in crops
+        ]
+        if isinstance(crops, (list, tuple))
+        else []
+    )
+    return json.dumps(ranges, sort_keys=True, separators=(",", ":"))
 
 
 def _try_next(
