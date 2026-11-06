@@ -35,22 +35,26 @@ total interval   = next planting - harvest
 ```
 
 The next range is clipped at the documented supported-late end and the clip is
-reported (`NEXT_PLANTING_LATEST_CLIPPED`). A clipped latest cannot create a
-negative waiting interval. When preparation is unknown, the next planting range
-is the crop window only (`timing_basis=window_only_preparation_unknown`); the
+reported (`NEXT_PLANTING_LATEST_CLIPPED`). When the clip falls below the latest
+ready/harvest endpoint, the latest realization is invalid: latest waiting/total
+are null and `latest_invalid=true`; the earliest endpoint is kept only when its
+own pairing is valid. When preparation is unknown, the next planting range is
+the crop window only (`timing_basis=window_only_preparation_unknown`); the
 engine does not claim the crop follows on time.
 
 ## Waiting limit is product policy
 
 `max_waiting_days` has no default numeric value. `None` gives
 `waiting_limit_status=not_configured`; `within` is inclusive, `partial` means
-only part of the range exceeds it, and `exceeds` excludes the path. The limit is
-a product relevance cutoff, not a sourced agronomic maximum or a claim that
-longer fallow is unsafe.
+part of the range exceeds it or the latest waiting is unknown (`max=null`), and
+`exceeds` excludes the path. The limit is a product relevance cutoff, not a
+sourced agronomic maximum or a claim that longer fallow is unsafe.
 
 ## Rotation scope
 
-Same-family repetition is `caution` / `SAME_FAMILY_REPEAT`; a family change is
+Consecutive same-family repetition is `caution` / `SAME_FAMILY_REPEAT`; a repeat
+at any non-consecutive position (e.g. 1 & 3) is `caution` /
+`FAMILY_REPEAT_IN_PATH` with `matched_positions`. A family change is
 `pass` / `FAMILY_DIVERSIFIED`. Neither is proof of disease control, soil-carbon
 improvement, or nitrogen balance. Legume presence is potential BNF, not a
 guaranteed nitrogen credit. The CSV text is advisory (`rule_machine_readable=false`)

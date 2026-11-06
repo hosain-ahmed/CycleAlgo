@@ -1,6 +1,7 @@
 """Tests for deterministic three-crop branch expansion (v1.md §10, §11, §17.12)."""
 
 import copy
+import datetime as dt
 import json
 import re
 import unittest
@@ -337,6 +338,136 @@ class BranchExpanderTests(unittest.TestCase):
                 self.assertIsNone(transition["waiting_range"])
                 self.assertIsNone(transition["total_interval_range_days"])
                 self.assertEqual(transition["waiting_limit_status"], "unknown")
+
+    def test_preparation_interval_is_lower_bound_for_total(self) -> None:
+        """Spec §10.4 | Bug it catches: clipped latest makes total interval below preparation."""
+        preparation = {
+            "min_days": 7,
+            "max_days": 10,
+            "source_ids": ["synthetic://e6-final"],
+        }
+        result = self._run(max_waiting_days=365, preparation_lookup=preparation)
+        bad = []
+        for branch in result["branches"]:
+            for transition in branch["transitions"]:
+                prep = transition["preparation_range"]
+                total = transition["total_interval_range_days"]
+                if prep is None or total is None:
+                    continue
+                below_min = (
+                    total["min"] is not None
+                    and total["min"] < prep["min_days"]
+                )
+                below_max = (
+                    total["max"] is not None
+                    and total["max"] < prep["max_days"]
+                )
+                if below_min or below_max:
+                    bad.append((transition["to_crop_id"], total, prep))
+        self.assertEqual(len(bad), 0)
+
+    def test_clipped_latest_marks_waiting_and_total_latest_unknown(self) -> None:
+        """Spec §10.4 | Bug it catches: clipped latest still reports a numeric latest waiting/total."""
+        preparation = {
+            "min_days": 7,
+            "max_days": 10,
+            "source_ids": ["synthetic://e6-final"],
+        }
+        result = self._run(max_waiting_days=365, preparation_lookup=preparation)
+        clipped = [
+            transition
+            for branch in result["branches"]
+            for transition in branch["transitions"]
+            if transition["next_planting"]["latest_clipped"]
+        ]
+        self.assertTrue(clipped)
+        for transition in clipped:
+            self.assertTrue(transition["latest_invalid"])
+            self.assertEqual(
+                transition["next_planting"]["code"],
+                "NEXT_PLANTING_LATEST_CLIPPED",
+            )
+            self.assertTrue(transition["next_planting"]["latest_clipped"])
+            self.assertIsInstance(transition["waiting_range"]["min"], int)
+            self.assertIsNone(transition["waiting_range"]["max"])
+            self.assertIsInstance(
+                transition["total_interval_range_days"]["min"], int
+            )
+            self.assertIsNone(transition["total_interval_range_days"]["max"])
+
+    def test_synthetic_latest_invalid_transition_is_conditional(self) -> None:
+        """Spec §10.4 | Bug it catches: latest_invalid transition still yields a candidate branch."""
+        transition = {
+            "next_planting": {
+                "status": "pass",
+                "code": "NEXT_PLANTING_WITHIN_PREFERRED",
+            },
+            "latest_invalid": True,
+            "calendar_check": {"status": "pass"},
+            "waiting_limit_status": "within",
+            "waiting_range": {"min": 0, "max": None},
+            "total_interval_range_days": {"min": 7, "max": None},
+            "reasons": ["latest realization invalid"],
+            "cautions": ["latest realization invalid"],
+            "missing_evidence": ["latest_waiting_total"],
+            "source_ids": [],
+        }
+        self.assertFalse(branch_expander._transition_ok(transition))
+        crop = {
+            "crop_id": "crop",
+            "planting_range": {"earliest": "2027-01-01", "latest": "2027-01-02"},
+            "status": "candidate",
+            "reasons": [],
+            "cautions": [],
+            "missing_evidence": [],
+            "source_ids": [],
+        }
+        branch = branch_expander._branch(
+            dt.date(2026, 11, 6), [crop, crop, crop], [transition, transition]
+        )
+        self.assertEqual(branch["status"], "conditional")
+        self.assertIn("latest_waiting_total", branch["missing_evidence"])
+
+    def test_caution_next_planting_transition_is_conditional(self) -> None:
+        """Spec §10.4/§14.4 | Bug it catches: a caution next-planting transition still yields a candidate."""
+        crop = {
+            "crop_id": "crop",
+            "planting_range": {"earliest": "2027-01-01", "latest": "2027-01-02"},
+            "status": "candidate",
+            "reasons": [],
+            "cautions": [],
+            "missing_evidence": [],
+            "source_ids": [],
+        }
+        caution = {
+            "next_planting": {"status": "caution", "code": "NEXT_PLANTING_LATE_WINDOW"},
+            "latest_invalid": False,
+            "calendar_check": {"status": "pass"},
+            "waiting_limit_status": "within",
+            "waiting_range": {"min": 0, "max": 5},
+            "total_interval_range_days": {"min": 7, "max": 12},
+            "reasons": ["next planting is a caution"],
+            "cautions": ["next planting is a caution"],
+            "missing_evidence": [],
+            "source_ids": [],
+        }
+        self.assertFalse(branch_expander._transition_ok(caution))
+
+        passed = {
+            **caution,
+            "next_planting": {"status": "pass", "code": "NEXT_PLANTING_WITHIN_PREFERRED"},
+            "reasons": [],
+            "cautions": [],
+        }
+        self.assertTrue(branch_expander._transition_ok(passed))
+        branch = branch_expander._branch(
+            dt.date(2026, 11, 6), [crop, crop, crop], [caution, passed]
+        )
+        self.assertEqual(branch["status"], "conditional")
+        candidate = branch_expander._branch(
+            dt.date(2026, 11, 6), [crop, crop, crop], [passed, passed]
+        )
+        self.assertEqual(candidate["status"], "candidate")
 
     def test_known_preparation_propagates_waiting_and_total_ranges(self) -> None:
         """Spec §10.2-10.4 | Bug it catches: preparation, waiting, or total range mis-paired."""

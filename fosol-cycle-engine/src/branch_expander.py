@@ -403,7 +403,11 @@ def _try_next(
         return None, ("UNSUPPORTED_CROP_CHECK", "A crop check rejected this node.")
 
     waiting = calculate_waiting(
-        planting_range, ready, harvest, preparation_known
+        planting_range,
+        ready,
+        harvest,
+        preparation_known,
+        latest_invalid=next_planting["latest_clipped"],
     )
     waiting_limit = evaluate_waiting_limit(
         waiting["waiting_range"], max_waiting_days
@@ -772,6 +776,16 @@ def _transition(
     cautions: list[str] = []
     missing: list[str] = []
     sources: list[str] = list(window["source_ids"])
+    latest_invalid = bool(waiting.get("latest_invalid"))
+
+    if latest_invalid:
+        invalid_reason = (
+            "The latest next-planting realization was clipped below the latest "
+            "field-ready or harvest date; latest waiting and total interval "
+            "endpoints are unknown."
+        )
+        cautions.append(invalid_reason)
+        missing.append("latest_waiting_total")
 
     if next_planting["status"] != "pass":
         reasons.append(f"Next planting: {next_planting['reason']}")
@@ -838,6 +852,7 @@ def _transition(
         },
         "waiting_range": waiting["waiting_range"],
         "total_interval_range_days": waiting["total_interval_range_days"],
+        "latest_invalid": latest_invalid,
         "calendar_check": calendar,
         "window_reference_check": reference_check,
         "waiting_limit_status": waiting_limit["status"],
@@ -975,11 +990,20 @@ def _branch(start: dt.date, crops: list[dict], transitions: list[dict]) -> dict:
 
 
 def _transition_ok(transition: dict) -> bool:
+    if transition["next_planting"]["status"] != "pass":
+        return False
     if transition["calendar_check"]["status"] != "pass":
         return False
     if transition["waiting_limit_status"] != "within":
         return False
+    if transition.get("latest_invalid"):
+        return False
     if transition["waiting_range"] is None:
+        return False
+    if transition["waiting_range"].get("max") is None:
+        return False
+    total = transition.get("total_interval_range_days")
+    if total is None or total.get("max") is None:
         return False
     return True
 

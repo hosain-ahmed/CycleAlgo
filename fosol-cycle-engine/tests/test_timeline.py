@@ -268,6 +268,33 @@ class TimelineTests(unittest.TestCase):
         self.assertGreaterEqual(clipped["waiting_range"]["min"], 0)
         self.assertGreaterEqual(clipped["total_interval_range_days"]["min"], 0)
 
+    def test_clipped_latest_keeps_earliest_end_only(self) -> None:
+        """Spec §10.4 | Bug it catches: clipped latest paired with latest ready/harvest."""
+        result = calculate_waiting(
+            {"earliest": "2027-02-01", "latest": "2027-03-10"},
+            {"earliest": "2027-02-01", "latest": "2027-03-20"},
+            {"earliest": "2026-12-01", "latest": "2026-12-20"},
+            True,
+            latest_invalid=True,
+        )
+        self.assertEqual(result["waiting_range"], {"min": 0, "max": None})
+        self.assertEqual(
+            result["total_interval_range_days"], {"min": 62, "max": None}
+        )
+        self.assertTrue(result["latest_invalid"])
+
+    def test_waiting_limit_with_unknown_latest_is_partial_or_exceeds(self) -> None:
+        """Spec §10.4 | Bug it catches: null latest treated as within or zero."""
+        for waiting, limit, expected in (
+            ({"min": 5, "max": None}, 10, "partial"),
+            ({"min": 10, "max": None}, 10, "partial"),
+            ({"min": 11, "max": None}, 10, "exceeds"),
+        ):
+            with self.subTest(waiting=waiting, limit=limit):
+                result = evaluate_waiting_limit(waiting, limit)
+                self.assertEqual(result["status"], expected)
+                self.assertEqual(result["limit_days"], limit)
+
     def test_waiting_limit_statuses_are_inclusive_and_distinguish_overlap(self) -> None:
         """Spec §17.8 | Bug it catches: equality excludes, or partial overlap labeled complete."""
         cases = (

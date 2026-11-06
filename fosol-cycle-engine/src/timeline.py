@@ -193,13 +193,15 @@ def calculate_waiting(
     ready_range: dict | None,
     harvest_range: dict | None,
     preparation_known: bool,
+    latest_invalid: bool = False,
 ) -> dict:
     """Return waiting and total between-crop interval ranges.
 
     Waiting is ``next planting - ready`` and total is ``next planting -
     harvest``. Both are ``None`` when preparation or readiness is unknown.
-    Endpoint differences are sorted so the returned ``min`` never exceeds
-    ``max`` even when both readiness dates fall before the window opening.
+    When the latest realization is invalid (the latest next planting is clipped
+    below the latest ready/harvest endpoint), only the earliest pairing is
+    returned and the latest endpoints are ``None``.
     """
     if (
         not preparation_known
@@ -210,17 +212,37 @@ def calculate_waiting(
         return {
             "waiting_range": None,
             "total_interval_range_days": None,
+            "latest_invalid": bool(latest_invalid),
         }
 
     next_range = _parse_range(next_planting_range, "next_planting_range")
     ready = _parse_range(ready_range, "ready_range")
     harvest = _parse_range(harvest_range, "harvest_range")
 
+    latest_invalid = bool(latest_invalid) or (
+        next_range[1] < ready[1] or next_range[1] < harvest[1]
+    )
+    if latest_invalid:
+        waiting_min = (next_range[0] - ready[0]).days
+        if waiting_min < 0:
+            return {
+                "waiting_range": None,
+                "total_interval_range_days": None,
+                "latest_invalid": True,
+            }
+        total_min = (next_range[0] - harvest[0]).days
+        return {
+            "waiting_range": {"min": waiting_min, "max": None},
+            "total_interval_range_days": {"min": total_min, "max": None},
+            "latest_invalid": True,
+        }
+
     waiting = _range_difference(next_range, ready)
     total = _range_difference(next_range, harvest)
     return {
         "waiting_range": waiting,
         "total_interval_range_days": total,
+        "latest_invalid": False,
     }
 
 
@@ -256,8 +278,28 @@ def evaluate_waiting_limit(
             ),
         }
 
-    waiting = _validate_days_range(waiting_range, "waiting_range")
-    if waiting["max"] <= limit:
+    waiting = _validate_days_range(
+        waiting_range, "waiting_range", allow_null_max=True
+    )
+    if waiting["max"] is None:
+        if waiting["min"] > limit:
+            status = "exceeds"
+            reason = (
+                f"The earliest waiting ({waiting['min']} days) already exceeds "
+                f"this explorer's maximum waiting gap of {limit} days; the latest "
+                "is unknown because the latest next-planting realization is "
+                "invalid. The limit is a product relevance cutoff, not a "
+                "biological impossibility."
+            )
+        else:
+            status = "partial"
+            reason = (
+                f"The earliest waiting ({waiting['min']} days) is within the "
+                f"configured maximum of {limit} days, but the latest waiting is "
+                "unknown because the latest next-planting realization is invalid; "
+                "the branch remains conditional."
+            )
+    elif waiting["max"] <= limit:
         status = "within"
         reason = (
             f"The whole waiting range ({waiting['min']}-{waiting['max']} days) "
@@ -576,16 +618,27 @@ def _parse_range(value: dict | None, field: str) -> tuple[dt.date, dt.date]:
     return earliest, latest
 
 
-def _validate_days_range(value: dict, field: str) -> dict:
+def _validate_days_range(
+    value: dict, field: str, allow_null_max: bool = False
+) -> dict:
     if not isinstance(value, dict):
         raise TypeError(f"{field} must be a dict with min and max")
     minimum = value.get("min")
     maximum = value.get("max")
-    for number, name in ((minimum, "min"), (maximum, "max")):
-        if isinstance(number, bool) or not isinstance(number, int) or number < 0:
-            raise ValueError(f"{field}.{name} must be a non-negative integer")
-    if minimum > maximum:
-        raise ValueError(f"{field}.min cannot exceed max")
+    if isinstance(minimum, bool) or not isinstance(minimum, int) or minimum < 0:
+        raise ValueError(f"{field}.min must be a non-negative integer")
+    if maximum is None:
+        if not allow_null_max:
+            raise ValueError(f"{field}.max must be a non-negative integer")
+    else:
+        if (
+            isinstance(maximum, bool)
+            or not isinstance(maximum, int)
+            or maximum < 0
+        ):
+            raise ValueError(f"{field}.max must be a non-negative integer")
+        if minimum > maximum:
+            raise ValueError(f"{field}.min cannot exceed max")
     return {"min": minimum, "max": maximum}
 
 
@@ -593,12 +646,9 @@ def _range_difference(
     later: tuple[dt.date, dt.date], earlier: tuple[dt.date, dt.date]
 ) -> dict:
     first = (later[0] - earlier[0]).days
-    if first < 0:
-        raise ValueError("next planting cannot precede the earlier range")
-    # A clipped next-planting latest can fall below the readiness/harvest
-    # latest. That realization has no valid planting, so it contributes a
-    # zero interval instead of a negative one.
-    second = (later[1] - min(earlier[1], later[1])).days
+    second = (later[1] - earlier[1]).days
+    if first < 0 or second < 0:
+        raise ValueError("later range cannot precede the earlier range")
     return {"min": min(first, second), "max": max(first, second)}
 
 
