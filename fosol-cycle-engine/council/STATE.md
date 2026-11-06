@@ -1,16 +1,16 @@
 # Council State
 
-Last updated: 2026-11-06 (E7 W1 PASS; mustard audit resolved; W2/W3 next)
+Last updated: 2026-11-06 (E7 W2 PASS; W3 next)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 201 tests, OK).
-3. E7 W1 PASS; mustard audit resolved. Next: **W2 statistics + warning flags**, then W3
-   output schema/label. All warning flags default OFF: wheat max/min hidden; mustard
-   held (corrected 1/35).
-4. W1 code: `src/seasonal_replay.py` (`map_schedule_to_seasons`); reports
-   `E7-W1-builder.md`, `E7-W1-review.md`, `E7-mustard-audit.md`.
+   (expect 216 tests, OK).
+3. E7 W1–W2 PASS. Next: **W3 output assembler** (`build_outlook`) — schema, exact
+   em-dash label, status ok/partial/unavailable, sources/fill/missing from data,
+   union-span notes, all warning flags default OFF.
+4. W1/W2 code: `src/seasonal_replay.py`, `src/outlook_config.py`,
+   `src/outlook_indicators.py`; reports `E7-W1-*`, `E7-W2-*`, `E7-mustard-audit.md`.
 5. Local 1990 CSV `PRECTOTCORR` is 24× the API/2000 file; never use raw. See
    `docs/ENVIRONMENTAL_DATA.md` and `E7-mustard-audit.md`.
 5. §6.2 climate exposure is still pending; do not claim complete crop checks.
@@ -53,6 +53,9 @@ Last updated: 2026-11-06 (E7 W1 PASS; mustard audit resolved; W2/W3 next)
   is 24× the live API/2000 file. Corrected 1/35 (2023 season, 2024-01-21 70.23 mm/day).
   Wheat warnings 35/35 (weak), mustard 1/35 (weak). All warning flags default OFF;
   statistics only until stage-specific windows/evidence. Report `E7-mustard-audit.md`.
+- E7 W2 PASS: temperature pooled stats (≥90%, linear IQR), precipitation per-season
+  totals (100% days, mm), generic warning engine with per-indicator text, flags default
+  OFF. 216 tests; 7/7 mutations; E6 smoke 420/0/420/15. Reports `E7-W2-*`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -68,6 +71,8 @@ Last updated: 2026-11-06 (E7 W1 PASS; mustard audit resolved; W2/W3 next)
   Option A null-latest, candidate `next_planting` pass guard.
 - E7 W1 season mapping PASS: 13 focused tests, 201 total; 6/6 mutations; E6 smoke
   unchanged. Reports `E7-W1-builder.md`, `E7-W1-review.md`.
+- E7 W2 indicators PASS: 15 focused tests, 216 total; 7/7 mutations; E6 smoke unchanged.
+  Reports `E7-W2-builder.md`, `E7-W2-review.md`.
 - Entry points:
   - `src/crop_profiles.py` -> `load_crop_profiles(path)`
   - `src/request_validation.py` -> `validate_explore_request(payload, known_crop_ids)`
@@ -108,4 +113,5 @@ Last updated: 2026-11-06 (E7 W1 PASS; mustard audit resolved; W2/W3 next)
 | E6 fix 2 | PASS | PASS | PASS | PASS | PASS | f867dd5 |
 | E6 fix 3 | PASS | PASS | PASS | PASS | PASS | 9b99cc1 |
 | E6 final | PASS | PASS | PASS | PASS | PASS | 609cdf0 |
-| E7 W1 | PASS | PASS | PASS | PASS | PASS | 78cc023 |
+| E7 W1 | PASS | PASS | PASS | PASS | PASS | 8e2f0d3 |
+| E7 W2 | PASS | PASS | PASS | PASS | PASS | 1fafb61 |
