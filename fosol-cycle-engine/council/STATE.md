@@ -1,21 +1,27 @@
 # Council State
 
-Last updated: 2026-11-06 (E3 complete)
+Last updated: 2026-11-06 (E4 complete; testing policy amended)
 
 ## RESUME HERE
-1. Read this file and `council/CHECKLIST.md`.
+1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 86 tests, OK).
-3. Next task: **E4 calendar evaluator** (spec §6.1, §17.1–5).
-4. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
+   (expect 116 tests, OK).
+3. Next layer: **E5 soil/land + water checks** (spec §7, §8).
+4. E5 tests per the amended policy: boundaries, one normal case, all missing shapes,
+   one failure, unknown-never-pass; budget 15–25; test docstrings `Spec §X | Bug: ...`.
+5. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
    Rerun `python tools/appeears_login.py` when it expires; never commit it.
 
 ## Current
-- E1, E2, E3 PASS; commits `4711b3e`, `fc92802`, and the E3 commit below.
+- E1, E2, E3 PASS; commits `4711b3e`, `fc92802`, `68220d1`.
 - E3 live-verified both providers:
   - POWER official daily point API, v2.10.3, fill `-999`.
   - SMAP via AppEEARS `SPL4SMGP.008`, layers `Geophysical_Data_sm_surface` /
     `..._sm_rootzone`, 3-hourly, 9 km, fill `-9999`; live task done, CSV fixture saved.
+- E4 calendar evaluator PASS: 30 new tests (116 total); compact gate 5/5 mutations killed.
+  Reports: `E4-fault-log.md`, `E4-review-round2.md`, `E4-spec-integrity.md`.
+- Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
+  demo_check at E8–E9).
 
 ## Done
 - Step 0 setup: dirs, checklist, state.
@@ -23,7 +29,11 @@ Last updated: 2026-11-06 (E3 complete)
 - E2 request validation + error contract: 18 new tests. Reports `council/reports/E2-*.md`.
   Commit `fc92802`.
 - E3 environmental loader: 54 new tests (86 total). Reports `council/reports/E3-*.md`.
-  Docs `docs/ENVIRONMENTAL_DATA.md`, fixtures under `tests/fixtures/`.
+  Docs `docs/ENVIRONMENTAL_DATA.md`, fixtures under `tests/fixtures/`. Commit `68220d1`.
+- E4 calendar evaluator: 30 new tests (116 total). Compact gate PASS (5/5 mutations).
+  Reports `E4-fault-log.md`, `E4-review-round2.md`, `E4-spec-integrity.md`.
+- E4 calendar evaluator: 30 new tests (116 total). Reports `council/reports/E4-*.md`.
+  Round-2 fixes: optional late bound, late order/year, precision/source guards, edge tests.
 - Entry points:
   - `src/crop_profiles.py` -> `load_crop_profiles(path)`
   - `src/request_validation.py` -> `validate_explore_request(payload, known_crop_ids)`
@@ -57,4 +67,5 @@ Last updated: 2026-11-06 (E3 complete)
 |---|---|---|---|---|---|---|
 | E1 | PASS | PASS | PASS | PASS | PASS | 4711b3e |
 | E2 | PASS | PASS | PASS | PASS | PASS | fc92802 |
-| E3 | PASS | PASS | PASS | PASS | PASS | 7a4f1fa |
+| E3 | PASS | PASS | PASS | PASS | PASS | 68220d1 |
+| E4 | PASS | PASS | PASS | PASS | PASS | 489f9e3 |
