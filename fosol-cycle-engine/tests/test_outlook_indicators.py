@@ -382,9 +382,9 @@ class OutlookIndicatorTests(unittest.TestCase):
         definition = {**WARNING_DEFINITIONS["wheat_tmax_gt_30c"], "enabled": True}
         result = calculate_warning_indicator(observations, season_result, definition)
         self.assertEqual(result["status"], "unavailable")
-        self.assertEqual(result["numerator"], 0)
+        self.assertIsNone(result["numerator"])
         self.assertEqual(result["denominator"], 0)
-        self.assertEqual(result["days_meeting"], 0)
+        self.assertIsNone(result["days_meeting"])
         self.assertIn("not zero", result["text"])
 
     def test_outlook_label_is_exact_with_em_dash(self) -> None:

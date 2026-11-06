@@ -243,6 +243,8 @@ def calculate_warning_indicator(
     notes: list[str] = []
     if denominator == 0:
         status = "unavailable"
+        numerator = None
+        days_meeting = None
         notes.append(
             "No evaluated historical seasons with 100% valid days; risk is "
             "unavailable, not zero."

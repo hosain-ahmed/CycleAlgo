@@ -1,16 +1,15 @@
 # Council State
 
-Last updated: 2026-11-06 (E7 W2 PASS; W3 next)
+Last updated: 2026-11-06 (E7 W3 PASS; E7 final gate pending)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 216 tests, OK).
-3. E7 W1–W2 PASS. Next: **W3 output assembler** (`build_outlook`) — schema, exact
-   em-dash label, status ok/partial/unavailable, sources/fill/missing from data,
-   union-span notes, all warning flags default OFF.
-4. W1/W2 code: `src/seasonal_replay.py`, `src/outlook_config.py`,
-   `src/outlook_indicators.py`; reports `E7-W1-*`, `E7-W2-*`, `E7-mustard-audit.md`.
+   (expect 224 tests, OK).
+3. E7 W1–W3 PASS. Next: E7 final spec/integrity gate, then E8 metrics/economics.
+4. W1/W2/W3 code: `src/seasonal_replay.py`, `src/outlook_config.py`,
+   `src/outlook_indicators.py`, `src/outlook.py`; reports `E7-W1-*`, `E7-W2-*`,
+   `E7-W3-*`, `E7-mustard-audit.md`.
 5. Local 1990 CSV `PRECTOTCORR` is 24× the API/2000 file; never use raw. See
    `docs/ENVIRONMENTAL_DATA.md` and `E7-mustard-audit.md`.
 5. §6.2 climate exposure is still pending; do not claim complete crop checks.
@@ -56,6 +55,10 @@ Last updated: 2026-11-06 (E7 W2 PASS; W3 next)
 - E7 W2 PASS: temperature pooled stats (≥90%, linear IQR), precipitation per-season
   totals (100% days, mm), generic warning engine with per-indicator text, flags default
   OFF. 216 tests; 7/7 mutations; E6 smoke 420/0/420/15. Reports `E7-W2-*`.
+- E7 W3 PASS: `build_outlook` schema, exact em-dash label, status ok/partial/unavailable,
+  data-sourced version/fill/missing, indicator `source_ids`, union-span notes. 224 tests;
+  8 W3; 2/2 contract mutations. E7 total 36 tests vs 20–30; extra cases cover schema,
+  status, source refs, unavailable nulls (documented reason). Reports `E7-W3-*`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -73,6 +76,8 @@ Last updated: 2026-11-06 (E7 W2 PASS; W3 next)
   unchanged. Reports `E7-W1-builder.md`, `E7-W1-review.md`.
 - E7 W2 indicators PASS: 15 focused tests, 216 total; 7/7 mutations; E6 smoke unchanged.
   Reports `E7-W2-builder.md`, `E7-W2-review.md`.
+- E7 W3 outlook assembler PASS: 8 focused tests, 224 total; contract mutations killed.
+  Reports `E7-W3-builder.md`, `E7-W3-review.md`.
 - Entry points:
   - `src/crop_profiles.py` -> `load_crop_profiles(path)`
   - `src/request_validation.py` -> `validate_explore_request(payload, known_crop_ids)`
@@ -115,3 +120,4 @@ Last updated: 2026-11-06 (E7 W2 PASS; W3 next)
 | E6 final | PASS | PASS | PASS | PASS | PASS | 609cdf0 |
 | E7 W1 | PASS | PASS | PASS | PASS | PASS | 8e2f0d3 |
 | E7 W2 | PASS | PASS | PASS | PASS | PASS | 1fafb61 |
+| E7 W3 | PASS | PASS | PASS | PASS | PASS | 723ff00 |
