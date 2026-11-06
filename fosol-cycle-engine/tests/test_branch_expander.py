@@ -428,6 +428,21 @@ class BranchExpanderTests(unittest.TestCase):
         self.assertEqual(branch["status"], "conditional")
         self.assertIn("latest_waiting_total", branch["missing_evidence"])
 
+    def test_limit_error_states_product_basis(self) -> None:
+        """Spec §10.4 | Bug it catches: product waiting cutoff labeled as scientific/biological limit."""
+        code, reason = branch_expander._limit_error(
+            dt.date(2027, 1, 1), 10, 5
+        )
+        self.assertEqual(code, "FUTURE_WINDOW_EXCEEDS_LIMIT")
+        self.assertIn("2027-01-01", reason)
+        self.assertIn("10 days", reason)
+        self.assertIn("5 days", reason)
+        self.assertIn("product relevance cutoff", reason)
+        self.assertIn("not a scientifically safe maximum", reason)
+        self.assertIn("not a biological impossibility", reason)
+        self.assertIn("longer fallow", reason)
+        self.assertNotIn("longer fallow is impossible", reason)
+
     def test_caution_next_planting_transition_is_conditional(self) -> None:
         """Spec §10.4/§14.4 | Bug it catches: a caution next-planting transition still yields a candidate."""
         crop = {

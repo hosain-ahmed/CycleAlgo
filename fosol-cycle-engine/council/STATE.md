@@ -5,7 +5,7 @@ Last updated: 2026-11-06 (E6 PASS; next E7)
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 187 tests, OK).
+   (expect 188 tests, OK).
 3. E6 PASS. Next: **E7 historical seasonal replay + coverage** (spec §9).
 4. §6.2 climate exposure is still pending; do not claim complete crop checks.
 5. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
@@ -38,6 +38,8 @@ Last updated: 2026-11-06 (E6 PASS; next E7)
   uniqueness 420/420. Prep 7–10: 419/16, total<prep 30 -> 0, 30 `latest_invalid`,
   78 caution / 0 pass. Reports `E6-final-review-round2.md`,
   `E6-final-spec-integrity-round2.md`.
+- E6 wording fix PASS: `_limit_error` now states product relevance cutoff, not a
+  scientifically safe maximum / biological impossibility; 188 tests; smoke 420/15.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 

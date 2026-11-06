@@ -728,7 +728,10 @@ def _limit_error(next_start: dt.date, wait: int, limit: int):
         (
             f"The next documented window starts {next_start.isoformat()} "
             f"({wait} days after the reference date), which exceeds this "
-            f"explorer's maximum waiting gap of {limit} days."
+            f"explorer's maximum waiting gap of {limit} days. The limit is a "
+            "product relevance cutoff, not a scientifically safe maximum and "
+            "not a biological impossibility; longer fallow is not claimed "
+            "impossible."
         ),
     )
 
