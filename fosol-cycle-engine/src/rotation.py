@@ -16,56 +16,83 @@ def evaluate_rotation(
     previous_profile: dict | None,
     path_profiles: list[dict] | tuple[dict, ...] | None,
 ) -> dict:
-    """Compare the current crop family with the previous crop in the path.
+    """Compare the current crop family with every prior family in the path.
 
-    ``path_profiles`` is used only for diversity and legume indicators. No
-    machine-readable blocking rule exists in the current data, so ``status`` is
-    never ``unsupported`` and ``blocking`` is always false.
+    ``path_profiles`` is the ordered prior-crop path; the current crop is
+    appended at its actual position, so duplicate crop IDs are preserved.
+    No machine-readable blocking rule exists in the current data, so ``status``
+    is never ``unsupported`` and ``blocking`` is always false.
     """
+    path = _path_profiles(path_profiles, previous_profile, profile)
     current_family = _profile_text(profile, "family")
     previous_family = (
-        _profile_text(previous_profile, "family")
-        if isinstance(previous_profile, dict)
-        else None
+        _profile_text(path[-2], "family") if len(path) >= 2 else None
     )
-    path = _path_profiles(path_profiles, profile)
+    prior_families = [_profile_text(item, "family") for item in path[:-1]]
     legume_profiles = [
         item
         for item in path
         if _is_true(item.get("is_legume_n_fixing"))
     ]
-    legume_ids = [
-        crop_id
-        for crop_id in (_profile_text(item, "crop_id") for item in legume_profiles)
-        if crop_id is not None
-    ]
+    legume_ids = _dedupe(
+        [
+            crop_id
+            for crop_id in (
+                _profile_text(item, "crop_id") for item in legume_profiles
+            )
+            if crop_id is not None
+        ]
+    )
 
-    if current_family is None or previous_family is None:
+    matched_positions: list[int] = []
+    if (
+        current_family is None
+        or not prior_families
+        or any(family is None for family in prior_families)
+    ):
         status = "unknown"
         code = "ROTATION_FAMILY_EVIDENCE_MISSING"
         reason = (
-            "The current or previous crop family is missing; rotation "
+            "The current or a prior crop family is missing; rotation "
             "compatibility is unknown rather than an automatic pass."
         )
         missing = ["crop_family"]
-    elif _same_family(current_family, previous_family):
-        status = "caution"
-        code = "SAME_FAMILY_REPEAT"
-        reason = (
-            f"Both the previous crop and this crop are in {current_family}. "
-            "Same-family repetition is a diversity caution only; it is not "
-            "rejected because no structured, sourced restriction exists."
-        )
-        missing = []
     else:
-        status = "pass"
-        code = "FAMILY_DIVERSIFIED"
-        reason = (
-            f"The family changes from {previous_family} to {current_family}. "
-            "Family diversification alone does not establish disease control, "
-            "soil-carbon improvement, or nitrogen balance."
-        )
-        missing = []
+        matched_positions = [
+            position
+            for position, family in enumerate(prior_families, start=1)
+            if _same_family(current_family, family)
+        ]
+        if matched_positions:
+            matched_positions.append(len(path))
+            if _same_family(current_family, prior_families[-1]):
+                status = "caution"
+                code = "SAME_FAMILY_REPEAT"
+                reason = (
+                    f"Both the previous crop and this crop are in {current_family}. "
+                    "Same-family repetition is a diversity caution only; it is not "
+                    "rejected because no structured, sourced restriction exists."
+                )
+            else:
+                status = "caution"
+                code = "FAMILY_REPEAT_IN_PATH"
+                reason = (
+                    f"The current crop family {current_family} also appears at "
+                    f"position(s) {', '.join(str(p) for p in matched_positions[:-1])} "
+                    "earlier in the three-crop path. Repeated families are a "
+                    "diversity caution only; they are not rejected because no "
+                    "structured, sourced restriction exists."
+                )
+            missing = []
+        else:
+            status = "pass"
+            code = "FAMILY_DIVERSIFIED"
+            reason = (
+                f"The family changes from {previous_family} to {current_family}. "
+                "Family diversification alone does not establish disease control, "
+                "soil-carbon improvement, or nitrogen balance."
+            )
+            missing = []
 
     return {
         "status": status,
@@ -74,6 +101,7 @@ def evaluate_rotation(
         "source_ids": ["rotation_family_rule"],
         "family": current_family,
         "previous_family": previous_family,
+        "matched_positions": matched_positions,
         "diversity_indicator": True,
         "blocking": False,
         "rule_machine_readable": False,
@@ -101,6 +129,7 @@ def evaluate_rotation(
 
 def _path_profiles(
     path_profiles: list[dict] | tuple[dict, ...] | None,
+    previous_profile: dict | None,
     profile: dict,
 ) -> list[dict]:
     if isinstance(path_profiles, dict):
@@ -110,11 +139,9 @@ def _path_profiles(
     else:
         path = []
 
-    current_id = _profile_text(profile, "crop_id")
-    if current_id is None or not any(
-        _profile_text(item, "crop_id") == current_id for item in path
-    ):
-        path.append(profile)
+    if not path and isinstance(previous_profile, dict):
+        path = [previous_profile]
+    path.append(profile)
     return path
 
 
@@ -128,6 +155,10 @@ def _is_true(value: object) -> bool:
     if isinstance(value, str):
         return value.strip().upper() == "TRUE"
     return False
+
+
+def _dedupe(values) -> list:
+    return list(dict.fromkeys(values))
 
 
 def _profile_text(profile: dict, field: str) -> str | None:

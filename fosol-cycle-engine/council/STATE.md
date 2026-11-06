@@ -1,13 +1,13 @@
 # Council State
 
-Last updated: 2026-11-06 (E6 fix 1 PASS; fixes 2–3 pending; testing policy amended)
+Last updated: 2026-11-06 (E6 fix 2 PASS; fix 3 pending; testing policy amended)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 177 tests, OK).
-3. E6 fix 1 (next-season roll) is PASS and committed. Next: **fix 2 rotation family**,
-   then **fix 3 sequence uniqueness**, then re-run the E6 gate.
+   (expect 178 tests, OK).
+3. E6 fixes 1–2 PASS and committed. Next: **fix 3 sequence uniqueness**, then re-run
+   the E6 gate (mutation + spec/integrity + smoke report).
 4. Evidence gaps: no local soil measurements; preparation blank; max waiting unset;
    duration reference stage unconfirmed. Keep timing/prep `unknown`/conditional, never zero.
    §6.2 climate exposure is still pending; do not claim complete checks.
@@ -21,8 +21,11 @@ Last updated: 2026-11-06 (E6 fix 1 PASS; fixes 2–3 pending; testing policy ame
 - E6 fix 1 PASS: next-season windows roll forward within `max_waiting_days`.
   Smoke (`2026-11-06`, max 365): 295 -> 420 branches, 0 candidate / 420 conditional,
   exclusions 56 -> 15 (all `WINDOW_GEOGRAPHY_UNKNOWN`), Aman 0 -> 62.
-  Reports `E6-fix1-builder.md`, `E6-fix1-review.md`.
-- E6 fixes 2 (rotation repeats) and 3 (sequence uniqueness) still pending; E6 gate not final.
+  Reports `E6-fix1-builder.md`, `E6-fix1-review.md`. Commit `5f6cef0`.
+- E6 fix 2 PASS: rotation compares all prior positions; 150 position-1/3 family-repeat
+  branches now caution (was 81 pass / 69 caution), 0 `FAMILY_DIVERGIFIED`; total branches
+  still 420, exclusions still 15. Reports `E6-fix2-builder.md`, `E6-fix2-review.md`.
+- E6 fix 3 (sequence uniqueness) still pending; E6 gate not final.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -71,5 +74,6 @@ Last updated: 2026-11-06 (E6 fix 1 PASS; fixes 2–3 pending; testing policy ame
 | E3 | PASS | PASS | PASS | PASS | PASS | 68220d1 |
 | E4 | PASS | PASS | PASS | PASS | PASS | a528c26 |
 | E5 | PASS | PASS | PASS | PASS | PASS | 8fdbd5d |
-| E6 fix 1 | PASS | PASS | pending | pending | PASS | e4811bb |
-| E6 fixes 2–3 | pending | pending | pending | pending | pending | pending |
+| E6 fix 1 | PASS | PASS | pending | pending | PASS | 5f6cef0 |
+| E6 fix 2 | PASS | PASS | PASS | pending | PASS | pending |
+| E6 fix 3 | pending | pending | pending | pending | pending | pending |
