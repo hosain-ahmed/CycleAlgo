@@ -1,13 +1,18 @@
 # Council State
 
-Last updated: 2026-11-06 (E6 fixes 1–3 PASS; final E6 gate pending)
+Last updated: 2026-11-06 (E6 fixes 1–3 PASS; final gate FAIL on two timeline items)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
    (expect 181 tests, OK).
-3. E6 fixes 1–3 PASS. Next: re-run the E6 milestone gate (mutation + spec/integrity +
-   smoke report), then resolve any remaining gate failure before E7.
+3. E6 fixes 1–3 PASS. Final gate FAIL remains on:
+   - §10.4 waiting/total pairing: 30 transitions with synthetic prep 7–10 give total
+     below prep (e.g. total {5,7} vs prep {7,10}); choose a policy before coding.
+   - `_transition_ok` ignores `next_planting.status=="caution"`; 1 synthetic branch can
+     be wrongly candidate. Clear fix: require `next_planting.status == "pass"`.
+   - Low: docs omit `FAMILY_REPEAT_IN_PATH` / `matched_positions`.
+4. Next after E6: E7 historical replay (spec §9). §6.2 climate exposure still pending.
 4. Evidence gaps: no local soil measurements; preparation blank; max waiting unset;
    duration reference stage unconfirmed. Keep timing/prep `unknown`/conditional, never zero.
    §6.2 climate exposure is still pending; do not claim complete checks.
@@ -27,7 +32,12 @@ Last updated: 2026-11-06 (E6 fixes 1–3 PASS; final E6 gate pending)
   still 420, exclusions still 15. Reports `E6-fix2-builder.md`, `E6-fix2-review.md`.
 - E6 fix 3 PASS: sequence/branch-ID uniqueness check added; 420 branches, 420 unique
   sequences/IDs, 0 duplicates; branches not collapsed. Reports `E6-fix3-builder.md`,
-  `E6-fix3-review.md`. E6 gate not final.
+  `E6-fix3-review.md`.
+- E6 final gate: fixes 1–3 PASS; 181 tests; 6/6 mutations killed; smoke 420 branches,
+  0 candidate/420 conditional, 15 geography exclusions, 150 position-1/3 family repeats
+  all caution, 420 unique IDs/sequences. Gate FAIL on §10.4 waiting/total and
+  `_transition_ok` caution handling. Reports `E6-final-review.md`,
+  `E6-final-spec-integrity.md`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -79,3 +89,4 @@ Last updated: 2026-11-06 (E6 fixes 1–3 PASS; final E6 gate pending)
 | E6 fix 1 | PASS | PASS | pending | pending | PASS | 5f6cef0 |
 | E6 fix 2 | PASS | PASS | PASS | pending | PASS | pending |
 | E6 fix 3 | PASS | PASS | pending | pending | PASS | 2af8e52 |
+| E6 gate | fixes PASS | fixes PASS | FAIL (2 items) | FAIL (2 items) | FAIL | a0e3bab |

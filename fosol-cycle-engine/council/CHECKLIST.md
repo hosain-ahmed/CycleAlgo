@@ -66,6 +66,8 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [x] E4 Calendar evaluator (§6.1, §17.1–5).
 - [x] E5 Soil/land and water checks (§7, §8).
 - [ ] E6 Timeline, preparation, waiting, 3-crop expansion (§10, §11).
+      Remainder: §10.4 waiting/total pairing; `_transition_ok` must reject
+      `next_planting.status=="caution"`; docs codes.
 - [ ] E7 Historical seasonal replay with coverage rules (§9).
 - [ ] E8 Metrics, economics, rankings, preferences (§12, §13).
 - [ ] E9 Response envelope, status precedence, warnings (§14.3, §14.4).
