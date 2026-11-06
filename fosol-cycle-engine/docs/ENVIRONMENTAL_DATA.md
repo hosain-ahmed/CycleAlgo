@@ -214,3 +214,13 @@ contain `request`, `sources` (`power` and `smap`), and `warnings`.
 - No crop-specific moisture threshold is validated here. Do not declare land
   ready, waterlogged, or unsuitable from an unvalidated SMAP threshold.
 - No QA flag is available from the selected AppEEARS layers; do not invent one.
+
+## Local CSV caveat
+
+`Data/POWER_Point_Daily_19900101_20261023_024d38N_088d60E_LST.csv` contains
+`PRECTOTCORR` values **24×** the live POWER API and the 2000–2026 local file.
+`T2M`, `T2M_MAX`, `T2M_MIN`, `QV2M`, and `GWETTOP` match. The 1991–1999 rows exist
+only in that file; if they are used for local analysis, divide `PRECTOTCORR` by 24
+and record the correction. Production E7 uses the POWER API, which matches the
+2000–2026 file. Do not use the 1990 file's `PRECTOTCORR` raw. See
+`council/reports/E7-mustard-audit.md` for the live-API comparison.

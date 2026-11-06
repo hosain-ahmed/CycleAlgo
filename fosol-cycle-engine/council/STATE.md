@@ -1,16 +1,18 @@
 # Council State
 
-Last updated: 2026-11-06 (E7 W1 PASS; W2 waiting on warning-indicator decision)
+Last updated: 2026-11-06 (E7 W1 PASS; mustard audit resolved; W2/W3 next)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
    (expect 201 tests, OK).
-3. E7 W1 PASS. Next: **W2 indicators** — but first the user must decide whether to
-   expose wheat warnings (`wheat_tmax_gt_30c` 35/35, `wheat_tmin_lt_15c` 35/35,
-   both flagged weakly informative) and mustard heavy rain (29/35, 82.9%).
+3. E7 W1 PASS; mustard audit resolved. Next: **W2 statistics + warning flags**, then W3
+   output schema/label. All warning flags default OFF: wheat max/min hidden; mustard
+   held (corrected 1/35).
 4. W1 code: `src/seasonal_replay.py` (`map_schedule_to_seasons`); reports
-   `E7-W1-builder.md`, `E7-W1-review.md`.
+   `E7-W1-builder.md`, `E7-W1-review.md`, `E7-mustard-audit.md`.
+5. Local 1990 CSV `PRECTOTCORR` is 24× the API/2000 file; never use raw. See
+   `docs/ENVIRONMENTAL_DATA.md` and `E7-mustard-audit.md`.
 5. §6.2 climate exposure is still pending; do not claim complete crop checks.
 6. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
    Rerun `python tools/appeears_login.py` when it expires; never commit it.
@@ -46,8 +48,11 @@ Last updated: 2026-11-06 (E7 W1 PASS; W2 waiting on warning-indicator decision)
   scientifically safe maximum / biological impossibility; 188 tests; smoke 420/15.
 - E7 W1 PASS: `map_schedule_to_seasons` maps E6 union spans to 1991–2025, 90%/100%
   coverage, cross-year/leap handling, `last_complete_data_date` parameter. 201 tests;
-  6/6 mutations; E6 smoke 420/0/420/15. Pending warning-indicator decision:
-  wheat max 35/35, wheat min 35/35 (both weakly informative), mustard heavy rain 29/35.
+  6/6 mutations; E6 smoke 420/0/420/15.
+- E7 mustard audit: raw 29/35 was a local CSV unit bug; 1990 file `PRECTOTCORR`
+  is 24× the live API/2000 file. Corrected 1/35 (2023 season, 2024-01-21 70.23 mm/day).
+  Wheat warnings 35/35 (weak), mustard 1/35 (weak). All warning flags default OFF;
+  statistics only until stage-specific windows/evidence. Report `E7-mustard-audit.md`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
