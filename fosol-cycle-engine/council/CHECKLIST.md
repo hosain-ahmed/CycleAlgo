@@ -15,7 +15,7 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [ ] 17.8 Waiting limits distinguish partial range overlap from complete exclusion.
 - [ ] 17.9 Missing soil or irrigation evidence does not automatically pass or reject a crop.
 - [ ] 17.10 API missing values, poor quality, and failed requests cannot create favorable results.
-- [ ] 17.11 Incomplete historical crop periods are excluded according to the declared coverage rule.
+- [x] 17.11 Incomplete historical crop periods are excluded according to the declared coverage rule.
 - [ ] 17.12 A branch stops at exactly three crops.
 - [ ] 17.13 Unsupported districts do not inherit Rajshahi results.
 - [ ] 17.14 Preference changes cannot revive blocked branches.
@@ -66,7 +66,7 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [x] E4 Calendar evaluator (§6.1, §17.1–5).
 - [x] E5 Soil/land and water checks (§7, §8).
 - [x] E6 Timeline, preparation, waiting, 3-crop expansion (§10, §11).
-- [ ] E7 Historical seasonal replay with coverage rules (§9).
+- [x] E7 Historical seasonal replay with coverage rules (§9).
 - [ ] E8 Metrics, economics, rankings, preferences (§12, §13).
 - [ ] E9 Response envelope, status precedence, warnings (§14.3, §14.4).
 - [ ] E10 Thin HTTP wrapper `POST /api/explore`.

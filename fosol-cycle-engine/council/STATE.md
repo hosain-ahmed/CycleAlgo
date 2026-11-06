@@ -1,17 +1,21 @@
 # Council State
 
-Last updated: 2026-11-06 (E7 W3 PASS; E7 final gate pending)
+Last updated: 2026-11-06 (E7 PASS; next E8)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
    (expect 224 tests, OK).
-3. E7 W1–W3 PASS. Next: E7 final spec/integrity gate, then E8 metrics/economics.
-4. W1/W2/W3 code: `src/seasonal_replay.py`, `src/outlook_config.py`,
+3. E7 PASS. Next: **E8 metrics, economics, rankings, preferences** (spec §12, §13).
+4. E7 code: `src/seasonal_replay.py`, `src/outlook_config.py`,
    `src/outlook_indicators.py`, `src/outlook.py`; reports `E7-W1-*`, `E7-W2-*`,
-   `E7-W3-*`, `E7-mustard-audit.md`.
-5. Local 1990 CSV `PRECTOTCORR` is 24× the API/2000 file; never use raw. See
+   `E7-W3-*`, `E7-final-spec-integrity.md`, `E7-mustard-audit.md`.
+5. E7 warnings all OFF by config: wheat hidden (35/35 weak); mustard held (corrected
+   1/35 after the local 24× precipitation bug). Statistics only until sourced
+   stage-specific windows/thresholds are approved.
+6. Local 1990 CSV `PRECTOTCORR` is 24× the API/2000 file; never use raw. See
    `docs/ENVIRONMENTAL_DATA.md` and `E7-mustard-audit.md`.
+7. §6.2 current-season climate exposure is still unimplemented; do not claim it.
 5. §6.2 climate exposure is still pending; do not claim complete crop checks.
 6. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
    Rerun `python tools/appeears_login.py` when it expires; never commit it.
@@ -59,6 +63,9 @@ Last updated: 2026-11-06 (E7 W3 PASS; E7 final gate pending)
   data-sourced version/fill/missing, indicator `source_ids`, union-span notes. 224 tests;
   8 W3; 2/2 contract mutations. E7 total 36 tests vs 20–30; extra cases cover schema,
   status, source refs, unavailable nulls (documented reason). Reports `E7-W3-*`.
+- E7 final gate PASS: spec/integrity, 224 tests, E6 smoke 420/0/420/15. Warnings OFF
+  (wheat 35/35 hidden; mustard corrected 1/35 held); no SMAP/soil/water/prep/duration
+  added; E7 historical-only. Report `E7-final-spec-integrity.md`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -78,6 +85,8 @@ Last updated: 2026-11-06 (E7 W3 PASS; E7 final gate pending)
   Reports `E7-W2-builder.md`, `E7-W2-review.md`.
 - E7 W3 outlook assembler PASS: 8 focused tests, 224 total; contract mutations killed.
   Reports `E7-W3-builder.md`, `E7-W3-review.md`.
+- E7 final PASS: 224 tests; E6 smoke unchanged; warnings OFF; E7 36 tests (+6 budget,
+  documented). Next E8.
 - Entry points:
   - `src/crop_profiles.py` -> `load_crop_profiles(path)`
   - `src/request_validation.py` -> `validate_explore_request(payload, known_crop_ids)`
@@ -120,4 +129,5 @@ Last updated: 2026-11-06 (E7 W3 PASS; E7 final gate pending)
 | E6 final | PASS | PASS | PASS | PASS | PASS | 609cdf0 |
 | E7 W1 | PASS | PASS | PASS | PASS | PASS | 8e2f0d3 |
 | E7 W2 | PASS | PASS | PASS | PASS | PASS | 1fafb61 |
-| E7 W3 | PASS | PASS | PASS | PASS | PASS | 723ff00 |
+| E7 W3 | PASS | PASS | PASS | PASS | PASS | cff97bc |
+| E7 final | PASS | PASS | PASS | PASS | PASS | d454b96 |
