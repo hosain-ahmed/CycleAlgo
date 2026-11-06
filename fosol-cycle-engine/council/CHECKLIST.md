@@ -64,7 +64,7 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [x] E2 Request validation and error contract (§14.2, §14.3).
 - [x] E3 Environmental loading, caching, missing-value handling (§15).
 - [x] E4 Calendar evaluator (§6.1, §17.1–5).
-- [ ] E5 Soil/land and water checks (§7, §8).
+- [x] E5 Soil/land and water checks (§7, §8).
 - [ ] E6 Timeline, preparation, waiting, 3-crop expansion (§10, §11).
 - [ ] E7 Historical seasonal replay with coverage rules (§9).
 - [ ] E8 Metrics, economics, rankings, preferences (§12, §13).

@@ -1,12 +1,14 @@
 # Council State
 
-Last updated: 2026-11-06 (E4 complete; testing policy amended)
+Last updated: 2026-11-06 (E5 complete; testing policy amended)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, and `council/TESTING_POLICY.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
    (expect 116 tests, OK).
-3. Next layer: **E5 soil/land + water checks** (spec §7, §8).
+3. Next layer: **E6 timeline, preparation, waiting, 3-crop expansion** (spec §10, §11).
+4. Evidence gaps: no local soil measurements; preparation times blank; max waiting limit
+   unset. Keep timing/prep `unknown`/conditional and never zero-fill.
 4. E5 tests per the amended policy: boundaries, one normal case, all missing shapes,
    one failure, unknown-never-pass; budget 15–25; test docstrings `Spec §X | Bug: ...`.
 5. SMAP token: `Q:\CycleAlgo\appeears_token.txt` expires 2026-11-07T03:13:49Z.
@@ -19,7 +21,12 @@ Last updated: 2026-11-06 (E4 complete; testing policy amended)
   - SMAP via AppEEARS `SPL4SMGP.008`, layers `Geophysical_Data_sm_surface` /
     `..._sm_rootzone`, 3-hourly, 9 km, fill `-9999`; live task done, CSV fixture saved.
 - E4 calendar evaluator PASS: 30 new tests (116 total); compact gate 5/5 mutations killed.
-  Reports: `E4-fault-log.md`, `E4-review-round2.md`, `E4-spec-integrity.md`.
+  Reports: `E4-fault-log.md`, `E4-review-round2.md`, `E4-spec-integrity.md`. Commit `a528c26`.
+- E5 soil/land + water checks PASS: 20 new tests (136 total); 5/5 mutations killed.
+  Reports: `E5-builder.md`, `E5-review.md`, `E5-spec-integrity.md`; docs `SOIL_WATER.md`.
+  Real crops: all soil properties unknown (no local evidence); water is caution/unknown,
+  never pass; no demand-minus-rainfall. Residual low: non-string salinity `unit` details
+  may not JSON-serialize; FAO min>max returns caution.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -68,4 +75,5 @@ Last updated: 2026-11-06 (E4 complete; testing policy amended)
 | E1 | PASS | PASS | PASS | PASS | PASS | 4711b3e |
 | E2 | PASS | PASS | PASS | PASS | PASS | fc92802 |
 | E3 | PASS | PASS | PASS | PASS | PASS | 68220d1 |
-| E4 | PASS | PASS | PASS | PASS | PASS | 489f9e3 |
+| E4 | PASS | PASS | PASS | PASS | PASS | a528c26 |
+| E5 | PASS | PASS | PASS | PASS | PASS | e91cb1b |
