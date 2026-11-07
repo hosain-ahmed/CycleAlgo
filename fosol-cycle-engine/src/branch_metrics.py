@@ -159,6 +159,159 @@ def calculate_diversity_metrics(
     }
 
 
+def build_resource_metrics(
+    branch: dict, profiles: dict | None = None
+) -> dict:
+    """Return cash, irrigation, labor, and equipment context separately.
+
+    No combined resource score is produced. Cash, labor, and equipment have no
+    sourced evidence; irrigation is qualitative context only and is not summed
+    or converted into a dependence score.
+    """
+    if not _valid_branch_shape(branch):
+        return _invalid_resource_metrics()
+    if profiles is not None and not isinstance(profiles, dict):
+        raise TypeError("profiles must be a dict keyed by crop_id or None")
+
+    per_crop = []
+    for crop in branch["crops"]:
+        crop_id = _resource_text(crop.get("crop_id"))
+        profile = profiles.get(crop_id) if profiles and crop_id else None
+        if not isinstance(profile, dict):
+            profile = None
+        per_crop.append(
+            {
+                "crop_id": crop_id,
+                "irrigation_guidance": _context_text(
+                    crop, profile, "irrigation_guidance"
+                ),
+                "fao_crop_water_need_min_mm": _context_number(
+                    crop, profile, "fao_crop_water_need_min_mm"
+                ),
+                "fao_crop_water_need_max_mm": _context_number(
+                    crop, profile, "fao_crop_water_need_max_mm"
+                ),
+                "local_phase_water_total_mm": _context_number(
+                    crop, profile, "local_phase_water_total_mm"
+                ),
+                "water_ranking_readiness": _context_text(
+                    crop, profile, "water_ranking_readiness"
+                ),
+            }
+        )
+
+    return {
+        "cash_cost": _cash_unavailable(),
+        "irrigation": {
+            "status": "context_only",
+            "ranking_status": "unranked",
+            "per_crop": per_crop,
+            "total": None,
+            "missing_evidence": ["comparable_irrigation_evidence"],
+            "reason": (
+                "Irrigation guidance and FAO/phase values are qualitative "
+                "context only; they are not comparable across crops or "
+                "scenarios, so no total or dependence score is calculated."
+            ),
+        },
+        "labor": _resource_unavailable(
+            "labor_evidence",
+            "No sourced labor evidence; labor requirements and peak periods "
+            "are unavailable.",
+        ),
+        "equipment": _resource_unavailable(
+            "equipment_evidence",
+            "No sourced equipment evidence; equipment and special-management "
+            "prerequisites are unavailable.",
+        ),
+    }
+
+
+def _cash_unavailable() -> dict:
+    return {
+        "status": "unavailable",
+        "value_bdt_per_ha": None,
+        "unit": "BDT/ha",
+        "missing_evidence": ["production_cost_evidence"],
+        "reason": (
+            "No sourced production-cost evidence; reference yields are not "
+            "used to estimate cash cost."
+        ),
+    }
+
+
+def _resource_unavailable(evidence: str, reason: str) -> dict:
+    return {
+        "status": "unavailable",
+        "value": None,
+        "unit": None,
+        "missing_evidence": [evidence],
+        "reason": reason,
+    }
+
+
+def _invalid_resource_metrics() -> dict:
+    return {
+        "cash_cost": {
+            **_cash_unavailable(),
+            "missing_evidence": ["branch_shape"],
+            "reason": "INVALID_BRANCH_SHAPE",
+        },
+        "irrigation": {
+            "status": "unavailable",
+            "ranking_status": "unranked",
+            "per_crop": [],
+            "total": None,
+            "missing_evidence": ["branch_shape"],
+            "reason": "INVALID_BRANCH_SHAPE",
+        },
+        "labor": {
+            **_resource_unavailable(
+                "labor_evidence",
+                "No sourced labor evidence.",
+            ),
+            "missing_evidence": ["branch_shape"],
+            "reason": "INVALID_BRANCH_SHAPE",
+        },
+        "equipment": {
+            **_resource_unavailable(
+                "equipment_evidence",
+                "No sourced equipment evidence.",
+            ),
+            "missing_evidence": ["branch_shape"],
+            "reason": "INVALID_BRANCH_SHAPE",
+        },
+    }
+
+
+def _context_text(crop: dict, profile: dict | None, field: str) -> str | None:
+    value = _resource_text(crop.get(field))
+    if value is None and profile is not None:
+        value = _resource_text(profile.get(field))
+    return value
+
+
+def _context_number(crop: dict, profile: dict | None, field: str) -> float | None:
+    value = _resource_number(crop.get(field))
+    if value is None and profile is not None:
+        value = _resource_number(profile.get(field))
+    return value
+
+
+def _resource_text(value: object) -> str | None:
+    if isinstance(value, str):
+        text = value.strip()
+        return text or None
+    return None
+
+
+def _resource_number(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    number = float(value)
+    return number if number == number and abs(number) != float("inf") else None
+
+
 def _valid_branch_shape(branch: object) -> bool:
     if not isinstance(branch, dict):
         return False

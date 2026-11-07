@@ -5,7 +5,11 @@ import unittest
 from pathlib import Path
 
 from src.branch_expander import expand_branches
-from src.branch_metrics import calculate_completion_time, calculate_diversity_metrics
+from src.branch_metrics import (
+    build_resource_metrics,
+    calculate_completion_time,
+    calculate_diversity_metrics,
+)
 from src.crop_profiles import load_crop_profiles
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "branch_metrics.py"
@@ -42,6 +46,23 @@ def _diversity_branch(
             for crop_id, family, flag in zip(crop_ids, families, legume_flags)
         ],
         "transitions": [{}, {}],
+    }
+
+
+def _resource_branch(
+    contexts: tuple[dict, ...] | None = None,
+    crop_count: int = 3,
+    transition_count: int = 2,
+) -> dict:
+    crops = []
+    for index, suffix in enumerate(("a", "b", "c")):
+        crop = {"crop_id": f"crop_{suffix}"}
+        if contexts is not None:
+            crop.update(contexts[index])
+        crops.append(crop)
+    return {
+        "crops": crops[:crop_count],
+        "transitions": [{} for _ in range(transition_count)],
     }
 
 
@@ -339,6 +360,123 @@ class CompletionTimeTests(unittest.TestCase):
         source = SRC.read_text(encoding="utf-8")
         for crop_id in _CROP_IDS:
             self.assertNotIn(crop_id, source)
+
+
+class ResourceMetricsTests(unittest.TestCase):
+    def test_resources_remain_four_separate_metrics(self) -> None:
+        """Spec §12.2 | Bug it catches: unlike resource units collapsed into one score."""
+        result = build_resource_metrics(_resource_branch())
+        self.assertEqual(
+            set(result), {"cash_cost", "irrigation", "labor", "equipment"}
+        )
+        self.assertFalse(any("score" in key for key in result))
+        self.assertFalse(any(key.startswith("total") for key in result))
+
+    def test_cash_labor_and_equipment_are_unavailable(self) -> None:
+        """Spec §12.2 | Bug it catches: missing cost/labor/equipment evidence becomes zero."""
+        result = build_resource_metrics(_resource_branch())
+        cash = result["cash_cost"]
+        self.assertEqual(cash["status"], "unavailable")
+        self.assertIsNone(cash["value_bdt_per_ha"])
+        self.assertEqual(cash["missing_evidence"], ["production_cost_evidence"])
+        for name, evidence in (("labor", "labor_evidence"), ("equipment", "equipment_evidence")):
+            with self.subTest(name=name):
+                metric = result[name]
+                self.assertEqual(metric["status"], "unavailable")
+                self.assertIsNone(metric["value"])
+                self.assertEqual(metric["missing_evidence"], [evidence])
+                self.assertTrue(metric["reason"])
+
+    def test_irrigation_is_context_only_without_numeric_total(self) -> None:
+        """Spec §12.2 | Bug it catches: qualitative irrigation guidance summed or ranked."""
+        result = build_resource_metrics(_resource_branch())
+        irrigation = result["irrigation"]
+        self.assertEqual(irrigation["status"], "context_only")
+        self.assertEqual(irrigation["ranking_status"], "unranked")
+        self.assertIsNone(irrigation["total"])
+        self.assertNotIn("dependence_score", irrigation)
+        self.assertEqual(len(irrigation["per_crop"]), 3)
+        self.assertIn("not comparable", irrigation["reason"])
+
+    def test_irrigation_per_crop_uses_node_then_profile_fallback(self) -> None:
+        """Spec §12.2 | Bug it catches: per-crop irrigation context lost or node value overridden."""
+        contexts = (
+            {
+                "crop_id": "crop_a",
+                "irrigation_guidance": "node guidance",
+                "fao_crop_water_need_min_mm": 100.0,
+                "fao_crop_water_need_max_mm": 200.0,
+                "local_phase_water_total_mm": 150.0,
+                "water_ranking_readiness": "HIGH",
+            },
+            {"crop_id": "crop_b"},
+            {"crop_id": "crop_c"},
+        )
+        profiles = {
+            "crop_a": {
+                "irrigation_guidance": "profile A",
+                "fao_crop_water_need_min_mm": 999.0,
+                "fao_crop_water_need_max_mm": 999.0,
+                "local_phase_water_total_mm": 999.0,
+                "water_ranking_readiness": "LOW",
+            },
+            "crop_b": {
+                "irrigation_guidance": "profile B",
+                "fao_crop_water_need_min_mm": 10.0,
+                "fao_crop_water_need_max_mm": 20.0,
+                "local_phase_water_total_mm": 15.0,
+                "water_ranking_readiness": "PARTIAL",
+            },
+            "crop_c": {},
+        }
+        result = build_resource_metrics(_resource_branch(contexts), profiles)
+        per_crop = result["irrigation"]["per_crop"]
+        self.assertEqual(
+            [item["crop_id"] for item in per_crop],
+            ["crop_a", "crop_b", "crop_c"],
+        )
+        self.assertEqual(per_crop[0]["irrigation_guidance"], "node guidance")
+        self.assertEqual(per_crop[0]["fao_crop_water_need_min_mm"], 100.0)
+        self.assertEqual(per_crop[0]["local_phase_water_total_mm"], 150.0)
+        self.assertEqual(per_crop[0]["water_ranking_readiness"], "HIGH")
+        self.assertEqual(per_crop[1]["irrigation_guidance"], "profile B")
+        self.assertEqual(per_crop[1]["fao_crop_water_need_max_mm"], 20.0)
+        self.assertEqual(per_crop[1]["water_ranking_readiness"], "PARTIAL")
+        self.assertIsNone(per_crop[2]["irrigation_guidance"])
+        self.assertIsNone(per_crop[2]["fao_crop_water_need_min_mm"])
+
+    def test_malformed_branch_makes_all_resources_unavailable(self) -> None:
+        """Spec §14.4 | Bug it catches: malformed branches return context or numeric resources."""
+        base = _resource_branch()
+        cases = (
+            None,
+            {},
+            _resource_branch(crop_count=2),
+            _resource_branch(transition_count=1),
+            {"crops": base["crops"], "transitions": [None, None]},
+        )
+        for branch in cases:
+            with self.subTest(branch=branch):
+                result = build_resource_metrics(branch)
+                for name in ("cash_cost", "irrigation", "labor", "equipment"):
+                    self.assertEqual(result[name]["status"], "unavailable")
+                    self.assertEqual(
+                        result[name]["reason"], "INVALID_BRANCH_SHAPE"
+                    )
+                self.assertIsNone(result["cash_cost"]["value_bdt_per_ha"])
+                self.assertIsNone(result["labor"]["value"])
+                self.assertIsNone(result["equipment"]["value"])
+                self.assertEqual(result["irrigation"]["per_crop"], [])
+                self.assertIsNone(result["irrigation"]["total"])
+
+    def test_resource_metrics_are_json_serializable(self) -> None:
+        """Spec §14.4 | Bug it catches: non-JSON values leak from resource metrics."""
+        result = build_resource_metrics(_resource_branch())
+        encoded = json.dumps(result, allow_nan=False)
+        self.assertNotIn("NaN", encoded)
+        self.assertEqual(
+            json.loads(encoded)["irrigation"]["ranking_status"], "unranked"
+        )
 
 
 if __name__ == "__main__":
