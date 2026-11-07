@@ -1,15 +1,15 @@
 # Council State
 
-Last updated: 2026-11-07 (E8 W1 PASS; W2 next; defaults A/A/display-only)
+Last updated: 2026-11-07 (E8 W2 PASS; W3 next; defaults A/A/display-only)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
    `council/reports/E8-preflight.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 232 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
+   (expect 240 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
    conditional / 15 exclusions.
-3. E7 accepted; E8 guard PASS (commit `2e01a65`). E8 W1 completion PASS; next W2
-   diversity, then W3 resources, W4 economics-unavailable, W5 ranking.
+3. E7 accepted; E8 guard PASS (commit `2e01a65`). E8 W1 completion and W2 diversity
+   PASS; next W3 resources, W4 economics-unavailable, W5 ranking.
 4. E8 defaults in use (user can override): economics A (completion+diversity only;
    all economic/resource metrics unavailable), completion endpoints A
    (earliest−earliest / latest−latest, rank by latest), irrigation display-only.
@@ -74,6 +74,9 @@ Last updated: 2026-11-07 (E8 W1 PASS; W2 next; defaults A/A/display-only)
 - E8 W1 PASS: `calculate_completion_time` decision A, unavailable/null on missing,
   malformed, or reversed ranges; 232 tests; 5/5 mutations; E6 smoke 420/0/420/15.
   Reports `E8-W1-builder.md`, `E8-W1-review.md`.
+- E8 W2 PASS: `calculate_diversity_metrics` family count/repeat proxy, legume
+  presence with profile fallback; missing -> unknown/null; 240 tests; 5/5 mutations.
+  Reports `E8-W2-builder.md`, `E8-W2-review.md`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -143,4 +146,5 @@ Last updated: 2026-11-07 (E8 W1 PASS; W2 next; defaults A/A/display-only)
 | E7 W3 | PASS | PASS | PASS | PASS | PASS | cff97bc |
 | E7 final | PASS | PASS | PASS | PASS | PASS | d454b96 |
 | E8 guard | PASS | PASS | PASS | PASS | PASS | 2e01a65 |
-| E8 W1 | PASS | PASS | PASS | PASS | PASS | pending |
+| E8 W1 | PASS | PASS | PASS | PASS | PASS | 7c45cbb |
+| E8 W2 | PASS | PASS | PASS | PASS | PASS | 6495a4d |
