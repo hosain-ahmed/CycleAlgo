@@ -58,7 +58,10 @@ def _diversity_branch(
 def _real_branches():
     profiles = load_crop_profiles(DATA_CSV)
     branches = expand_branches(
-        profiles, "2026-11-06", max_waiting_days=365
+        profiles,
+        "2026-11-06",
+        max_waiting_days=365,
+        max_initial_wait_days=365,
     )["branches"]
     return profiles, branches
 
@@ -821,7 +824,10 @@ class CompletionTimeTests(unittest.TestCase):
         """Spec §13 | Bug it catches: real E6 branches lose legume presence without profile lookup."""
         profiles = load_crop_profiles(DATA_CSV)
         expanded = expand_branches(
-            profiles, "2026-11-06", max_waiting_days=365
+            profiles,
+            "2026-11-06",
+            max_waiting_days=365,
+            max_initial_wait_days=365,
         )
         legume_ids = {"lentil_binamasur9", "mung_bari_mung6_kharif1"}
         branch = next(
@@ -1269,7 +1275,10 @@ class RankingTests(unittest.TestCase):
         """Spec §13/§17.14-17 | Bug it catches: real conditional branches are not ranked or groups mix."""
         profiles = load_crop_profiles(DATA_CSV)
         expanded = expand_branches(
-            profiles, "2026-11-06", max_waiting_days=365
+            profiles,
+            "2026-11-06",
+            max_waiting_days=365,
+            max_initial_wait_days=365,
         )
         branches = expanded["branches"]
         self.assertEqual(len(branches), 420)

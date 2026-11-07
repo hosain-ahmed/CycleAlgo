@@ -1,6 +1,6 @@
 # Council State
 
-Last updated: 2026-11-07 (E9 preflight; maximum initial wait decision pending)
+Last updated: 2026-11-07 (E9 initial wait = 180; E6 split PASS; E9 next)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
@@ -8,15 +8,16 @@ Last updated: 2026-11-07 (E9 preflight; maximum initial wait decision pending)
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
    (expect 274 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
    conditional / 15 exclusions.
-3. E8 PASS. Next: **E9** after `max_initial_wait_days` is decided. Read
-   `council/reports/E9-preflight.md`.
-4. Wait audit: engine default is `None`; the 365 in the E6/E8 smoke was a test
-   parameter, not an approved product maximum. E9 must expose `initial_wait_days` and
-   `max_initial_wait_days`, and show the H1→P2 window-only gap separately from
-   preparation/waiting (which are null while prep is unknown).
-5. **E9 hard gate:** build and run `scripts/demo_check.py` before any E9 commit;
-   golden scenarios, invariants, status `partial`, no-candidate state, null
-   serialization, 400/500 behavior, offline/stale-cache. Do not defer again.
+3. E8 PASS. E9 initial wait decided: **180 days**, product relevance limit,
+   configurable, engine default `None`; transition max remains `None`.
+   Counts: 365/365 -> 420/0/420/15; 180/None -> 295/0/295/56; 180/365 -> 358/0/358/14.
+   Branches expose `initial_wait_days`; boundary tests 179/180/181 pass.
+4. Next: **E9 envelope/status/crop_options/ranking + `scripts/demo_check.py`**.
+   Demo status must be `partial`, candidate 0 / conditional 295, explicit no-candidate
+   message, nulls not zeros, 400/500 contract.
+5. **E9 hard gate:** `scripts/demo_check.py` must exist and pass before the first E9
+   commit. Golden scenarios for each selectable first crop, preference, water access;
+   invariants; offline; status/partial; no-candidate; nulls; 400/500. Do not defer.
 4. E8 defaults in use (user can override): economics A (completion+diversity only;
    all economic/resource metrics unavailable), completion endpoints A
    (earliest−earliest / latest−latest, rank by latest), irrigation display-only.
@@ -102,6 +103,10 @@ Last updated: 2026-11-07 (E9 preflight; maximum initial wait decision pending)
   (60..99 vs B 60..129), enumeration fallback, fastest 420/420; 274 tests; 49 E8
   (+9 for user-requested realization/tightness tests); §17.16 N/A.
   Report `E8-final-spec-integrity-realization.md`.
+- E9 initial-wait split PASS: `max_initial_wait_days=180` configurable, default None;
+  roots use initial only, transitions use max_waiting only; `initial_wait_days` per
+  branch; boundary 179/180/181. 275 tests. Counts 420/295/358 as above.
+  Reports `E9-initial-wait-builder.md`, `E9-initial-wait-review.md`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -182,4 +187,5 @@ Last updated: 2026-11-07 (E9 preflight; maximum initial wait decision pending)
 | E8 W4 | PASS | PASS | PASS | PASS | PASS | cae196a |
 | E8 W5 | PASS | PASS | PASS | PASS | PASS | 30927f7 |
 | E8 W1 rev | PASS | PASS | PASS | PASS | PASS | d0a7e8d |
-| E8 final | PASS | PASS | PASS | PASS | PASS | 3934114 |
+| E8 final | PASS | PASS | PASS | PASS | PASS | 1de054c |
+| E9 initial wait | PASS | PASS | PASS | PASS | PASS | c93cc78 |

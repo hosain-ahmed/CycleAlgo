@@ -41,6 +41,13 @@ class BranchExpanderTests(unittest.TestCase):
         cls.profiles = load_crop_profiles(REAL_CSV)
 
     def _run(self, profiles=None, start="2026-11-06", **overrides):
+        # Legacy E6 cases used one shared limit; mirror it for the initial
+        # window only when the test supplies it explicitly.
+        if (
+            "max_initial_wait_days" not in overrides
+            and overrides.get("max_waiting_days") is not None
+        ):
+            overrides["max_initial_wait_days"] = overrides["max_waiting_days"]
         return expand_branches(profiles or self.profiles, start, **overrides)
 
     def _branches_with(self, result, crop_id, position=None):
@@ -310,6 +317,70 @@ class BranchExpanderTests(unittest.TestCase):
         self.assertEqual(
             len(self._branches_with(no_policy, "aman_br11", position=1)), 0
         )
+
+    def test_initial_wait_boundary_is_separate_from_transitions(self) -> None:
+        """Spec §6.1/§10.4 | Bug it catches: root wait uses the transition limit."""
+        start = dt.date(2026, 1, 1)
+        future_start = start + dt.timedelta(days=180)
+        profile = copy.deepcopy(self.profiles["wheat_bari_gom33"])
+        profile.update(
+            {
+                "crop_id": "synthetic_initial_wait",
+                "preferred_start_mmdd": future_start.strftime("%m-%d"),
+                "preferred_end_mmdd": (future_start + dt.timedelta(days=20)).strftime(
+                    "%m-%d"
+                ),
+                "supported_late_end_mmdd": None,
+                "window_crosses_year": False,
+                "planting_window_type": "SYNTHETIC_DAY_EXACT",
+                "date_precision": "DAY",
+                "window_basis": "synthetic initial-wait boundary",
+            }
+        )
+        profiles = {"synthetic_initial_wait": profile}
+        for limit in (180, 181):
+            with self.subTest(limit=limit):
+                result = expand_branches(
+                    profiles,
+                    start.isoformat(),
+                    max_waiting_days=365,
+                    max_initial_wait_days=limit,
+                )
+                self.assertTrue(result["branches"])
+                self.assertEqual(result["request"]["max_initial_wait_days"], limit)
+                crop = result["branches"][0]["crops"][0]
+                self.assertEqual(crop["planting_range"]["earliest"], future_start.isoformat())
+                self.assertEqual(result["branches"][0]["initial_wait_days"], 180)
+                self.assertEqual(crop["checks"]["calendar"]["status"], "caution")
+                self.assertEqual(
+                    crop["checks"]["calendar"]["code"],
+                    "FUTURE_WINDOW_WITHIN_LIMIT",
+                )
+
+        for limit, expected_code in ((179, "FUTURE_WINDOW_EXCEEDS_LIMIT"), (None, "FUTURE_WINDOW_WAIT_POLICY_UNKNOWN")):
+            with self.subTest(limit=limit):
+                result = expand_branches(
+                    profiles,
+                    start.isoformat(),
+                    max_waiting_days=365,
+                    max_initial_wait_days=limit,
+                )
+                self.assertEqual(result["branches"], [])
+                self.assertTrue(
+                    any(
+                        exclusion["at_position"] == 1
+                        and exclusion["crop_ids"] == ["synthetic_initial_wait"]
+                        and exclusion["code"] == expected_code
+                        for exclusion in result["excluded_paths"]
+                    )
+                )
+                if limit == 179:
+                    self.assertTrue(
+                        any(
+                            "product relevance cutoff" in exclusion["reason"]
+                            for exclusion in result["excluded_paths"]
+                        )
+                    )
 
     def test_first_crop_late_window_uses_late_range(self) -> None:
         """Spec §6.1 / §10.3 | Bug it catches: late start uses the preferred end instead of its own range."""

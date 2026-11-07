@@ -38,6 +38,7 @@ def expand_branches(
     soil_evidence: dict | None = None,
     preparation_lookup: object = None,
     max_waiting_days: int | None = None,
+    max_initial_wait_days: int | None = None,
     duration_reference_verified: bool = False,
     environment: dict | None = None,
     max_branches: int | None = None,
@@ -56,7 +57,10 @@ def expand_branches(
         )
     if not isinstance(duration_reference_verified, bool):
         raise TypeError("duration_reference_verified must be a bool")
-    limit = _validate_limit(max_waiting_days)
+    transition_limit = _validate_limit(max_waiting_days)
+    initial_limit = _validate_limit(
+        max_initial_wait_days, "max_initial_wait_days"
+    )
     branch_cap = _validate_max_branches(max_branches)
     start = _coerce_date(start_date, "start_date")
 
@@ -80,10 +84,10 @@ def expand_branches(
     roots: list[dict] = []
     for crop_id in crop_ids:
         profile = profiles[crop_id]
-        calendar = evaluate_calendar_fit(profile, start, limit)
+        calendar = evaluate_calendar_fit(profile, start, initial_limit)
         if calendar["status"] not in ("pass", "caution"):
             rolled_calendar, rolled_range, roll_error = _roll_root_window(
-                profile, calendar, start, limit
+                profile, calendar, start, initial_limit
             )
             if roll_error is not None:
                 excluded.add([crop_id], 1, roll_error[0], roll_error[1])
@@ -97,7 +101,7 @@ def expand_branches(
             planting_range = rolled_range
         else:
             planting_range, window_error = _root_planting_range(
-                profile, calendar, start, limit
+                profile, calendar, start, initial_limit
             )
             if window_error is not None:
                 excluded.add([crop_id], 1, window_error[0], window_error[1])
@@ -108,7 +112,7 @@ def expand_branches(
             planting_range,
             _resolve_preparation(preparation_lookup, crop_id),
             duration_reference_verified,
-            limit,
+            transition_limit,
         )
         if timeline["harvest_range"] is None:
             excluded.add(
@@ -156,7 +160,7 @@ def expand_branches(
                 path_profiles=[root["profile"]],
                 preparation_lookup=preparation_lookup,
                 duration_reference_verified=duration_reference_verified,
-                max_waiting_days=limit,
+                max_waiting_days=transition_limit,
                 soil_water=soil_water,
             )
             if failure is not None:
@@ -189,7 +193,7 @@ def expand_branches(
                     path_profiles=[root["profile"], second["profile"]],
                     preparation_lookup=preparation_lookup,
                     duration_reference_verified=duration_reference_verified,
-                    max_waiting_days=limit,
+                    max_waiting_days=transition_limit,
                     soil_water=soil_water,
                 )
                 if failure is not None:
@@ -236,7 +240,8 @@ def expand_branches(
         "request": {
             "start_date": start.isoformat(),
             "water_access": water_access,
-            "max_waiting_days": limit,
+            "max_waiting_days": transition_limit,
+            "max_initial_wait_days": initial_limit,
             "duration_reference_verified": duration_reference_verified,
             "max_branches": branch_cap,
         },
@@ -961,6 +966,12 @@ def _branch(start: dt.date, crops: list[dict], transitions: list[dict]) -> dict:
     digest = hashlib.sha256(
         json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()[:12]
+    initial_wait_days = max(
+        0,
+        (
+            dt.date.fromisoformat(crops[0]["planting_range"]["earliest"]) - start
+        ).days,
+    )
 
     candidate = all(crop["status"] == "candidate" for crop in crops) and all(
         _transition_ok(transition) for transition in transitions
@@ -983,6 +994,7 @@ def _branch(start: dt.date, crops: list[dict], transitions: list[dict]) -> dict:
     return {
         "branch_id": "b_" + digest,
         "status": "candidate" if candidate else "conditional",
+        "initial_wait_days": initial_wait_days,
         "crops": crops,
         "transitions": transitions,
         "reasons": _dedupe(reasons),
@@ -1094,13 +1106,15 @@ def _iso_range(earliest: dt.date, latest: dt.date) -> dict:
     return {"earliest": earliest.isoformat(), "latest": latest.isoformat()}
 
 
-def _validate_limit(value: int | None) -> int | None:
+def _validate_limit(
+    value: int | None, name: str = "max_waiting_days"
+) -> int | None:
     if value is None:
         return None
     if isinstance(value, bool) or not isinstance(value, int):
-        raise TypeError("max_waiting_days must be an integer or None")
+        raise TypeError(f"{name} must be an integer or None")
     if value < 0:
-        raise ValueError("max_waiting_days cannot be negative")
+        raise ValueError(f"{name} cannot be negative")
     return value
 
 
