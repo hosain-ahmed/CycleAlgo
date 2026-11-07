@@ -1,36 +1,33 @@
 # Council State
 
-Last updated: 2026-11-07 (E9 initial wait = 180; E6 split PASS; E9 next)
+Last updated: 2026-11-07 (E9 initial wait 180 committed; E9 envelope/demo_check next)
 
 ## RESUME HERE
-1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
-   `council/reports/E8-preflight.md`.
+1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`,
+   `council/reports/E9-preflight.md`, and `council/reports/E8-preflight.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 274 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
-   conditional / 15 exclusions.
-3. E8 PASS. E9 initial wait decided: **180 days**, product relevance limit,
+   (expect 275 tests, OK). E6 regression smoke with 365/365 must stay
+   420 branches / 0 candidate / 420 conditional / 15 exclusions.
+3. E8 accepted. E9 initial wait: **180 days**, product relevance limit,
    configurable, engine default `None`; transition max remains `None`.
-   Counts: 365/365 -> 420/0/420/15; 180/None -> 295/0/295/56; 180/365 -> 358/0/358/14.
-   Branches expose `initial_wait_days`; boundary tests 179/180/181 pass.
-4. Next: **E9 envelope/status/crop_options/ranking + `scripts/demo_check.py`**.
-   Demo status must be `partial`, candidate 0 / conditional 295, explicit no-candidate
-   message, nulls not zeros, 400/500 contract.
-5. **E9 hard gate:** `scripts/demo_check.py` must exist and pass before the first E9
-   commit. Golden scenarios for each selectable first crop, preference, water access;
-   invariants; offline; status/partial; no-candidate; nulls; 400/500. Do not defer.
-4. E8 defaults in use (user can override): economics A (completion+diversity only;
-   all economic/resource metrics unavailable), completion endpoints A
-   (earliest−earliest / latest−latest, rank by latest), irrigation display-only.
-   Labor/equipment/upfront cash unavailable; no annualization; diversity = family
-   count with legume presence separate. See `reports/E8-preflight.md`.
-5. After decisions: W1 completion -> W2 diversity -> W3 resources -> W4 economics
-   unavailable -> W5 ranking. One function per worker, different reviewer; tests,
-   mutation, code+spec, E6 smoke, commit/push after each.
-6. E7 warnings all OFF: wheat 35/35 hidden; mustard held at corrected 1/35.
-7. Local 1990 CSV `PRECTOTCORR` is 24× the API/2000 file; never use raw. The guard
-   `tests/test_local_power_data.py` locks this and the 2026-09 stale-B drift.
-8. §6.2 current-season climate exposure is still unimplemented; do not claim it.
-9. SMAP token expiry is operational; rerun `tools/appeears_login.py` when needed.
+   Committed `e887489`. Counts:
+   - 365/365: 420 / 0 / 420 / 15
+   - 180/None: **295 / 0 / 295 / 56**
+   - 180/365: 358 / 0 / 358 / 14
+   First crops at 180/None: Boro 42, Lentil 55, Maize 42, Mustard 54, Potato 54,
+   Wheat 48. Aman excluded at 246 d; Mung geography. 56 exclusions: 1 future >180,
+   45 outside supported window, 10 geography. Boundary tests 179/180/181 pass.
+4. Next: build `src/explore.py` envelope + crop_options/branch metrics/ranking/status
+   and `scripts/demo_check.py`. **No E9 envelope commit until demo_check exists and passes.**
+5. E9 hard requirements: status `partial` (0 candidate / 295 conditional); explicit
+   “No candidate branches — 295 conditional branches shown” in the response;
+   `initial_wait_days` per branch; window-only gap separate from prep/waiting; unknown
+   `null`; 400 invalid / 500 generic with no stack trace; unsupported-district
+   precedence; `data_sources`, `assumptions`, `warnings`.
+6. E7 warnings all OFF (wheat 35/35 hidden; mustard corrected 1/35 held). Local 1990
+   CSV `PRECTOTCORR` is 24× the API/2000 file; never raw. §6.2 current-season climate
+   exposure remains unimplemented. SMAP token expiry is operational.
+7. `v1.md` has no leftover council prompt; it remains uncommitted.
 
 ## Current
 - E1–E5 PASS. Commits: `4711b3e`, `fc92802`, `68220d1`, `a528c26`, `8fdbd5d`.
@@ -188,4 +185,4 @@ Last updated: 2026-11-07 (E9 initial wait = 180; E6 split PASS; E9 next)
 | E8 W5 | PASS | PASS | PASS | PASS | PASS | 30927f7 |
 | E8 W1 rev | PASS | PASS | PASS | PASS | PASS | d0a7e8d |
 | E8 final | PASS | PASS | PASS | PASS | PASS | 1de054c |
-| E9 initial wait | PASS | PASS | PASS | PASS | PASS | c93cc78 |
+| E9 initial wait | PASS | PASS | PASS | PASS | PASS | e887489 |
