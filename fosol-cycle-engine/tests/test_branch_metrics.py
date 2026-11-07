@@ -10,6 +10,7 @@ from src.branch_metrics import (
     build_resource_metrics,
     calculate_completion_time,
     calculate_diversity_metrics,
+    rank_branches,
 )
 from src.crop_profiles import load_crop_profiles
 
@@ -77,6 +78,55 @@ def _resource_branch(
     return {
         "crops": crops[:crop_count],
         "transitions": [{} for _ in range(transition_count)],
+    }
+
+
+def _ranking_branch(
+    branch_id: str,
+    status: str = "conditional",
+    first_planting: object = _MISSING,
+    third_harvest: object = _MISSING,
+    families: tuple = ("Poaceae", "Fabaceae", "Brassicaceae"),
+    legume_flags: tuple = (False, True, False),
+    reasons: list | None = None,
+    cautions: list | None = None,
+) -> dict:
+    first = (
+        {"earliest": "2026-01-01", "latest": "2026-01-02"}
+        if first_planting is _MISSING
+        else first_planting
+    )
+    third = (
+        {"earliest": "2026-04-01", "latest": "2026-04-12"}
+        if third_harvest is _MISSING
+        else third_harvest
+    )
+    crops = []
+    for index, (family, flag) in enumerate(zip(families, legume_flags)):
+        crops.append(
+            {
+                "crop_id": f"{branch_id}_crop_{index}",
+                "family": family,
+                "is_legume_n_fixing": flag,
+                "planting_range": (
+                    first
+                    if index == 0
+                    else {"earliest": "2026-01-03", "latest": "2026-01-04"}
+                ),
+                "harvest_range": (
+                    third
+                    if index == 2
+                    else {"earliest": "2026-02-01", "latest": "2026-02-02"}
+                ),
+            }
+        )
+    return {
+        "branch_id": branch_id,
+        "status": status,
+        "crops": crops,
+        "transitions": [{}, {}],
+        "reasons": reasons or [],
+        "cautions": cautions or [],
     }
 
 
@@ -593,6 +643,202 @@ class ResourceMetricsTests(unittest.TestCase):
         self.assertEqual(
             json.loads(encoded)["irrigation"]["ranking_status"], "unranked"
         )
+
+
+class RankingTests(unittest.TestCase):
+    def test_fastest_completion_ranks_conditional_and_notes_empty_candidate(self) -> None:
+        """Spec §12.1/§13 | Bug it catches: fastest ranking crosses groups or claims a winner."""
+        slow = _ranking_branch(
+            "b_slow",
+            third_harvest={"earliest": "2026-04-01", "latest": "2026-05-01"},
+        )
+        fast = _ranking_branch("b_fast")
+        result = rank_branches([slow, fast], "fastest_completion")
+        self.assertEqual(result["preference"], "fastest_completion")
+        self.assertEqual(result["metric"], "completion_days.max")
+        self.assertEqual(result["direction"], "ascending")
+        self.assertEqual(result["groups"]["candidate"]["count"], 0)
+        self.assertEqual(result["groups"]["candidate"]["ranked"], [])
+        conditional = result["groups"]["conditional"]
+        self.assertEqual(conditional["count"], 2)
+        self.assertEqual(
+            [entry["branch_id"] for entry in conditional["ranked"]],
+            ["b_fast", "b_slow"],
+        )
+        self.assertEqual(conditional["ranked"][0]["metric_value"], 100)
+        self.assertEqual(
+            conditional["ranked"][0]["completion_days"],
+            {"min": 90, "max": 100},
+        )
+        self.assertFalse(result["no_winner"])
+        self.assertTrue(
+            any("Candidate group is empty" in note for note in result["notes"])
+        )
+
+    def test_fastest_completion_overlap_note_is_visible(self) -> None:
+        """Spec §12.1/§13 | Bug it catches: overlapping completion ranges claim a definitive winner."""
+        result = rank_branches(
+            [
+                _ranking_branch("b_early"),
+                _ranking_branch(
+                    "b_late",
+                    third_harvest={
+                        "earliest": "2026-04-06",
+                        "latest": "2026-04-17",
+                    },
+                ),
+            ],
+            "fastest_completion",
+        )
+        self.assertEqual(
+            [entry["branch_id"] for entry in result["groups"]["conditional"]["ranked"]],
+            ["b_early", "b_late"],
+        )
+        self.assertTrue(any("overlap" in note.lower() for note in result["notes"]))
+        self.assertFalse(result["no_winner"])
+
+    def test_diversity_ranks_descending_and_shows_legume_separately(self) -> None:
+        """Spec §13 | Bug it catches: diversity order is ascending or legume is folded into family count."""
+        result = rank_branches(
+            [
+                _ranking_branch(
+                    "b_two",
+                    families=("Poaceae", "Poaceae", "Fabaceae"),
+                    legume_flags=(False, False, False),
+                ),
+                _ranking_branch("b_three"),
+            ],
+            "more_crop_diversity",
+        )
+        ranked = result["groups"]["conditional"]["ranked"]
+        self.assertEqual([entry["branch_id"] for entry in ranked], ["b_three", "b_two"])
+        self.assertEqual(ranked[0]["metric_value"], 3)
+        self.assertEqual(ranked[0]["family_repeat_count"], 0)
+        self.assertTrue(ranked[0]["legume_present"])
+        self.assertEqual(ranked[0]["legume_crop_ids"], ["b_three_crop_1"])
+        self.assertEqual(ranked[1]["metric_value"], 2)
+        self.assertEqual(ranked[1]["family_repeat_count"], 1)
+        self.assertEqual(
+            ranked[0]["basis"], "crop_family_count_product_convention"
+        )
+        self.assertIn("product convention", ranked[0]["diversity_note"])
+
+    def test_economic_and_irrigation_preferences_are_unranked_no_winner(self) -> None:
+        """Spec §13/§17.15 | Bug it catches: unavailable cost/return/irrigation becomes zero and ranks."""
+        branches = [_ranking_branch("b_one"), _ranking_branch("b_two")]
+        expected = {
+            "lowest_total_cost": "production_cost_bdt_per_ha",
+            "highest_net_return": "net_return_bdt_per_ha",
+            "lowest_upfront_cash": "upfront_cash_bdt_per_ha",
+            "least_irrigation_dependence": "irrigation_dependence",
+        }
+        for preference, metric in expected.items():
+            with self.subTest(preference=preference):
+                result = rank_branches(branches, preference)
+                self.assertEqual(result["metric"], metric)
+                self.assertEqual(result["direction"], "unavailable")
+                self.assertTrue(result["no_winner"])
+                for name in ("candidate", "conditional"):
+                    group = result["groups"][name]
+                    self.assertEqual(group["ranked"], [])
+                    self.assertEqual(group["count"], 2 if name == "conditional" else 0)
+                    for entry in group["unranked"]:
+                        self.assertIsNone(entry["metric_value"])
+                        self.assertTrue(entry["reason"])
+                        self.assertTrue(entry["missing_evidence"])
+
+    def test_missing_completion_is_unranked_not_favorable(self) -> None:
+        """Spec §13/§14.4 | Bug it catches: missing completion gets a zero or favorable rank."""
+        result = rank_branches(
+            [_ranking_branch("b_missing", third_harvest=None)],
+            "fastest_completion",
+        )
+        conditional = result["groups"]["conditional"]
+        self.assertEqual(conditional["count"], 1)
+        self.assertEqual(conditional["ranked"], [])
+        self.assertEqual(len(conditional["unranked"]), 1)
+        self.assertTrue(result["no_winner"])
+        self.assertIsNone(conditional["unranked"][0]["metric_value"])
+        self.assertIn("third_harvest_range", conditional["unranked"][0]["missing_evidence"])
+
+    def test_blocked_branch_is_excluded_not_revived(self) -> None:
+        """Spec §13/§17.14 | Bug it catches: a preference revives an unsupported branch."""
+        result = rank_branches(
+            [
+                _ranking_branch("b_blocked", status="unsupported"),
+                _ranking_branch("b_ok"),
+            ],
+            "fastest_completion",
+        )
+        self.assertEqual(result["excluded"], ["b_blocked"])
+        self.assertEqual(
+            [entry["branch_id"] for entry in result["groups"]["conditional"]["ranked"]],
+            ["b_ok"],
+        )
+        self.assertFalse(result["no_winner"])
+
+    def test_candidate_and_conditional_groups_stay_separate(self) -> None:
+        """Spec §13 | Bug it catches: candidate and conditional branches share one ranking."""
+        result = rank_branches(
+            [
+                _ranking_branch("b_candidate", status="candidate"),
+                _ranking_branch("b_conditional", status="conditional"),
+            ],
+            "fastest_completion",
+        )
+        self.assertEqual(result["groups"]["candidate"]["count"], 1)
+        self.assertEqual(result["groups"]["conditional"]["count"], 1)
+        self.assertEqual(
+            [entry["branch_id"] for entry in result["groups"]["candidate"]["ranked"]],
+            ["b_candidate"],
+        )
+        self.assertEqual(
+            [entry["branch_id"] for entry in result["groups"]["conditional"]["ranked"]],
+            ["b_conditional"],
+        )
+
+    def test_ties_break_deterministically_by_branch_id(self) -> None:
+        """Spec §13/§14.4 | Bug it catches: equal metrics order nondeterministically."""
+        result = rank_branches(
+            [_ranking_branch("b_b"), _ranking_branch("b_a")],
+            "fastest_completion",
+        )
+        self.assertEqual(
+            [entry["branch_id"] for entry in result["groups"]["conditional"]["ranked"]],
+            ["b_a", "b_b"],
+        )
+        self.assertIn("branch_id", result["method"])
+
+    def test_invalid_preference_raises(self) -> None:
+        """Spec §13 | Bug it catches: an unknown preference silently falls back."""
+        with self.assertRaises(ValueError):
+            rank_branches([], "unknown_preference")
+
+    def test_real_420_branches_rank_fastest_and_diversity(self) -> None:
+        """Spec §13/§17.14-17 | Bug it catches: real conditional branches are not ranked or groups mix."""
+        profiles = load_crop_profiles(DATA_CSV)
+        expanded = expand_branches(
+            profiles, "2026-11-06", max_waiting_days=365
+        )
+        branches = expanded["branches"]
+        self.assertEqual(len(branches), 420)
+        fastest = rank_branches(branches, "fastest_completion", profiles)
+        self.assertEqual(fastest["groups"]["candidate"]["count"], 0)
+        self.assertGreater(len(fastest["groups"]["conditional"]["ranked"]), 0)
+        diversity = rank_branches(branches, "more_crop_diversity", profiles)
+        self.assertEqual(diversity["groups"]["candidate"]["count"], 0)
+        self.assertGreater(len(diversity["groups"]["conditional"]["ranked"]), 0)
+        economics = rank_branches(branches, "lowest_total_cost", profiles)
+        self.assertTrue(economics["no_winner"])
+        self.assertEqual(economics["groups"]["conditional"]["ranked"], [])
+        self.assertEqual(len(economics["groups"]["conditional"]["unranked"]), 420)
+
+    def test_ranking_is_json_serializable(self) -> None:
+        """Spec §14.4 | Bug it catches: non-JSON values leak from ranking output."""
+        result = rank_branches([_ranking_branch("b_one")], "fastest_completion")
+        encoded = json.dumps(result, allow_nan=False)
+        self.assertNotIn("NaN", encoded)
+        self.assertFalse(json.loads(encoded)["no_winner"])
 
 
 if __name__ == "__main__":

@@ -9,6 +9,14 @@ _DIVERSITY_BASIS = "crop_family_count_product_convention"
 _DIVERSITY_NOTE = (
     "Family count is a product convention, not a measured soil-health ranking."
 )
+_PREFERENCE_CONFIG = {
+    "fastest_completion": ("completion_days.max", "ascending"),
+    "lowest_total_cost": ("production_cost_bdt_per_ha", "unavailable"),
+    "least_irrigation_dependence": ("irrigation_dependence", "unavailable"),
+    "highest_net_return": ("net_return_bdt_per_ha", "unavailable"),
+    "more_crop_diversity": ("distinct_family_count", "descending"),
+    "lowest_upfront_cash": ("upfront_cash_bdt_per_ha", "unavailable"),
+}
 _ECONOMIC_REASON = "Economic estimate unavailable."
 _ECONOMIC_MISSING = [
     "production_cost_evidence",
@@ -328,6 +336,249 @@ def build_economics_metrics(
         },
         "missing_evidence": list(_ECONOMIC_MISSING),
     }
+
+
+def rank_branches(
+    branches: list[dict] | tuple[dict, ...],
+    preference: str,
+    profiles: dict | None = None,
+) -> dict:
+    """Rank candidate and conditional branches by one explicit preference metric."""
+    if preference not in _PREFERENCE_CONFIG:
+        raise ValueError(
+            "preference must be one of " + ", ".join(_PREFERENCE_CONFIG)
+        )
+    if not isinstance(branches, (list, tuple)):
+        raise TypeError("branches must be a list or tuple")
+    if profiles is not None and not isinstance(profiles, dict):
+        raise TypeError("profiles must be a dict keyed by crop_id or None")
+
+    metric, direction = _PREFERENCE_CONFIG[preference]
+    group_items = {
+        "candidate": {"items": [], "ranked": [], "unranked": []},
+        "conditional": {"items": [], "ranked": [], "unranked": []},
+    }
+    excluded: list = []
+    prepared: list[dict] = []
+    for branch in branches:
+        branch_id = _ranking_branch_id(branch)
+        if not isinstance(branch, dict):
+            excluded.append(branch_id)
+            continue
+        status = branch.get("status")
+        if status not in group_items:
+            excluded.append(branch_id)
+            continue
+        item = {
+            "branch": branch,
+            "branch_id": branch_id,
+            "status": status,
+            "completion": calculate_completion_time(branch),
+            "diversity": calculate_diversity_metrics(branch, profiles),
+            "resources": build_resource_metrics(branch, profiles),
+            "economics": build_economics_metrics(branch, profiles),
+        }
+        group_items[status]["items"].append(item)
+        prepared.append(item)
+
+    if preference == "fastest_completion":
+        for item in prepared:
+            completion = item["completion"]
+            if (
+                completion["status"] != "ok"
+                or completion["completion_days"] is None
+            ):
+                _append_unranked(
+                    group_items[item["status"]],
+                    item,
+                    completion.get("reason") or "COMPLETION_EVIDENCE_MISSING",
+                    completion.get("missing_evidence", []),
+                )
+                continue
+            reasons, cautions = _ranking_reasons(item)
+            reasons = _dedupe(reasons + list(completion.get("reasons", [])))
+            group_items[item["status"]]["ranked"].append(
+                {
+                    **_ranking_base(item),
+                    "metric_value": completion["completion_days"]["max"],
+                    "completion_days": completion["completion_days"],
+                    "earliest_completion_date": completion[
+                        "earliest_completion_date"
+                    ],
+                    "latest_completion_date": completion[
+                        "latest_completion_date"
+                    ],
+                    "reasons": reasons,
+                    "cautions": cautions,
+                }
+            )
+        for name in group_items:
+            group_items[name]["ranked"].sort(
+                key=lambda entry: (
+                    entry["metric_value"],
+                    entry["branch_id"] or "",
+                )
+            )
+    elif preference == "more_crop_diversity":
+        for item in prepared:
+            diversity = item["diversity"]
+            if diversity["distinct_family_count"] is None:
+                _append_unranked(
+                    group_items[item["status"]],
+                    item,
+                    diversity.get("reason") or "DIVERSITY_EVIDENCE_MISSING",
+                    diversity.get("missing_evidence", []),
+                )
+                continue
+            reasons, cautions = _ranking_reasons(item)
+            reasons = _dedupe(reasons + list(diversity.get("reasons", [])))
+            group_items[item["status"]]["ranked"].append(
+                {
+                    **_ranking_base(item),
+                    "metric_value": diversity["distinct_family_count"],
+                    "families": diversity["families"],
+                    "family_repeat_count": diversity["family_repeat_count"],
+                    "legume_present": diversity["legume_present"],
+                    "legume_crop_ids": diversity["legume_crop_ids"],
+                    "basis": diversity["basis"],
+                    "diversity_note": diversity["diversity_note"],
+                    "reasons": reasons,
+                    "cautions": cautions,
+                }
+            )
+        for name in group_items:
+            group_items[name]["ranked"].sort(
+                key=lambda entry: (
+                    -entry["metric_value"],
+                    entry["branch_id"] or "",
+                )
+            )
+    else:
+        for item in prepared:
+            if preference == "least_irrigation_dependence":
+                evidence = item["resources"]["irrigation"]
+            else:
+                evidence = item["economics"][metric]
+            _append_unranked(
+                group_items[item["status"]],
+                item,
+                evidence.get("reason") or "METRIC_EVIDENCE_MISSING",
+                evidence.get("missing_evidence", []),
+            )
+
+    groups = {}
+    for name in ("candidate", "conditional"):
+        ranked = group_items[name]["ranked"]
+        unranked = group_items[name]["unranked"]
+        groups[name] = {
+            "count": len(ranked) + len(unranked),
+            "ranked": ranked,
+            "unranked": unranked,
+        }
+
+    ranked_any = any(groups[name]["ranked"] for name in groups)
+    no_winner = not ranked_any
+    notes: list[str] = []
+    for name in ("candidate", "conditional"):
+        if groups[name]["count"] == 0:
+            notes.append(
+                f"{name.capitalize()} group is empty; no {name} branches were ranked."
+            )
+        elif not groups[name]["ranked"]:
+            notes.append(
+                f"{name.capitalize()} group has no branch with a comparable metric."
+            )
+    if no_winner:
+        notes.append("No branch has a comparable metric; no winner is forced.")
+    if preference == "fastest_completion":
+        for name in ("candidate", "conditional"):
+            ranked = groups[name]["ranked"]
+            if len(ranked) >= 2 and _completion_overlap(ranked[0], ranked[1]):
+                notes.append(
+                    "Top two completion ranges overlap in the "
+                    f"{name} group ({ranked[0]['branch_id']}, "
+                    f"{ranked[1]['branch_id']}); the order is not a "
+                    "definitive timing winner."
+                )
+    elif preference == "more_crop_diversity":
+        notes.append(
+            "Family-count ordering is a product convention, not a "
+            "soil-health ranking; legume presence is reported separately."
+        )
+    else:
+        notes.append(
+            f"No comparable {metric} evidence; all branches are unranked."
+        )
+
+    if preference == "fastest_completion":
+        method = (
+            "Rank candidate and conditional groups separately by "
+            "completion_days.max ascending; ties by branch_id ascending; "
+            "no weighted score."
+        )
+    elif preference == "more_crop_diversity":
+        method = (
+            "Rank candidate and conditional groups separately by "
+            "distinct_family_count descending; ties by branch_id ascending; "
+            "family count is a product convention, not a soil-health ranking."
+        )
+    else:
+        method = (
+            f"No comparable {metric} evidence; all candidate and conditional "
+            "branches are unranked; no winner is forced."
+        )
+
+    return {
+        "preference": preference,
+        "metric": metric,
+        "direction": direction,
+        "groups": groups,
+        "excluded": excluded,
+        "method": method,
+        "notes": notes,
+        "no_winner": no_winner,
+    }
+
+
+def _ranking_branch_id(branch: object):
+    if isinstance(branch, dict):
+        value = branch.get("branch_id")
+        if value is not None:
+            return str(value)
+    return None
+
+
+def _ranking_base(item: dict) -> dict:
+    return {"branch_id": item["branch_id"], "status": item["status"]}
+
+
+def _ranking_reasons(item: dict) -> tuple[list, list]:
+    branch = item["branch"]
+    reasons = list(branch.get("reasons") or [])
+    cautions = list(branch.get("cautions") or [])
+    return _dedupe(reasons), _dedupe(cautions)
+
+
+def _append_unranked(group: dict, item: dict, reason: str, missing: list) -> None:
+    reasons, cautions = _ranking_reasons(item)
+    if reason and reason not in reasons:
+        reasons.append(reason)
+    group["unranked"].append(
+        {
+            **_ranking_base(item),
+            "metric_value": None,
+            "reason": reason,
+            "missing_evidence": list(missing),
+            "reasons": _dedupe(reasons),
+            "cautions": cautions,
+        }
+    )
+
+
+def _completion_overlap(left: dict, right: dict) -> bool:
+    a = left["completion_days"]
+    b = right["completion_days"]
+    return a["min"] <= b["max"] and b["min"] <= a["max"]
 
 
 def _economics_metric(missing: list[str]) -> dict:
