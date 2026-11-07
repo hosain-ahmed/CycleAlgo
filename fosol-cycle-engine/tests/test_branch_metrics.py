@@ -14,6 +14,7 @@ from src.branch_metrics import (
     calculate_diversity_metrics,
     enumerate_completion_range,
     rank_branches,
+    realize_completion,
 )
 from src.crop_profiles import load_crop_profiles
 
@@ -64,6 +65,80 @@ def _real_branches():
 
 def _random_date(rng: random.Random, start: dt.date, end: dt.date) -> dt.date:
     return start + dt.timedelta(days=rng.randint(0, (end - start).days))
+
+
+def _prep_known_branch() -> dict:
+    return {
+        "crops": [
+            {
+                "planting_range": {
+                    "earliest": "2026-01-01",
+                    "latest": "2026-01-10",
+                },
+                "harvest_range": {
+                    "earliest": "2026-01-11",
+                    "latest": "2026-01-20",
+                },
+                "duration": {"min_days": 10, "max_days": 10},
+                "preparation_range": {
+                    "min_days": 5,
+                    "max_days": 30,
+                },
+            },
+            {
+                "planting_range": {
+                    "earliest": "2026-02-01",
+                    "latest": "2026-02-28",
+                },
+                "harvest_range": {
+                    "earliest": "2026-02-11",
+                    "latest": "2026-03-10",
+                },
+                "duration": {"min_days": 10, "max_days": 10},
+                "preparation_range": {
+                    "min_days": 5,
+                    "max_days": 30,
+                },
+            },
+            {
+                "planting_range": {
+                    "earliest": "2026-03-01",
+                    "latest": "2026-04-30",
+                },
+                "harvest_range": {
+                    "earliest": "2026-03-11",
+                    "latest": "2026-05-10",
+                },
+                "duration": {"min_days": 10, "max_days": 10},
+                "preparation_range": {
+                    "min_days": 5,
+                    "max_days": 30,
+                },
+            },
+        ],
+        "transitions": [
+            {
+                "preparation_known": True,
+                "preparation_range": {"min_days": 5, "max_days": 30},
+                "window": {
+                    "preferred_start": "2026-02-01",
+                    "preferred_end": "2026-02-28",
+                    "supported_late_end": None,
+                    "window_start": "2026-02-01",
+                },
+            },
+            {
+                "preparation_known": True,
+                "preparation_range": {"min_days": 5, "max_days": 30},
+                "window": {
+                    "preferred_start": "2026-03-01",
+                    "preferred_end": "2026-03-31",
+                    "supported_late_end": None,
+                    "window_start": "2026-03-01",
+                },
+            },
+        ],
+    }
 
 
 def _economics_profiles() -> dict:
@@ -155,10 +230,37 @@ def _branch(
     default_harvest = {"earliest": "2026-01-03", "latest": "2026-01-04"}
     first_p = default_planting if first_planting is _MISSING else first_planting
     third_h = default_harvest if third_harvest is _MISSING else third_harvest
+    third_duration = None
+    if isinstance(third_h, dict):
+        try:
+            harvest_earliest = dt.date.fromisoformat(third_h["earliest"])
+            harvest_latest = dt.date.fromisoformat(third_h["latest"])
+            planting_earliest = dt.date.fromisoformat(
+                default_planting["earliest"]
+            )
+            planting_latest = dt.date.fromisoformat(default_planting["latest"])
+            third_duration = {
+                "min_days": (harvest_earliest - planting_earliest).days,
+                "max_days": (harvest_latest - planting_latest).days,
+            }
+        except (KeyError, TypeError, ValueError):
+            third_duration = None
     crops = [
-        {"planting_range": first_p, "harvest_range": default_harvest},
-        {"planting_range": default_planting, "harvest_range": default_harvest},
-        {"planting_range": default_planting, "harvest_range": third_h},
+        {
+            "planting_range": first_p,
+            "harvest_range": default_harvest,
+            "duration": {"min_days": 2, "max_days": 2},
+        },
+        {
+            "planting_range": default_planting,
+            "harvest_range": default_harvest,
+            "duration": {"min_days": 2, "max_days": 2},
+        },
+        {
+            "planting_range": default_planting,
+            "harvest_range": third_h,
+            "duration": third_duration,
+        },
     ]
     return {
         "crops": crops[:crop_count],
@@ -189,14 +291,30 @@ class CompletionTimeTests(unittest.TestCase):
         self.assertEqual(
             result["basis"], "third_harvest_minus_first_planting"
         )
-        self.assertEqual(result["range_basis"], "corner_extremes")
+        self.assertEqual(result["range_basis"], "realized_corners")
         self.assertEqual(
             result["min_realization"],
-            {"first_planting": "2026-01-10", "third_harvest": "2026-04-01"},
+            {
+                "p1": "2026-01-10",
+                "h1": "2026-01-12",
+                "p2": "2026-01-01",
+                "h2": "2026-01-03",
+                "p3": "2026-01-01",
+                "h3": "2026-04-01",
+                "completion_days": 81,
+            },
         )
         self.assertEqual(
             result["max_realization"],
-            {"first_planting": "2026-01-01", "third_harvest": "2026-04-20"},
+            {
+                "p1": "2026-01-01",
+                "h1": "2026-01-03",
+                "p2": "2026-01-02",
+                "h2": "2026-01-04",
+                "p3": "2026-01-02",
+                "h3": "2026-04-20",
+                "completion_days": 109,
+            },
         )
         self.assertEqual(
             result["first_planting_range"],
@@ -291,14 +409,30 @@ class CompletionTimeTests(unittest.TestCase):
         )
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["completion_days"], {"min": 10, "max": 24})
-        self.assertEqual(result["range_basis"], "corner_extremes")
+        self.assertEqual(result["range_basis"], "realized_corners")
         self.assertEqual(
             result["min_realization"],
-            {"first_planting": "2026-01-10", "third_harvest": "2026-01-20"},
+            {
+                "p1": "2026-01-10",
+                "h1": "2026-01-12",
+                "p2": "2026-01-01",
+                "h2": "2026-01-03",
+                "p3": "2026-01-01",
+                "h3": "2026-01-20",
+                "completion_days": 10,
+            },
         )
         self.assertEqual(
             result["max_realization"],
-            {"first_planting": "2026-01-01", "third_harvest": "2026-01-25"},
+            {
+                "p1": "2026-01-01",
+                "h1": "2026-01-03",
+                "p2": "2026-01-02",
+                "h2": "2026-01-04",
+                "p3": "2026-01-02",
+                "h3": "2026-01-25",
+                "completion_days": 24,
+            },
         )
 
     def test_negative_corner_min_is_unavailable(self) -> None:
@@ -353,18 +487,46 @@ class CompletionTimeTests(unittest.TestCase):
         self.assertIsNone(result["completion_days"])
         self.assertIn("third_harvest_range", result["missing_evidence"])
 
-    def test_corner_extremes_min_le_max_for_all_real_branches(self) -> None:
+    def test_realized_corners_are_tight_for_all_real_branches(self) -> None:
         """Spec §12.1 | Bug it catches: a valid branch still gets an inverted completion range."""
         _, branches = _real_branches()
         self.assertEqual(len(branches), 420)
         for branch in branches:
             result = calculate_completion_time(branch)
-            self.assertEqual(result["status"], "ok", branch["branch_id"])
-            self.assertLessEqual(
-                result["completion_days"]["min"],
-                result["completion_days"]["max"],
+            crops = branch["crops"]
+            p1_fast = dt.date.fromisoformat(
+                crops[0]["planting_range"]["latest"]
             )
-            self.assertEqual(result["range_basis"], "corner_extremes")
+            p1_slow = dt.date.fromisoformat(
+                crops[0]["planting_range"]["earliest"]
+            )
+            h3_fast = dt.date.fromisoformat(
+                crops[2]["planting_range"]["earliest"]
+            ) + dt.timedelta(days=crops[2]["duration"]["min_days"])
+            h3_slow = dt.date.fromisoformat(
+                crops[2]["planting_range"]["latest"]
+            ) + dt.timedelta(days=crops[2]["duration"]["max_days"])
+            self.assertEqual(result["status"], "ok", branch["branch_id"])
+            self.assertEqual(
+                result["completion_days"],
+                {
+                    "min": (h3_fast - p1_fast).days,
+                    "max": (h3_slow - p1_slow).days,
+                },
+            )
+            self.assertEqual(
+                result["min_realization"]["p1"], p1_fast.isoformat()
+            )
+            self.assertEqual(
+                result["min_realization"]["h3"], h3_fast.isoformat()
+            )
+            self.assertEqual(
+                result["max_realization"]["p1"], p1_slow.isoformat()
+            )
+            self.assertEqual(
+                result["max_realization"]["h3"], h3_slow.isoformat()
+            )
+            self.assertEqual(result["range_basis"], "realized_corners")
 
     def test_previously_inverted_branches_are_now_valid(self) -> None:
         """Spec §12.1 | Bug it catches: the 57 decision-A inversions remain unranked."""
@@ -397,6 +559,91 @@ class CompletionTimeTests(unittest.TestCase):
         )
         result = calculate_completion_time(example)
         self.assertEqual(result["completion_days"], {"min": 655, "max": 682})
+        self.assertEqual(result["range_basis"], "realized_corners")
+        self.assertEqual(result["min_realization"]["p1"], "2027-07-24")
+        self.assertEqual(result["min_realization"]["h3"], "2029-05-09")
+        self.assertEqual(result["max_realization"]["p1"], "2027-07-10")
+        self.assertEqual(result["max_realization"]["h3"], "2029-05-22")
+
+    def test_realized_corners_not_widest_span(self) -> None:
+        """Spec §12.1 | Bug it catches: widest-span endpoints replace actual realizations."""
+        branch = _prep_known_branch()
+        result = calculate_completion_time(branch)
+        fastest = realize_completion(branch, "fastest")
+        slowest = realize_completion(branch, "slowest")
+        self.assertEqual(fastest["completion_days"], 60)
+        self.assertEqual(slowest["completion_days"], 99)
+        self.assertEqual(result["completion_days"], {"min": 60, "max": 99})
+        self.assertEqual(result["range_basis"], "realized_corners")
+        self.assertEqual(result["min_realization"]["h3"], "2026-03-11")
+        self.assertEqual(result["max_realization"]["h3"], "2026-04-10")
+        self.assertEqual(
+            {
+                "min": (
+                    dt.date(2026, 3, 11) - dt.date(2026, 1, 10)
+                ).days,
+                "max": (
+                    dt.date(2026, 5, 10) - dt.date(2026, 1, 1)
+                ).days,
+            },
+            {"min": 60, "max": 129},
+        )
+        self.assertLess(result["completion_days"]["max"], 129)
+
+    def test_sampling_min_max_equal_realized_corners(self) -> None:
+        """Spec §12.1 | Bug it catches: sampled extremes differ from realized corners."""
+        _, branches = _real_branches()
+        rng = random.Random(20261108)
+        for branch in rng.sample(branches, 10):
+            result = calculate_completion_time(branch)
+            fastest = realize_completion(branch, "fastest")
+            slowest = realize_completion(branch, "slowest")
+            days = [fastest["completion_days"], slowest["completion_days"]]
+            crops = branch["crops"]
+            for _ in range(30):
+                p1 = _random_date(
+                    rng,
+                    dt.date.fromisoformat(crops[0]["planting_range"]["earliest"]),
+                    dt.date.fromisoformat(crops[0]["planting_range"]["latest"]),
+                )
+                d1 = rng.randint(
+                    crops[0]["duration"]["min_days"],
+                    crops[0]["duration"]["max_days"],
+                )
+                p2 = _random_date(
+                    rng,
+                    dt.date.fromisoformat(crops[1]["planting_range"]["earliest"]),
+                    dt.date.fromisoformat(crops[1]["planting_range"]["latest"]),
+                )
+                d2 = rng.randint(
+                    crops[1]["duration"]["min_days"],
+                    crops[1]["duration"]["max_days"],
+                )
+                p3 = _random_date(
+                    rng,
+                    dt.date.fromisoformat(crops[2]["planting_range"]["earliest"]),
+                    dt.date.fromisoformat(crops[2]["planting_range"]["latest"]),
+                )
+                d3 = rng.randint(
+                    crops[2]["duration"]["min_days"],
+                    crops[2]["duration"]["max_days"],
+                )
+                del d1, d2
+                days.append(
+                    (p3 + dt.timedelta(days=d3) - p1).days
+                )
+            self.assertEqual(min(days), result["completion_days"]["min"])
+            self.assertEqual(max(days), result["completion_days"]["max"])
+
+    def test_prep_known_infeasible_corner_falls_back_to_enumeration(self) -> None:
+        """Spec §12.1 | Bug it catches: an infeasible prep corner is forced into a range."""
+        branch = _prep_known_branch()
+        branch["transitions"][0]["preparation_range"]["min_days"] = 100
+        branch["transitions"][0]["preparation_range"]["max_days"] = 100
+        result = calculate_completion_time(branch)
+        self.assertEqual(result["status"], "ok")
+        self.assertTrue(result["enumeration_used"])
+        self.assertEqual(result["range_basis"], "enumerated_realizations")
 
     def test_completion_property_300_random_realizations(self) -> None:
         """Spec §12.1 | Bug it catches: a realizable date pair falls outside the corner range."""
@@ -459,10 +706,20 @@ class CompletionTimeTests(unittest.TestCase):
             enumerated["completion_days"], corner["completion_days"]
         )
         self.assertEqual(
-            enumerated["min_realization"], corner["min_realization"]
+            enumerated["min_realization"]["first_planting"],
+            corner["min_realization"]["p1"],
         )
         self.assertEqual(
-            enumerated["max_realization"], corner["max_realization"]
+            enumerated["min_realization"]["third_harvest"],
+            corner["min_realization"]["h3"],
+        )
+        self.assertEqual(
+            enumerated["max_realization"]["first_planting"],
+            corner["max_realization"]["p1"],
+        )
+        self.assertEqual(
+            enumerated["max_realization"]["third_harvest"],
+            corner["max_realization"]["h3"],
         )
 
     def test_result_is_json_serializable(self) -> None:

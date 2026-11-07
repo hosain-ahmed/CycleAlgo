@@ -27,39 +27,352 @@ _ECONOMIC_MISSING = [
 
 
 def calculate_completion_time(branch: dict) -> dict:
-    """Return the corner-extreme completion range from third harvest minus planting.
-
-    ``min`` is the fastest realization (third harvest earliest minus first
-    planting latest); ``max`` is the slowest realization (third harvest latest
-    minus first planting earliest). The range is never silently swapped.
-    """
+    """Return completion from the actual fastest and slowest realized schedules."""
     first_planting, third_harvest, error = _completion_ranges(branch)
     if error is not None:
         return error
 
-    planting_earliest, planting_latest = first_planting
-    harvest_earliest, harvest_latest = third_harvest
-    completion_min = (harvest_earliest - planting_latest).days
-    completion_max = (harvest_latest - planting_earliest).days
-    if (
-        completion_min < 0
-        or completion_max < 0
-        or completion_min > completion_max
-    ):
-        result = _unavailable("COMPLETION_RANGE_INVALID", ["completion_range"])
-        result["first_planting_range"] = _iso_range(*first_planting)
-        result["third_harvest_range"] = _iso_range(*third_harvest)
-        return result
+    fastest = realize_completion(branch, "fastest")
+    slowest = realize_completion(branch, "slowest")
+    if fastest["status"] == "ok" and slowest["status"] == "ok":
+        completion_min = fastest["completion_days"]
+        completion_max = slowest["completion_days"]
+        if (
+            completion_min >= 0
+            and completion_max >= 0
+            and completion_min <= completion_max
+        ):
+            return _realized_result(
+                first_planting, third_harvest, fastest, slowest
+            )
 
-    return _completion_result(
-        first_planting,
-        third_harvest,
-        completion_min,
-        completion_max,
-        (planting_latest, harvest_earliest),
-        (planting_earliest, harvest_latest),
-        range_basis="corner_extremes",
+    enumerated = enumerate_completion_range(branch)
+    if enumerated["status"] == "ok":
+        return _enumerated_calculation_result(
+            first_planting, third_harvest, enumerated
+        )
+    return enumerated
+
+
+def realize_completion(branch: dict, mode: str) -> dict:
+    """Realize the fastest or slowest schedule from crop ranges and durations."""
+    if mode not in ("fastest", "slowest"):
+        raise ValueError("mode must be 'fastest' or 'slowest'")
+    if not _valid_branch_shape(branch):
+        return _realization_unavailable(
+            mode, "INVALID_BRANCH_SHAPE", ["branch_shape"]
+        )
+
+    crops = branch["crops"]
+    transitions = branch["transitions"]
+    first_range, first_missing = _range(
+        crops[0].get("planting_range"), "first_planting_range"
     )
+    if first_missing:
+        return _realization_unavailable(
+            mode, "COMPLETION_EVIDENCE_MISSING", first_missing
+        )
+    first_duration = _crop_duration(crops[0])
+    if first_duration is None:
+        return _realization_unavailable(
+            mode, "COMPLETION_EVIDENCE_MISSING", ["first_crop_duration"]
+        )
+
+    p1 = first_range[1] if mode == "fastest" else first_range[0]
+    h1 = p1 + dt.timedelta(days=_pick_duration(first_duration, mode))
+    p2, h2, prep2, error = _next_realization(
+        crops[1], transitions[0], h1, mode, "second"
+    )
+    if error is not None:
+        return _realization_unavailable(mode, *error)
+    p3, h3, prep3, error = _next_realization(
+        crops[2], transitions[1], h2, mode, "third"
+    )
+    if error is not None:
+        return _realization_unavailable(mode, *error)
+
+    days = (h3 - p1).days
+    if days < 0:
+        return _realization_unavailable(
+            mode, "COMPLETION_RANGE_INVALID", ["completion_range"]
+        )
+    return {
+        "status": "ok",
+        "mode": mode,
+        "completion_days": days,
+        "p1": p1.isoformat(),
+        "h1": h1.isoformat(),
+        "p2": p2.isoformat(),
+        "h2": h2.isoformat(),
+        "p3": p3.isoformat(),
+        "h3": h3.isoformat(),
+        "preparation_known": [prep2, prep3],
+        "range_basis": "realized_corners",
+        "reason": None,
+        "reasons": [],
+        "missing_evidence": [],
+    }
+
+
+def _next_realization(
+    crop: dict,
+    transition: dict,
+    previous_harvest: dt.date,
+    mode: str,
+    label: str,
+):
+    if not isinstance(transition, dict):
+        return None, None, False, (
+            "INVALID_BRANCH_SHAPE",
+            ["branch_shape"],
+        )
+    prep_known = bool(transition.get("preparation_known"))
+    if prep_known:
+        prep = _prep_days(transition.get("preparation_range"))
+        if prep is None:
+            return None, None, True, (
+                "COMPLETION_EVIDENCE_MISSING",
+                [f"{label}_preparation_range"],
+            )
+        window = _window_bounds(transition.get("window"))
+        if window is None:
+            return None, None, True, (
+                "COMPLETION_EVIDENCE_MISSING",
+                [f"{label}_window"],
+            )
+        if mode == "fastest":
+            ready = previous_harvest + dt.timedelta(days=prep[0])
+            planting = max(ready, window["window_start"])
+            if planting > window["support_end"]:
+                return None, None, True, (
+                    "COMPLETION_RANGE_INVALID",
+                    ["completion_range"],
+                )
+        else:
+            target = window["support_end"]
+            required = (target - previous_harvest).days
+            if required < prep[0]:
+                return None, None, True, (
+                    "COMPLETION_RANGE_INVALID",
+                    ["completion_range"],
+                )
+            # Use the latest feasible prep that still allows planting at the
+            # latest window end; extra prep becomes waiting.
+            prep_used = min(prep[1], required)
+            ready = previous_harvest + dt.timedelta(days=prep_used)
+            planting = target
+            if ready > planting:
+                return None, None, True, (
+                    "COMPLETION_RANGE_INVALID",
+                    ["completion_range"],
+                )
+    else:
+        crop_range, missing = _range(
+            crop.get("planting_range"), f"{label}_planting_range"
+        )
+        if missing:
+            return None, None, False, (
+                "COMPLETION_EVIDENCE_MISSING",
+                missing,
+            )
+        planting = crop_range[0] if mode == "fastest" else crop_range[1]
+
+    duration = _crop_duration(crop)
+    if duration is None:
+        return None, None, prep_known, (
+            "COMPLETION_EVIDENCE_MISSING",
+            [f"{label}_crop_duration"],
+        )
+    harvest = planting + dt.timedelta(days=_pick_duration(duration, mode))
+    return planting, harvest, prep_known, None
+
+
+def _crop_duration(crop: dict) -> tuple[int, int] | None:
+    duration = crop.get("duration")
+    if isinstance(duration, dict):
+        minimum = duration.get("min_days")
+        maximum = duration.get("max_days")
+        if _valid_duration_pair(minimum, maximum):
+            return (minimum, maximum)
+        return None
+
+    planting, planting_missing = _range(
+        crop.get("planting_range"), "planting_range"
+    )
+    harvest, harvest_missing = _range(crop.get("harvest_range"), "harvest_range")
+    if planting_missing or harvest_missing:
+        return None
+    minimum = (harvest[0] - planting[0]).days
+    maximum = (harvest[1] - planting[1]).days
+    if not _valid_duration_pair(minimum, maximum):
+        return None
+    return (minimum, maximum)
+
+
+def _valid_duration_pair(minimum: object, maximum: object) -> bool:
+    return (
+        not isinstance(minimum, bool)
+        and not isinstance(maximum, bool)
+        and isinstance(minimum, int)
+        and isinstance(maximum, int)
+        and minimum >= 0
+        and maximum >= 0
+        and minimum <= maximum
+    )
+
+
+def _pick_duration(duration: tuple[int, int], mode: str) -> int:
+    return duration[0] if mode == "fastest" else duration[1]
+
+
+def _prep_days(value: object) -> tuple[int, int] | None:
+    if not isinstance(value, dict):
+        return None
+    minimum = value.get("min_days")
+    maximum = value.get("max_days")
+    if not _valid_duration_pair(minimum, maximum):
+        return None
+    return (minimum, maximum)
+
+
+def _window_bounds(value: object) -> dict | None:
+    if not isinstance(value, dict):
+        return None
+    try:
+        preferred_start = _coerce_date(
+            value.get("preferred_start"), "preferred_start"
+        )
+        preferred_end = _coerce_date(
+            value.get("preferred_end"), "preferred_end"
+        )
+        late_raw = value.get("supported_late_end")
+        late_end = (
+            _coerce_date(late_raw, "supported_late_end")
+            if late_raw is not None
+            else None
+        )
+        start_raw = value.get("window_start")
+        window_start = (
+            _coerce_date(start_raw, "window_start")
+            if start_raw is not None
+            else preferred_start
+        )
+    except (TypeError, ValueError):
+        return None
+    support_end = late_end or preferred_end
+    if preferred_start > preferred_end or window_start > support_end:
+        return None
+    return {
+        "preferred_start": preferred_start,
+        "preferred_end": preferred_end,
+        "supported_late_end": late_end,
+        "window_start": window_start,
+        "support_end": support_end,
+    }
+
+
+def _realization_unavailable(
+    mode: str, code: str, missing: list[str]
+) -> dict:
+    return {
+        "status": "unavailable",
+        "mode": mode,
+        "completion_days": None,
+        "p1": None,
+        "h1": None,
+        "p2": None,
+        "h2": None,
+        "p3": None,
+        "h3": None,
+        "preparation_known": [],
+        "range_basis": None,
+        "reason": code,
+        "reasons": [code],
+        "missing_evidence": list(missing),
+    }
+
+
+def _realized_result(
+    first_planting: tuple[dt.date, dt.date],
+    third_harvest: tuple[dt.date, dt.date],
+    fastest: dict,
+    slowest: dict,
+) -> dict:
+    return {
+        "status": "ok",
+        "completion_days": {
+            "min": fastest["completion_days"],
+            "max": slowest["completion_days"],
+        },
+        "earliest_completion_date": fastest["h3"],
+        "latest_completion_date": slowest["h3"],
+        "ranking_value_days": slowest["completion_days"],
+        "basis": _BASIS,
+        "range_basis": "realized_corners",
+        "min_realization": _realization_dates(fastest),
+        "max_realization": _realization_dates(slowest),
+        "first_planting_range": _iso_range(*first_planting),
+        "third_harvest_range": _iso_range(*third_harvest),
+        "range_overlap_note": (
+            "Completion is a range; ranking uses the latest completion value, "
+            "and overlapping branch ranges are not a definitive timing winner."
+        ),
+        "reason": None,
+        "reasons": [],
+        "missing_evidence": [],
+        "enumeration_used": False,
+    }
+
+
+def _realization_dates(realization: dict) -> dict:
+    return {
+        "p1": realization["p1"],
+        "h1": realization["h1"],
+        "p2": realization["p2"],
+        "h2": realization["h2"],
+        "p3": realization["p3"],
+        "h3": realization["h3"],
+        "completion_days": realization["completion_days"],
+    }
+
+
+def _enumerated_calculation_result(
+    first_planting: tuple[dt.date, dt.date],
+    third_harvest: tuple[dt.date, dt.date],
+    enumerated: dict,
+) -> dict:
+    return {
+        "status": "ok",
+        "completion_days": enumerated["completion_days"],
+        "earliest_completion_date": enumerated["earliest_completion_date"],
+        "latest_completion_date": enumerated["latest_completion_date"],
+        "ranking_value_days": enumerated["ranking_value_days"],
+        "basis": _BASIS,
+        "range_basis": "enumerated_realizations",
+        "min_realization": _enumerated_dates(enumerated["min_realization"]),
+        "max_realization": _enumerated_dates(enumerated["max_realization"]),
+        "first_planting_range": _iso_range(*first_planting),
+        "third_harvest_range": _iso_range(*third_harvest),
+        "range_overlap_note": (
+            "Completion is a range; ranking uses the latest completion value, "
+            "and overlapping branch ranges are not a definitive timing winner."
+        ),
+        "reason": None,
+        "reasons": [],
+        "missing_evidence": [],
+        "enumeration_used": True,
+    }
+
+
+def _enumerated_dates(realization: dict) -> dict:
+    return {
+        "p1": realization.get("first_planting"),
+        "h1": None,
+        "p2": None,
+        "h2": None,
+        "p3": None,
+        "h3": realization.get("third_harvest"),
+    }
 
 
 def enumerate_completion_range(branch: dict) -> dict:

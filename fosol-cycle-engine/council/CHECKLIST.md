@@ -80,4 +80,5 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [x] E4 mutation check: 5 critical lines, each mutation caught, code restored (hash verified).
 - [ ] E5–E11 follow the per-function light gate and per-milestone full gate.
 - [ ] E8–E9 demo safety suite + `scripts/demo_check.py`; rerun at every later milestone.
+      **E9 hard gate: build and run before any E9 commit; do not defer again.**
 - [ ] E1–E3 budget overage reviewed (E1 14 vs 8–12; E3 54 vs 12–20) — deferred, not blocking.

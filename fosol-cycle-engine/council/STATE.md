@@ -1,17 +1,21 @@
 # Council State
 
-Last updated: 2026-11-07 (E8 PASS; next E9)
+Last updated: 2026-11-07 (E8 PASS with real-realization completion; next E9)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
    `council/reports/E8-preflight.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 271 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
+   (expect 274 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
    conditional / 15 exclusions.
 3. E8 PASS. Next: **E9 response envelope, status precedence, warnings, branch
-   attachment, demo check/API**. E8 corner completion: min=H3.earliest−P1.latest,
-   max=H3.latest−P1.earliest; 300-sample property test; enumeration fallback;
-   fastest 420/420; §17.16 N/A (no financial values).
+   attachment, `scripts/demo_check.py`, API**. Completion uses actual fastest/slowest
+   realizations (example b_82899e8d6941: 655..682; P1 2027-07-24/H3 2029-05-09 fast,
+   P1 2027-07-10/H3 2029-05-22 slow). Tightness + 300-sample exact min/max tests.
+   fastest 420/420; candidate 0 because prep/soil/water/duration evidence is missing
+   on all 1260 crop nodes. §17.16 N/A (no financial values).
+4. **E9 hard gate:** build and run `scripts/demo_check.py` before any E9 commit;
+   golden Rajshahi scenarios, invariants, offline/stale-cache behavior. Do not defer again.
 4. E8 defaults in use (user can override): economics A (completion+diversity only;
    all economic/resource metrics unavailable), completion endpoints A
    (earliest−earliest / latest−latest, rank by latest), irrigation display-only.
@@ -92,9 +96,11 @@ Last updated: 2026-11-07 (E8 PASS; next E9)
   enumeration fallback with negative guard, min<=max all 420, no
   `COMPLETION_RANGE_INVALID` unranked, fastest 420/420 conditional. 271 tests; E6 smoke
   420/0/420/15. Reports `E8-W1-revision-*.md`.
-- E8 final PASS: spec/integrity re-audit PASS; E8 46 tests vs 25–40 (+6) justified by
-  user-requested property/fallback/negative tests; §17.16 N/A (no financial values).
-  Reports `E8-final-spec-integrity-rev.md`.
+- E8 final PASS: real fastest/slowest realization range (example 655..682 with dates),
+  independent tightness all 420, 300-sample exact min/max, prep-known distinction
+  (60..99 vs B 60..129), enumeration fallback, fastest 420/420; 274 tests; 49 E8
+  (+9 for user-requested realization/tightness tests); §17.16 N/A.
+  Report `E8-final-spec-integrity-realization.md`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -136,9 +142,11 @@ Last updated: 2026-11-07 (E8 PASS; next E9)
   remain `unknown`/`null`/"Economic estimate unavailable" unless supplied.
 - Duration reference point preserved but unconfirmed.
 - AppEEARS token expiry is operational (48h); code raises a clear rerun hint.
-- E8 decisions pending: economics A/B (recommend A: completion+diversity only,
-  economic metrics unavailable), completion endpoint pairing A/B/C, irrigation
-  ranking display-only vs supplied classification. See `reports/E8-preflight.md`.
+- E9 must build/run `scripts/demo_check.py` before any commit (hard gate).
+- Candidate group is empty (0/420); present conditional branches with evidence reasons
+  and an explicit “no candidate branches” state. Cause: prep unknown, soil unknown,
+  water caution/unknown, duration reference unresolved on all 1260 crop nodes.
+- §17.16 N/A until sourced economics; all monetary metrics unavailable by design.
 
 ## Standing notes
 - `v1.md` is modified/uncommitted user work; source of truth, do not commit/revert.
@@ -170,4 +178,4 @@ Last updated: 2026-11-07 (E8 PASS; next E9)
 | E8 W4 | PASS | PASS | PASS | PASS | PASS | cae196a |
 | E8 W5 | PASS | PASS | PASS | PASS | PASS | 30927f7 |
 | E8 W1 rev | PASS | PASS | PASS | PASS | PASS | d0a7e8d |
-| E8 final | PASS | PASS | PASS | PASS | PASS | 91c855f |
+| E8 final | PASS | PASS | PASS | PASS | PASS | 3934114 |
