@@ -27,14 +27,90 @@ _ECONOMIC_MISSING = [
 
 
 def calculate_completion_time(branch: dict) -> dict:
-    """Return the completion range from third harvest minus first planting.
+    """Return the corner-extreme completion range from third harvest minus planting.
 
-    The latest-completion convention is ``max = third harvest latest - first
-    planting latest``; the returned range is never silently swapped.
+    ``min`` is the fastest realization (third harvest earliest minus first
+    planting latest); ``max`` is the slowest realization (third harvest latest
+    minus first planting earliest). The range is never silently swapped.
     """
-    if not isinstance(branch, dict):
-        return _unavailable("INVALID_BRANCH_SHAPE", ["branch_shape"])
+    first_planting, third_harvest, error = _completion_ranges(branch)
+    if error is not None:
+        return error
 
+    planting_earliest, planting_latest = first_planting
+    harvest_earliest, harvest_latest = third_harvest
+    completion_min = (harvest_earliest - planting_latest).days
+    completion_max = (harvest_latest - planting_earliest).days
+    if (
+        completion_min < 0
+        or completion_max < 0
+        or completion_min > completion_max
+    ):
+        result = _unavailable("COMPLETION_RANGE_INVALID", ["completion_range"])
+        result["first_planting_range"] = _iso_range(*first_planting)
+        result["third_harvest_range"] = _iso_range(*third_harvest)
+        return result
+
+    return _completion_result(
+        first_planting,
+        third_harvest,
+        completion_min,
+        completion_max,
+        (planting_latest, harvest_earliest),
+        (planting_earliest, harvest_latest),
+        range_basis="corner_extremes",
+    )
+
+
+def enumerate_completion_range(branch: dict) -> dict:
+    """Enumerate every first-planting/third-harvest date pair in the ranges."""
+    first_planting, third_harvest, error = _completion_ranges(branch)
+    if error is not None:
+        error["enumeration_used"] = False
+        return error
+
+    planting_earliest, planting_latest = first_planting
+    harvest_earliest, harvest_latest = third_harvest
+    minimum = None
+    maximum = None
+    min_realization = None
+    max_realization = None
+    planting = planting_earliest
+    while planting <= planting_latest:
+        harvest = harvest_earliest
+        while harvest <= harvest_latest:
+            days = (harvest - planting).days
+            if minimum is None or days < minimum:
+                minimum = days
+                min_realization = (planting, harvest)
+            if maximum is None or days > maximum:
+                maximum = days
+                max_realization = (planting, harvest)
+            harvest += dt.timedelta(days=1)
+        planting += dt.timedelta(days=1)
+
+    result = _completion_result(
+        first_planting,
+        third_harvest,
+        minimum,
+        maximum,
+        min_realization,
+        max_realization,
+        range_basis="enumerated_realizations",
+    )
+    result["enumeration_used"] = True
+    return result
+
+
+def _completion_ranges(
+    branch: object,
+) -> tuple[
+    tuple[dt.date, dt.date] | None,
+    tuple[dt.date, dt.date] | None,
+    dict | None,
+]:
+    if not isinstance(branch, dict):
+        return None, None, _unavailable("INVALID_BRANCH_SHAPE", ["branch_shape"])
     crops = branch.get("crops")
     transitions = branch.get("transitions")
     if (
@@ -44,7 +120,7 @@ def calculate_completion_time(branch: dict) -> dict:
         or len(transitions) != 2
         or not all(isinstance(crop, dict) for crop in crops)
     ):
-        return _unavailable("INVALID_BRANCH_SHAPE", ["branch_shape"])
+        return None, None, _unavailable("INVALID_BRANCH_SHAPE", ["branch_shape"])
 
     first_planting, first_missing = _range(
         crops[0].get("planting_range"), "first_planting_range"
@@ -59,29 +135,36 @@ def calculate_completion_time(branch: dict) -> dict:
     if third_harvest is not None:
         result["third_harvest_range"] = _iso_range(*third_harvest)
     if missing:
-        return result
+        return None, None, result
+    return first_planting, third_harvest, None
 
-    planting_earliest, planting_latest = first_planting
-    harvest_earliest, harvest_latest = third_harvest
-    completion_min = (harvest_earliest - planting_earliest).days
-    completion_max = (harvest_latest - planting_latest).days
-    if (
-        completion_min < 0
-        or completion_max < 0
-        or completion_max < completion_min
-    ):
-        result = _unavailable("COMPLETION_RANGE_INVALID", ["completion_range"])
-        result["first_planting_range"] = _iso_range(*first_planting)
-        result["third_harvest_range"] = _iso_range(*third_harvest)
-        return result
 
+def _completion_result(
+    first_planting: tuple[dt.date, dt.date],
+    third_harvest: tuple[dt.date, dt.date],
+    completion_min: int,
+    completion_max: int,
+    min_realization: tuple[dt.date, dt.date],
+    max_realization: tuple[dt.date, dt.date],
+    *,
+    range_basis: str,
+) -> dict:
     return {
         "status": "ok",
         "completion_days": {"min": completion_min, "max": completion_max},
-        "earliest_completion_date": harvest_earliest.isoformat(),
-        "latest_completion_date": harvest_latest.isoformat(),
+        "earliest_completion_date": third_harvest[0].isoformat(),
+        "latest_completion_date": third_harvest[1].isoformat(),
         "ranking_value_days": completion_max,
         "basis": _BASIS,
+        "range_basis": range_basis,
+        "min_realization": {
+            "first_planting": min_realization[0].isoformat(),
+            "third_harvest": min_realization[1].isoformat(),
+        },
+        "max_realization": {
+            "first_planting": max_realization[0].isoformat(),
+            "third_harvest": max_realization[1].isoformat(),
+        },
         "first_planting_range": _iso_range(*first_planting),
         "third_harvest_range": _iso_range(*third_harvest),
         "range_overlap_note": (
@@ -779,6 +862,9 @@ def _unavailable(code: str, missing: list[str]) -> dict:
         "latest_completion_date": None,
         "ranking_value_days": None,
         "basis": _BASIS,
+        "range_basis": None,
+        "min_realization": None,
+        "max_realization": None,
         "first_planting_range": None,
         "third_harvest_range": None,
         "range_overlap_note": None,

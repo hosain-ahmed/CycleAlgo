@@ -1,17 +1,17 @@
 # Council State
 
-Last updated: 2026-11-07 (E8 W1–W5 PASS; final audit PASS; completion-range caveat pending)
+Last updated: 2026-11-07 (E8 corner completion revision PASS; final re-audit pending)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
    `council/reports/E8-preflight.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 264 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
+   (expect 270 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
    conditional / 15 exclusions.
-3. E7 accepted; E8 guard PASS; E8 W1–W5 PASS; final spec/integrity PASS with one
-   caveat: decision A leaves 57/420 fastest branches unranked (`COMPLETION_RANGE_INVALID`;
-   example min 669 d > max 668 d). E8 not ticked. Decide option A/B/C/D in
-   `reports/E8-completion-range-issue.md`; no code changes yet.
+3. E7 accepted; E8 W1–W5 PASS; completion revised to corner form (Option 4):
+   min=H3.earliest−P1.latest, max=H3.latest−P1.earliest, 300-sample property test,
+   enumeration fallback, min<=max all 420, fastest 420/420 ranked. Next: final E8
+   spec/integrity re-audit, then E9.
 4. E8 defaults in use (user can override): economics A (completion+diversity only;
    all economic/resource metrics unavailable), completion endpoints A
    (earliest−earliest / latest−latest, rank by latest), irrigation display-only.
@@ -88,9 +88,10 @@ Last updated: 2026-11-07 (E8 W1–W5 PASS; final audit PASS; completion-range ca
 - E8 W5 PASS: `rank_branches` candidate/conditional groups separate, blocked excluded,
   fastest/diversity ranked, economics/irrigation unranked/no winner, missing metric
   unranked, deterministic ties; 264 tests; 5/5 mutations. Reports `E8-W5-*`.
-- E8 final audit PASS: 264 tests, 39 E8, E6 smoke 420/0/420/15; real fastest 363 ranked /
-  57 unranked under A. Caveat documented in `E8-completion-range-issue.md`; E8 not ticked
-  pending completion-range decision.
+- E8 completion revision PASS: corner form, both realizations, 300-seed property test,
+  enumeration fallback, min<=max all 420, no `COMPLETION_RANGE_INVALID` unranked, fastest
+  420/420 conditional. 270 tests; E6 smoke 420/0/420/15. Reports
+  `E8-W1-revision-*.md`. Final re-audit pending.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -165,3 +166,4 @@ Last updated: 2026-11-07 (E8 W1–W5 PASS; final audit PASS; completion-range ca
 | E8 W3 | PASS | PASS | PASS | PASS | PASS | 4b11246 |
 | E8 W4 | PASS | PASS | PASS | PASS | PASS | cae196a |
 | E8 W5 | PASS | PASS | PASS | PASS | PASS | 30927f7 |
+| E8 W1 rev | PASS | PASS | PASS | PASS | PASS | d0a7e8d |

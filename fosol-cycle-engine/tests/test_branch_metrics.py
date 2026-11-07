@@ -1,6 +1,8 @@
 """Tests for branch completion-time and diversity metrics (v1.md §12.1, §13, §14.4)."""
 
+import datetime as dt
 import json
+import random
 import unittest
 from pathlib import Path
 
@@ -10,6 +12,7 @@ from src.branch_metrics import (
     build_resource_metrics,
     calculate_completion_time,
     calculate_diversity_metrics,
+    enumerate_completion_range,
     rank_branches,
 )
 from src.crop_profiles import load_crop_profiles
@@ -49,6 +52,18 @@ def _diversity_branch(
         ],
         "transitions": [{}, {}],
     }
+
+
+def _real_branches():
+    profiles = load_crop_profiles(DATA_CSV)
+    branches = expand_branches(
+        profiles, "2026-11-06", max_waiting_days=365
+    )["branches"]
+    return profiles, branches
+
+
+def _random_date(rng: random.Random, start: dt.date, end: dt.date) -> dt.date:
+    return start + dt.timedelta(days=rng.randint(0, (end - start).days))
 
 
 def _economics_profiles() -> dict:
@@ -167,12 +182,21 @@ class CompletionTimeTests(unittest.TestCase):
             )
         )
         self.assertEqual(result["status"], "ok")
-        self.assertEqual(result["completion_days"], {"min": 90, "max": 100})
+        self.assertEqual(result["completion_days"], {"min": 81, "max": 109})
         self.assertEqual(result["earliest_completion_date"], "2026-04-01")
         self.assertEqual(result["latest_completion_date"], "2026-04-20")
-        self.assertEqual(result["ranking_value_days"], 100)
+        self.assertEqual(result["ranking_value_days"], 109)
         self.assertEqual(
             result["basis"], "third_harvest_minus_first_planting"
+        )
+        self.assertEqual(result["range_basis"], "corner_extremes")
+        self.assertEqual(
+            result["min_realization"],
+            {"first_planting": "2026-01-10", "third_harvest": "2026-04-01"},
+        )
+        self.assertEqual(
+            result["max_realization"],
+            {"first_planting": "2026-01-01", "third_harvest": "2026-04-20"},
         )
         self.assertEqual(
             result["first_planting_range"],
@@ -251,8 +275,8 @@ class CompletionTimeTests(unittest.TestCase):
                 self.assertIsNone(result["completion_days"])
                 self.assertEqual(result["reason"], "INVALID_BRANCH_SHAPE")
 
-    def test_max_below_min_is_unavailable_not_swapped(self) -> None:
-        """Spec §12.1 | Bug it catches: reversed completion endpoints are silently swapped."""
+    def test_previous_max_below_min_case_uses_corner_extremes(self) -> None:
+        """Spec §12.1 | Bug it catches: corner extremes are not used for an inverted A range."""
         result = calculate_completion_time(
             _branch(
                 first_planting={
@@ -265,11 +289,162 @@ class CompletionTimeTests(unittest.TestCase):
                 },
             )
         )
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["completion_days"], {"min": 10, "max": 24})
+        self.assertEqual(result["range_basis"], "corner_extremes")
+        self.assertEqual(
+            result["min_realization"],
+            {"first_planting": "2026-01-10", "third_harvest": "2026-01-20"},
+        )
+        self.assertEqual(
+            result["max_realization"],
+            {"first_planting": "2026-01-01", "third_harvest": "2026-01-25"},
+        )
+
+    def test_negative_corner_min_is_unavailable(self) -> None:
+        """Spec §12.1 | Bug it catches: a negative fastest completion is returned as valid."""
+        result = calculate_completion_time(
+            _branch(
+                first_planting={
+                    "earliest": "2027-01-01",
+                    "latest": "2027-12-31",
+                },
+                third_harvest={
+                    "earliest": "2027-06-01",
+                    "latest": "2027-07-01",
+                },
+            )
+        )
         self.assertEqual(result["status"], "unavailable")
         self.assertIsNone(result["completion_days"])
         self.assertIsNone(result["ranking_value_days"])
         self.assertEqual(result["reason"], "COMPLETION_RANGE_INVALID")
-        self.assertIn("completion_range", result["missing_evidence"])
+
+    def test_reversed_date_range_is_unavailable(self) -> None:
+        """Spec §12.1 | Bug it catches: reversed ISO endpoints are silently accepted."""
+        result = calculate_completion_time(
+            _branch(
+                third_harvest={
+                    "earliest": "2026-04-20",
+                    "latest": "2026-04-01",
+                }
+            )
+        )
+        self.assertEqual(result["status"], "unavailable")
+        self.assertIsNone(result["completion_days"])
+        self.assertIn("third_harvest_range", result["missing_evidence"])
+
+    def test_corner_extremes_min_le_max_for_all_real_branches(self) -> None:
+        """Spec §12.1 | Bug it catches: a valid branch still gets an inverted completion range."""
+        _, branches = _real_branches()
+        self.assertEqual(len(branches), 420)
+        for branch in branches:
+            result = calculate_completion_time(branch)
+            self.assertEqual(result["status"], "ok", branch["branch_id"])
+            self.assertLessEqual(
+                result["completion_days"]["min"],
+                result["completion_days"]["max"],
+            )
+            self.assertEqual(result["range_basis"], "corner_extremes")
+
+    def test_previously_inverted_branches_are_now_valid(self) -> None:
+        """Spec §12.1 | Bug it catches: the 57 decision-A inversions remain unranked."""
+        _, branches = _real_branches()
+        inverted = []
+        for branch in branches:
+            planting = branch["crops"][0]["planting_range"]
+            harvest = branch["crops"][2]["harvest_range"]
+            planting_earliest = dt.date.fromisoformat(planting["earliest"])
+            planting_latest = dt.date.fromisoformat(planting["latest"])
+            harvest_earliest = dt.date.fromisoformat(harvest["earliest"])
+            harvest_latest = dt.date.fromisoformat(harvest["latest"])
+            if (harvest_latest - planting_latest).days < (
+                harvest_earliest - planting_earliest
+            ).days:
+                inverted.append(branch)
+        self.assertEqual(len(inverted), 57)
+        for branch in inverted:
+            result = calculate_completion_time(branch)
+            self.assertEqual(result["status"], "ok")
+            self.assertLessEqual(
+                result["completion_days"]["min"],
+                result["completion_days"]["max"],
+            )
+
+        example = next(
+            branch
+            for branch in branches
+            if branch["branch_id"] == "b_82899e8d6941"
+        )
+        result = calculate_completion_time(example)
+        self.assertEqual(result["completion_days"], {"min": 655, "max": 682})
+
+    def test_completion_property_300_random_realizations(self) -> None:
+        """Spec §12.1 | Bug it catches: a realizable date pair falls outside the corner range."""
+        _, branches = _real_branches()
+        rng = random.Random(20261107)
+        cache = {}
+        fallback_used = False
+        for _ in range(300):
+            branch = rng.choice(branches)
+            planting_range = branch["crops"][0]["planting_range"]
+            harvest_range = branch["crops"][2]["harvest_range"]
+            planting = _random_date(
+                rng,
+                dt.date.fromisoformat(planting_range["earliest"]),
+                dt.date.fromisoformat(planting_range["latest"]),
+            )
+            harvest = _random_date(
+                rng,
+                dt.date.fromisoformat(harvest_range["earliest"]),
+                dt.date.fromisoformat(harvest_range["latest"]),
+            )
+            result = cache.get(branch["branch_id"])
+            if result is None:
+                result = calculate_completion_time(branch)
+                cache[branch["branch_id"]] = result
+            days = (harvest - planting).days
+            if not (
+                result["completion_days"]["min"]
+                <= days
+                <= result["completion_days"]["max"]
+            ):
+                fallback_used = True
+                enumerated = enumerate_completion_range(branch)
+                self.assertTrue(enumerated["enumeration_used"])
+                self.assertLessEqual(
+                    enumerated["completion_days"]["min"], days
+                )
+                self.assertGreaterEqual(
+                    enumerated["completion_days"]["max"], days
+                )
+        self.assertFalse(fallback_used)
+
+    def test_enumerate_completion_range_matches_corner_extremes(self) -> None:
+        """Spec §12.1 | Bug it catches: the enumeration fallback returns a different range."""
+        branch = _branch(
+            first_planting={
+                "earliest": "2026-01-01",
+                "latest": "2026-01-10",
+            },
+            third_harvest={
+                "earliest": "2026-04-01",
+                "latest": "2026-04-20",
+            },
+        )
+        corner = calculate_completion_time(branch)
+        enumerated = enumerate_completion_range(branch)
+        self.assertTrue(enumerated["enumeration_used"])
+        self.assertEqual(enumerated["range_basis"], "enumerated_realizations")
+        self.assertEqual(
+            enumerated["completion_days"], corner["completion_days"]
+        )
+        self.assertEqual(
+            enumerated["min_realization"], corner["min_realization"]
+        )
+        self.assertEqual(
+            enumerated["max_realization"], corner["max_realization"]
+        )
 
     def test_result_is_json_serializable(self) -> None:
         """Spec §14.4 | Bug it catches: dates or non-finite values leak into JSON."""
@@ -665,10 +840,10 @@ class RankingTests(unittest.TestCase):
             [entry["branch_id"] for entry in conditional["ranked"]],
             ["b_fast", "b_slow"],
         )
-        self.assertEqual(conditional["ranked"][0]["metric_value"], 100)
+        self.assertEqual(conditional["ranked"][0]["metric_value"], 101)
         self.assertEqual(
             conditional["ranked"][0]["completion_days"],
-            {"min": 90, "max": 100},
+            {"min": 89, "max": 101},
         )
         self.assertFalse(result["no_winner"])
         self.assertTrue(
@@ -824,7 +999,10 @@ class RankingTests(unittest.TestCase):
         self.assertEqual(len(branches), 420)
         fastest = rank_branches(branches, "fastest_completion", profiles)
         self.assertEqual(fastest["groups"]["candidate"]["count"], 0)
-        self.assertGreater(len(fastest["groups"]["conditional"]["ranked"]), 0)
+        self.assertEqual(fastest["groups"]["conditional"]["count"], 420)
+        self.assertEqual(len(fastest["groups"]["conditional"]["ranked"]), 420)
+        self.assertEqual(fastest["groups"]["conditional"]["unranked"], [])
+        self.assertTrue(any("overlap" in note.lower() for note in fastest["notes"]))
         diversity = rank_branches(branches, "more_crop_diversity", profiles)
         self.assertEqual(diversity["groups"]["candidate"]["count"], 0)
         self.assertGreater(len(diversity["groups"]["conditional"]["ranked"]), 0)
