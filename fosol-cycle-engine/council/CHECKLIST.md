@@ -70,6 +70,7 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [x] E7 Historical seasonal replay with coverage rules (§9).
 - [x] E8 Metrics, economics, rankings, preferences (§12, §13).
 - [ ] E9 Response envelope, status precedence, warnings (§14.3, §14.4).
+      Blocked on `max_initial_wait_days`; demo_check.py is a hard pre-commit gate.
 - [ ] E10 Thin HTTP wrapper `POST /api/explore`.
 - [ ] E11 Handoff artifacts and docs (§14.6).
 

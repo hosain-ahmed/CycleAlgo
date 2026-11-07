@@ -1,6 +1,6 @@
 # Council State
 
-Last updated: 2026-11-07 (E8 PASS with real-realization completion; next E9)
+Last updated: 2026-11-07 (E9 preflight; maximum initial wait decision pending)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
@@ -8,14 +8,15 @@ Last updated: 2026-11-07 (E8 PASS with real-realization completion; next E9)
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
    (expect 274 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
    conditional / 15 exclusions.
-3. E8 PASS. Next: **E9 response envelope, status precedence, warnings, branch
-   attachment, `scripts/demo_check.py`, API**. Completion uses actual fastest/slowest
-   realizations (example b_82899e8d6941: 655..682; P1 2027-07-24/H3 2029-05-09 fast,
-   P1 2027-07-10/H3 2029-05-22 slow). Tightness + 300-sample exact min/max tests.
-   fastest 420/420; candidate 0 because prep/soil/water/duration evidence is missing
-   on all 1260 crop nodes. §17.16 N/A (no financial values).
-4. **E9 hard gate:** build and run `scripts/demo_check.py` before any E9 commit;
-   golden Rajshahi scenarios, invariants, offline/stale-cache behavior. Do not defer again.
+3. E8 PASS. Next: **E9** after `max_initial_wait_days` is decided. Read
+   `council/reports/E9-preflight.md`.
+4. Wait audit: engine default is `None`; the 365 in the E6/E8 smoke was a test
+   parameter, not an approved product maximum. E9 must expose `initial_wait_days` and
+   `max_initial_wait_days`, and show the H1→P2 window-only gap separately from
+   preparation/waiting (which are null while prep is unknown).
+5. **E9 hard gate:** build and run `scripts/demo_check.py` before any E9 commit;
+   golden scenarios, invariants, status `partial`, no-candidate state, null
+   serialization, 400/500 behavior, offline/stale-cache. Do not defer again.
 4. E8 defaults in use (user can override): economics A (completion+diversity only;
    all economic/resource metrics unavailable), completion endpoints A
    (earliest−earliest / latest−latest, rank by latest), irrigation display-only.
@@ -142,6 +143,9 @@ Last updated: 2026-11-07 (E8 PASS with real-realization completion; next E9)
   remain `unknown`/`null`/"Economic estimate unavailable" unless supplied.
 - Duration reference point preserved but unconfirmed.
 - AppEEARS token expiry is operational (48h); code raises a clear rerun hint.
+- **BLOCKED:** `max_initial_wait_days` for E9/demo not decided. Options: 365
+  (current smoke, test-only), 180, 90, or None (future first crops unknown/unranked).
+  Engine default remains None. Do not bake 365 into the product.
 - E9 must build/run `scripts/demo_check.py` before any commit (hard gate).
 - Candidate group is empty (0/420); present conditional branches with evidence reasons
   and an explicit “no candidate branches” state. Cause: prep unknown, soil unknown,
