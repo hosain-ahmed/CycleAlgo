@@ -18,10 +18,11 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [x] 17.11 Incomplete historical crop periods are excluded according to the declared coverage rule.
 - [ ] 17.12 A branch stops at exactly three crops.
 - [ ] 17.13 Unsupported districts do not inherit Rajshahi results.
-- [ ] 17.14 Preference changes cannot revive blocked branches.
-- [ ] 17.15 Missing economic inputs cannot win cost or return rankings.
+- [x] 17.14 Preference changes cannot revive blocked branches.
+- [x] 17.15 Missing economic inputs cannot win cost or return rankings.
 - [ ] 17.16 Financial units are converted correctly and transition costs are counted once.
-- [ ] 17.17 No supported path returns an honest empty/insufficient-evidence result.
+      N/A until sourced economics; all monetary metrics are unavailable by design.
+- [x] 17.17 No supported path returns an honest empty/insufficient-evidence result.
 
 ## B. Spec §14.6 — required handoff artifacts (7)
 
@@ -67,8 +68,7 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [x] E5 Soil/land and water checks (§7, §8).
 - [x] E6 Timeline, preparation, waiting, 3-crop expansion (§10, §11).
 - [x] E7 Historical seasonal replay with coverage rules (§9).
-- [ ] E8 Metrics, economics, rankings, preferences (§12, §13).
-      Corner completion form implemented; final re-audit pending.
+- [x] E8 Metrics, economics, rankings, preferences (§12, §13).
 - [ ] E9 Response envelope, status precedence, warnings (§14.3, §14.4).
 - [ ] E10 Thin HTTP wrapper `POST /api/explore`.
 - [ ] E11 Handoff artifacts and docs (§14.6).

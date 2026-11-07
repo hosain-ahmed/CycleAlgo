@@ -1,17 +1,17 @@
 # Council State
 
-Last updated: 2026-11-07 (E8 corner completion revision PASS; final re-audit pending)
+Last updated: 2026-11-07 (E8 PASS; next E9)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
    `council/reports/E8-preflight.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 270 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
+   (expect 271 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
    conditional / 15 exclusions.
-3. E7 accepted; E8 W1–W5 PASS; completion revised to corner form (Option 4):
-   min=H3.earliest−P1.latest, max=H3.latest−P1.earliest, 300-sample property test,
-   enumeration fallback, min<=max all 420, fastest 420/420 ranked. Next: final E8
-   spec/integrity re-audit, then E9.
+3. E8 PASS. Next: **E9 response envelope, status precedence, warnings, branch
+   attachment, demo check/API**. E8 corner completion: min=H3.earliest−P1.latest,
+   max=H3.latest−P1.earliest; 300-sample property test; enumeration fallback;
+   fastest 420/420; §17.16 N/A (no financial values).
 4. E8 defaults in use (user can override): economics A (completion+diversity only;
    all economic/resource metrics unavailable), completion endpoints A
    (earliest−earliest / latest−latest, rank by latest), irrigation display-only.
@@ -89,9 +89,12 @@ Last updated: 2026-11-07 (E8 corner completion revision PASS; final re-audit pen
   fastest/diversity ranked, economics/irrigation unranked/no winner, missing metric
   unranked, deterministic ties; 264 tests; 5/5 mutations. Reports `E8-W5-*`.
 - E8 completion revision PASS: corner form, both realizations, 300-seed property test,
-  enumeration fallback, min<=max all 420, no `COMPLETION_RANGE_INVALID` unranked, fastest
-  420/420 conditional. 270 tests; E6 smoke 420/0/420/15. Reports
-  `E8-W1-revision-*.md`. Final re-audit pending.
+  enumeration fallback with negative guard, min<=max all 420, no
+  `COMPLETION_RANGE_INVALID` unranked, fastest 420/420 conditional. 271 tests; E6 smoke
+  420/0/420/15. Reports `E8-W1-revision-*.md`.
+- E8 final PASS: spec/integrity re-audit PASS; E8 46 tests vs 25–40 (+6) justified by
+  user-requested property/fallback/negative tests; §17.16 N/A (no financial values).
+  Reports `E8-final-spec-integrity-rev.md`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -167,3 +170,4 @@ Last updated: 2026-11-07 (E8 corner completion revision PASS; final re-audit pen
 | E8 W4 | PASS | PASS | PASS | PASS | PASS | cae196a |
 | E8 W5 | PASS | PASS | PASS | PASS | PASS | 30927f7 |
 | E8 W1 rev | PASS | PASS | PASS | PASS | PASS | d0a7e8d |
+| E8 final | PASS | PASS | PASS | PASS | PASS | 91c855f |

@@ -320,6 +320,25 @@ class CompletionTimeTests(unittest.TestCase):
         self.assertIsNone(result["ranking_value_days"])
         self.assertEqual(result["reason"], "COMPLETION_RANGE_INVALID")
 
+    def test_negative_corner_enumeration_is_unavailable(self) -> None:
+        """Spec §12.1 | Bug it catches: enumeration returns a negative range as ok."""
+        branch = _branch(
+            first_planting={
+                "earliest": "2027-01-01",
+                "latest": "2027-12-31",
+            },
+            third_harvest={
+                "earliest": "2027-06-01",
+                "latest": "2027-07-01",
+            },
+        )
+        result = enumerate_completion_range(branch)
+        self.assertEqual(result["status"], "unavailable")
+        self.assertIsNone(result["completion_days"])
+        self.assertIsNone(result["ranking_value_days"])
+        self.assertTrue(result["enumeration_used"])
+        self.assertEqual(result["reason"], "COMPLETION_RANGE_INVALID")
+
     def test_reversed_date_range_is_unavailable(self) -> None:
         """Spec §12.1 | Bug it catches: reversed ISO endpoints are silently accepted."""
         result = calculate_completion_time(

@@ -89,6 +89,17 @@ def enumerate_completion_range(branch: dict) -> dict:
             harvest += dt.timedelta(days=1)
         planting += dt.timedelta(days=1)
 
+    if (
+        minimum is None
+        or maximum is None
+        or minimum < 0
+        or maximum < 0
+        or minimum > maximum
+    ):
+        result = _unavailable("COMPLETION_RANGE_INVALID", ["completion_range"])
+        result["enumeration_used"] = True
+        return result
+
     result = _completion_result(
         first_planting,
         third_harvest,
