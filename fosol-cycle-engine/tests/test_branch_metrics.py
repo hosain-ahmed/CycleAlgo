@@ -6,6 +6,7 @@ from pathlib import Path
 
 from src.branch_expander import expand_branches
 from src.branch_metrics import (
+    build_economics_metrics,
     build_resource_metrics,
     calculate_completion_time,
     calculate_diversity_metrics,
@@ -46,6 +47,19 @@ def _diversity_branch(
             for crop_id, family, flag in zip(crop_ids, families, legume_flags)
         ],
         "transitions": [{}, {}],
+    }
+
+
+def _economics_profiles() -> dict:
+    return {
+        crop_id: {
+            "yield_reference_low_t_ha": 4.0,
+            "yield_reference_high_t_ha": 5.0,
+            "yield_basis": "synthetic test reference",
+            "market_price_mode": "DYNAMIC_EXTERNAL",
+            "source_barc_zoning": "https://example.test/barc",
+        }
+        for crop_id in ("crop_a", "crop_b", "crop_c")
     }
 
 
@@ -354,6 +368,108 @@ class CompletionTimeTests(unittest.TestCase):
         precedence = calculate_diversity_metrics(node, profiles)
         self.assertIn("Brassicaceae", precedence["families"])
         self.assertFalse(precedence["legume_present"])
+
+    def test_economics_metrics_are_unavailable_and_scenarios_empty(self) -> None:
+        """Spec §12.3/§17.15 | Bug it catches: missing economics becomes zero or estimated."""
+        result = build_economics_metrics(_diversity_branch(), _economics_profiles())
+        self.assertEqual(result["status"], "unavailable")
+        self.assertEqual(result["reason"], "Economic estimate unavailable.")
+        self.assertEqual(result["scenarios"], [])
+        for key in (
+            "gross_revenue_bdt_per_ha",
+            "production_cost_bdt_per_ha",
+            "net_return_bdt_per_ha",
+            "upfront_cash_bdt_per_ha",
+        ):
+            with self.subTest(metric=key):
+                metric = result[key]
+                self.assertEqual(metric["status"], "unavailable")
+                self.assertIsNone(metric["value_bdt_per_ha"])
+                self.assertEqual(metric["unit"], "BDT/ha")
+
+    def test_yield_reference_context_is_not_used_for_revenue(self) -> None:
+        """Spec §12.3 | Bug it catches: static reference yields are converted into revenue."""
+        result = build_economics_metrics(_diversity_branch(), _economics_profiles())
+        context = result["yield_reference_context"]
+        self.assertEqual(len(context), 3)
+        for item in context:
+            self.assertEqual(item["status"], "static_reference_not_used")
+            self.assertEqual(item["yield_reference_low_t_ha"], 4.0)
+            self.assertEqual(item["yield_reference_high_t_ha"], 5.0)
+            self.assertEqual(item["yield_basis"], "synthetic test reference")
+        self.assertIsNone(
+            result["gross_revenue_bdt_per_ha"]["value_bdt_per_ha"]
+        )
+
+        without_profiles = build_economics_metrics(_diversity_branch())
+        self.assertTrue(
+            all(
+                item["yield_reference_low_t_ha"] is None
+                for item in without_profiles["yield_reference_context"]
+            )
+        )
+        self.assertIsNone(
+            without_profiles["price_evidence"]["market_price_mode"]
+        )
+
+    def test_price_evidence_is_dynamic_external_without_value(self) -> None:
+        """Spec §12.3 | Bug it catches: a price value or static price is invented."""
+        result = build_economics_metrics(_diversity_branch(), _economics_profiles())
+        price = result["price_evidence"]
+        self.assertEqual(price["status"], "unavailable")
+        self.assertEqual(price["market_price_mode"], "DYNAMIC_EXTERNAL")
+        self.assertEqual(price["source_barc_zoning"], "https://example.test/barc")
+        self.assertIsNone(price["price_value"])
+        self.assertEqual(len(price["per_crop"]), 3)
+        self.assertNotIn("price_value", price["per_crop"][0])
+
+    def test_economics_missing_evidence_ids_are_exact(self) -> None:
+        """Spec §12.3/§12.4 | Bug it catches: missing economic evidence IDs are omitted."""
+        result = build_economics_metrics(_diversity_branch(), _economics_profiles())
+        self.assertEqual(
+            result["missing_evidence"],
+            [
+                "production_cost_evidence",
+                "farm_gate_price_evidence",
+                "validated_typical_yield_or_attainable_basis",
+                "cash_flow_schedule",
+            ],
+        )
+
+    def test_economics_malformed_branch_is_unavailable(self) -> None:
+        """Spec §14.4 | Bug it catches: malformed branches crash or return economics."""
+        base = _diversity_branch()
+        cases = (
+            None,
+            {},
+            {"crops": base["crops"][:2], "transitions": base["transitions"]},
+            {"crops": base["crops"], "transitions": base["transitions"][:1]},
+        )
+        for branch in cases:
+            with self.subTest(branch=branch):
+                result = build_economics_metrics(branch)
+                self.assertEqual(result["status"], "unavailable")
+                self.assertEqual(result["reason"], "INVALID_BRANCH_SHAPE")
+                self.assertEqual(result["scenarios"], [])
+                self.assertEqual(result["yield_reference_context"], [])
+                self.assertIsNone(
+                    result["gross_revenue_bdt_per_ha"]["value_bdt_per_ha"]
+                )
+
+    def test_economics_result_is_json_serializable(self) -> None:
+        """Spec §14.4 | Bug it catches: non-JSON values leak from economics metrics."""
+        result = build_economics_metrics(_diversity_branch(), _economics_profiles())
+        encoded = json.dumps(result, allow_nan=False)
+        self.assertNotIn("NaN", encoded)
+        self.assertIsNone(
+            json.loads(encoded)["net_return_bdt_per_ha"]["value_bdt_per_ha"]
+        )
+
+    def test_economics_module_has_no_crop_id_branches(self) -> None:
+        """Spec §14.4 | Bug it catches: a crop-specific branch is added to economics."""
+        source = SRC.read_text(encoding="utf-8")
+        for crop_id in _CROP_IDS:
+            self.assertNotIn(crop_id, source)
 
     def test_module_has_no_crop_id_branches(self) -> None:
         """Spec §14.4 | Bug it catches: a crop-specific branch is added to branch metrics."""

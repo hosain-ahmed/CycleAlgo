@@ -9,6 +9,13 @@ _DIVERSITY_BASIS = "crop_family_count_product_convention"
 _DIVERSITY_NOTE = (
     "Family count is a product convention, not a measured soil-health ranking."
 )
+_ECONOMIC_REASON = "Economic estimate unavailable."
+_ECONOMIC_MISSING = [
+    "production_cost_evidence",
+    "farm_gate_price_evidence",
+    "validated_typical_yield_or_attainable_basis",
+    "cash_flow_schedule",
+]
 
 
 def calculate_completion_time(branch: dict) -> dict:
@@ -224,6 +231,138 @@ def build_resource_metrics(
             "No sourced equipment evidence; equipment and special-management "
             "prerequisites are unavailable.",
         ),
+    }
+
+
+def build_economics_metrics(
+    branch: dict, profiles: dict | None = None
+) -> dict:
+    """Return economics metrics as explicitly unavailable, never zero-filled.
+
+    Yield references and price modes are context only; no revenue, cost, net
+    return, upfront cash, or price value is estimated without sourced evidence.
+    """
+    if not _valid_branch_shape(branch):
+        return _invalid_economics_metrics()
+    if profiles is not None and not isinstance(profiles, dict):
+        raise TypeError("profiles must be a dict keyed by crop_id or None")
+
+    yield_context = []
+    price_context = []
+    for crop in branch["crops"]:
+        crop_id = _resource_text(crop.get("crop_id"))
+        profile = profiles.get(crop_id) if profiles and crop_id else None
+        if not isinstance(profile, dict):
+            profile = None
+        yield_context.append(
+            {
+                "crop_id": crop_id,
+                "yield_reference_low_t_ha": _context_number(
+                    crop, profile, "yield_reference_low_t_ha"
+                ),
+                "yield_reference_high_t_ha": _context_number(
+                    crop, profile, "yield_reference_high_t_ha"
+                ),
+                "yield_basis": _context_text(crop, profile, "yield_basis"),
+                "status": "static_reference_not_used",
+            }
+        )
+        price_context.append(
+            {
+                "crop_id": crop_id,
+                "market_price_mode": _context_text(
+                    crop, profile, "market_price_mode"
+                ),
+                "source_barc_zoning": _context_text(
+                    crop, profile, "source_barc_zoning"
+                ),
+            }
+        )
+
+    modes = {
+        item["market_price_mode"]
+        for item in price_context
+        if item["market_price_mode"] is not None
+    }
+    sources = {
+        item["source_barc_zoning"]
+        for item in price_context
+        if item["source_barc_zoning"] is not None
+    }
+    mode = next(iter(modes)) if len(modes) == 1 else None
+    source = next(iter(sources)) if len(sources) == 1 else None
+
+    return {
+        "status": "unavailable",
+        "reason": _ECONOMIC_REASON,
+        "scenarios": [],
+        "gross_revenue_bdt_per_ha": _economics_metric(
+            ["validated_typical_yield_or_attainable_basis", "farm_gate_price_evidence"]
+        ),
+        "production_cost_bdt_per_ha": _economics_metric(
+            ["production_cost_evidence"]
+        ),
+        "net_return_bdt_per_ha": _economics_metric(
+            [
+                "production_cost_evidence",
+                "farm_gate_price_evidence",
+                "validated_typical_yield_or_attainable_basis",
+            ]
+        ),
+        "upfront_cash_bdt_per_ha": _economics_metric(
+            ["cash_flow_schedule", "production_cost_evidence"]
+        ),
+        "yield_reference_context": yield_context,
+        "price_evidence": {
+            "status": "unavailable",
+            "market_price_mode": mode,
+            "source_barc_zoning": source,
+            "price_value": None,
+            "unit": "BDT/t",
+            "per_crop": price_context,
+            "missing_evidence": ["farm_gate_price_evidence"],
+            "reason": (
+                "No sourced farm-gate price value; market price mode is "
+                "dynamic external."
+            ),
+        },
+        "missing_evidence": list(_ECONOMIC_MISSING),
+    }
+
+
+def _economics_metric(missing: list[str]) -> dict:
+    return {
+        "status": "unavailable",
+        "value_bdt_per_ha": None,
+        "unit": "BDT/ha",
+        "missing_evidence": missing,
+        "reason": _ECONOMIC_REASON,
+    }
+
+
+def _invalid_economics_metrics() -> dict:
+    missing = ["branch_shape"] + list(_ECONOMIC_MISSING)
+    metric_missing = ["branch_shape"]
+    return {
+        "status": "unavailable",
+        "reason": "INVALID_BRANCH_SHAPE",
+        "scenarios": [],
+        "gross_revenue_bdt_per_ha": _economics_metric(metric_missing),
+        "production_cost_bdt_per_ha": _economics_metric(metric_missing),
+        "net_return_bdt_per_ha": _economics_metric(metric_missing),
+        "upfront_cash_bdt_per_ha": _economics_metric(metric_missing),
+        "yield_reference_context": [],
+        "price_evidence": {
+            "status": "unavailable",
+            "market_price_mode": None,
+            "source_barc_zoning": None,
+            "price_value": None,
+            "unit": "BDT/t",
+            "per_crop": [],
+            "missing_evidence": ["branch_shape"],
+            "reason": "INVALID_BRANCH_SHAPE",
+        },
+        "missing_evidence": missing,
     }
 
 

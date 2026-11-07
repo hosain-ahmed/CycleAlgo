@@ -1,15 +1,14 @@
 # Council State
 
-Last updated: 2026-11-07 (E8 W3 PASS; W4 next; defaults A/A/display-only)
+Last updated: 2026-11-07 (E8 W4 PASS; W5 next; defaults A/A/display-only)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
    `council/reports/E8-preflight.md`.
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 246 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
+   (expect 253 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
    conditional / 15 exclusions.
-3. E7 accepted; E8 guard PASS. E8 W1 completion, W2 diversity, W3 resources PASS;
-   next W4 economics-unavailable, W5 ranking.
+3. E7 accepted; E8 guard PASS. E8 W1–W4 PASS; next W5 ranking, then E8 final gate.
 4. E8 defaults in use (user can override): economics A (completion+diversity only;
    all economic/resource metrics unavailable), completion endpoints A
    (earliest−earliest / latest−latest, rank by latest), irrigation display-only.
@@ -80,6 +79,9 @@ Last updated: 2026-11-07 (E8 W3 PASS; W4 next; defaults A/A/display-only)
 - E8 W3 PASS: `build_resource_metrics` keeps cash/irrigation/labor/equipment separate;
   cash/labor/equipment unavailable/null; irrigation context-only/unranked; no combined
   score or summed volume; 246 tests; 5/5 mutations. Reports `E8-W3-*`.
+- E8 W4 PASS: `build_economics_metrics` all monetary metrics unavailable/null;
+  reference yields context-only; no price/cost/cash-flow values; 253 tests; 5/5
+  mutations. Reports `E8-W4-*`.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
@@ -152,3 +154,4 @@ Last updated: 2026-11-07 (E8 W3 PASS; W4 next; defaults A/A/display-only)
 | E8 W1 | PASS | PASS | PASS | PASS | PASS | 7c45cbb |
 | E8 W2 | PASS | PASS | PASS | PASS | PASS | 6495a4d |
 | E8 W3 | PASS | PASS | PASS | PASS | PASS | 4b11246 |
+| E8 W4 | PASS | PASS | PASS | PASS | PASS | cae196a |
