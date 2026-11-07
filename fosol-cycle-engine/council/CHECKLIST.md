@@ -68,6 +68,8 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [x] E6 Timeline, preparation, waiting, 3-crop expansion (§10, §11).
 - [x] E7 Historical seasonal replay with coverage rules (§9).
 - [ ] E8 Metrics, economics, rankings, preferences (§12, §13).
+      Caveat: decision A leaves 57/420 fastest branches unranked; decide option A/B/C/D
+      in `reports/E8-completion-range-issue.md`.
 - [ ] E9 Response envelope, status precedence, warnings (§14.3, §14.4).
 - [ ] E10 Thin HTTP wrapper `POST /api/explore`.
 - [ ] E11 Handoff artifacts and docs (§14.6).

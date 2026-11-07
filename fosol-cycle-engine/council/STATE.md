@@ -1,6 +1,6 @@
 # Council State
 
-Last updated: 2026-11-07 (E8 W5 PASS; E8 final gate pending; defaults A/A/display-only)
+Last updated: 2026-11-07 (E8 W1–W5 PASS; final audit PASS; completion-range caveat pending)
 
 ## RESUME HERE
 1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`, and
@@ -8,7 +8,10 @@ Last updated: 2026-11-07 (E8 W5 PASS; E8 final gate pending; defaults A/A/displa
 2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
    (expect 264 tests, OK). E6 smoke must stay 420 branches / 0 candidate / 420
    conditional / 15 exclusions.
-3. E7 accepted; E8 guard PASS. E8 W1–W5 PASS; next E8 final spec/integrity gate.
+3. E7 accepted; E8 guard PASS; E8 W1–W5 PASS; final spec/integrity PASS with one
+   caveat: decision A leaves 57/420 fastest branches unranked (`COMPLETION_RANGE_INVALID`;
+   example min 669 d > max 668 d). E8 not ticked. Decide option A/B/C/D in
+   `reports/E8-completion-range-issue.md`; no code changes yet.
 4. E8 defaults in use (user can override): economics A (completion+diversity only;
    all economic/resource metrics unavailable), completion endpoints A
    (earliest−earliest / latest−latest, rank by latest), irrigation display-only.
@@ -85,6 +88,9 @@ Last updated: 2026-11-07 (E8 W5 PASS; E8 final gate pending; defaults A/A/displa
 - E8 W5 PASS: `rank_branches` candidate/conditional groups separate, blocked excluded,
   fastest/diversity ranked, economics/irrigation unranked/no winner, missing metric
   unranked, deterministic ties; 264 tests; 5/5 mutations. Reports `E8-W5-*`.
+- E8 final audit PASS: 264 tests, 39 E8, E6 smoke 420/0/420/15; real fastest 363 ranked /
+  57 unranked under A. Caveat documented in `E8-completion-range-issue.md`; E8 not ticked
+  pending completion-range decision.
 - Policy: `council/TESTING_POLICY.md` (budgets, fault log, mutation check, <30-line reports,
   demo_check at E8–E9).
 
