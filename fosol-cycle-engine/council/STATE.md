@@ -177,5 +177,5 @@ Last updated: 2026-11-09 (E9/E10/E11 complete; final handoff)
 | E8 W1 rev | PASS | PASS | PASS | PASS | PASS | d0a7e8d |
 | E8 final | PASS | PASS | PASS | PASS | PASS | 1de054c |
 | E9 initial wait | PASS | PASS | PASS | PASS | PASS | e887489 |
-| E9 | PASS | PASS | PASS | PASS | PASS | pending |
-| E10/E11 | PASS | PASS | PASS | PASS | PASS | pending |
+| E9 | PASS | PASS | PASS | PASS | PASS | 6af889f |
+| E10/E11 | PASS | PASS | PASS | PASS | PASS | 6af889f (examples trim 8664601) |
