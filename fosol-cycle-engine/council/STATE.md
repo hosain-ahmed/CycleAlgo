@@ -1,6 +1,6 @@
 # Council State
 
-Last updated: 2026-11-09 (E9/E10/E11 complete; final handoff)
+Last updated: 2026-11-09 (final; clean clone PASS; 310 tests)
 
 ## FINAL
 - Algorithm complete for v1 scope. **310 tests**, `demo_check.py` PASS, 9/9 example
@@ -18,6 +18,9 @@ Last updated: 2026-11-09 (E9/E10/E11 complete; final handoff)
   `docs/SETUP.md`, `docs/CONTRACT.md`; examples in `examples/`.
 - Server: `python -m src.server --port 8000`; `POST /api/explore`, `GET /health`.
 - `v1.md` remains uncommitted; no leftover council prompt.
+- Clean clone from `origin/vv1` PASS: 310 tests, demo_check PASS, contract checker
+  PASS; `GET /health` -> `{"status":"ok"}`; `POST /api/explore` -> `200 partial`,
+  42 branches/0 candidate/42 conditional for the trimmed Boro example.
 - Next: none unless sourced preparation/soil/water/economic evidence is supplied.
 
 ## Current
