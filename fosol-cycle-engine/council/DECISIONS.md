@@ -36,7 +36,18 @@
 
 - `max_waiting_days` (between-crop) remains `None` for E9/demo; affects transition
   exclusion only; reverse by passing a configured value.
-- SMAP token expired; no live calls; unavailable warning; rerun
-  `tools/appeears_login.py` to reverse.
+- SMAP uses the cached live-task fixture (`tests/fixtures/appeears_spl4smgp_...csv`);
+  no live token. Reverse by refreshing `tools/appeears_login.py` and fetching live.
 - §6.2 omitted from status; `climate` check is `unknown` with reason; reverse by
   implementing a sourced exposure rule.
+- Initial request returns `branches: []` per §14.3; `branch_summary` aggregates all
+  roots (295) and says available/select a first crop. Reverse by returning all root
+  branches in the initial response.
+- No-candidate message: “available; select a first crop” when branches are empty,
+  “shown” when branches are present. Reverse by changing the message policy.
+- Handoff examples trimmed: `example_response.json` 1 branch; 10-branch sample separate
+  (`max_branches`). Reverse by regenerating without the cap (42 for Boro).
+- E7 outlook is `unavailable` when no normalized POWER environment is supplied.
+  Reverse by injecting a POWER environment and attaching `build_outlook`.
+- SMAP context is omitted/unavailable when no cached context is supplied; reverse by
+  supplying the cached fixture or a live normalized SMAP payload.

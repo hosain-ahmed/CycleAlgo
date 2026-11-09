@@ -102,7 +102,7 @@
       "product": "SPL4SMGP.008",
       "version": "008",
       "coverage": "SMAP context only",
-      "retrieved_at": "2026-11-07T00:00:00+00:00"
+      "retrieved_at": "2026-11-09T12:00:00+00:00"
     },
     {
       "source_id": "rotation_family_rule",
@@ -2943,14 +2943,129 @@
     "temporal_resolution": "3-hourly",
     "observations": [
       {
-        "timestamp": "2026-11-01T00:00:00Z",
-        "sm_surface": 0.2,
-        "sm_rootzone": 0.25
+        "timestamp": "2025-01-01T01:30:00+00:00",
+        "sm_surface": 0.1858516,
+        "sm_rootzone": 0.2432147
+      },
+      {
+        "timestamp": "2025-01-01T04:30:00+00:00",
+        "sm_surface": 0.1863757,
+        "sm_rootzone": 0.243142
+      },
+      {
+        "timestamp": "2025-01-01T07:30:00+00:00",
+        "sm_surface": 0.183153,
+        "sm_rootzone": 0.2426977
+      },
+      {
+        "timestamp": "2025-01-01T10:30:00+00:00",
+        "sm_surface": 0.1812244,
+        "sm_rootzone": 0.2424095
+      },
+      {
+        "timestamp": "2025-01-01T13:30:00+00:00",
+        "sm_surface": 0.1825846,
+        "sm_rootzone": 0.2424353
+      },
+      {
+        "timestamp": "2025-01-01T16:30:00+00:00",
+        "sm_surface": 0.1844865,
+        "sm_rootzone": 0.2425273
+      },
+      {
+        "timestamp": "2025-01-01T19:30:00+00:00",
+        "sm_surface": 0.186254,
+        "sm_rootzone": 0.2425636
+      },
+      {
+        "timestamp": "2025-01-01T22:30:00+00:00",
+        "sm_surface": 0.1879442,
+        "sm_rootzone": 0.2426064
+      },
+      {
+        "timestamp": "2025-01-02T01:30:00+00:00",
+        "sm_surface": 0.1896051,
+        "sm_rootzone": 0.2426461
+      },
+      {
+        "timestamp": "2025-01-02T04:30:00+00:00",
+        "sm_surface": 0.1894959,
+        "sm_rootzone": 0.2425776
+      },
+      {
+        "timestamp": "2025-01-02T07:30:00+00:00",
+        "sm_surface": 0.1858919,
+        "sm_rootzone": 0.2422264
+      },
+      {
+        "timestamp": "2025-01-02T10:30:00+00:00",
+        "sm_surface": 0.183879,
+        "sm_rootzone": 0.2419415
+      },
+      {
+        "timestamp": "2025-01-02T13:30:00+00:00",
+        "sm_surface": 0.1719301,
+        "sm_rootzone": 0.241217
+      },
+      {
+        "timestamp": "2025-01-02T16:30:00+00:00",
+        "sm_surface": 0.1742833,
+        "sm_rootzone": 0.2412964
+      },
+      {
+        "timestamp": "2025-01-02T19:30:00+00:00",
+        "sm_surface": 0.1763543,
+        "sm_rootzone": 0.2413401
+      },
+      {
+        "timestamp": "2025-01-02T22:30:00+00:00",
+        "sm_surface": 0.1783577,
+        "sm_rootzone": 0.2414309
+      },
+      {
+        "timestamp": "2025-01-03T01:30:00+00:00",
+        "sm_surface": 0.1802487,
+        "sm_rootzone": 0.2414674
+      },
+      {
+        "timestamp": "2025-01-03T04:30:00+00:00",
+        "sm_surface": 0.1803458,
+        "sm_rootzone": 0.2414102
+      },
+      {
+        "timestamp": "2025-01-03T07:30:00+00:00",
+        "sm_surface": 0.1777144,
+        "sm_rootzone": 0.2410814
+      },
+      {
+        "timestamp": "2025-01-03T10:30:00+00:00",
+        "sm_surface": 0.176697,
+        "sm_rootzone": 0.2409017
+      },
+      {
+        "timestamp": "2025-01-03T13:30:00+00:00",
+        "sm_surface": 0.1782918,
+        "sm_rootzone": 0.240921
+      },
+      {
+        "timestamp": "2025-01-03T16:30:00+00:00",
+        "sm_surface": 0.1798971,
+        "sm_rootzone": 0.2409767
+      },
+      {
+        "timestamp": "2025-01-03T19:30:00+00:00",
+        "sm_surface": 0.1810097,
+        "sm_rootzone": 0.2410468
+      },
+      {
+        "timestamp": "2025-01-03T22:30:00+00:00",
+        "sm_surface": 0.1818904,
+        "sm_rootzone": 0.2410727
       }
     ],
-    "observation_start": "2026-11-01T00:00:00Z",
-    "observation_end": "2026-11-01T00:00:00Z",
-    "retrieved_at": "2026-11-07T00:00:00+00:00",
+    "observation_start": "2025-01-01T01:30:00+00:00",
+    "observation_end": "2025-01-03T22:30:00+00:00",
+    "retrieved_at": "2026-11-09T12:00:00+00:00",
     "label": "Context only - no effect on status or ranking",
     "warnings": [],
     "status": "available"

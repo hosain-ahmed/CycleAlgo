@@ -12,8 +12,14 @@ Last updated: 2026-11-09 (final; clean clone PASS; 310 tests)
   `no_winner=true`; §17.16 N/A (no financial values).
 - §6.2 current-season climate deferred; preparation/soil/economic evidence missing, so
   no candidate branches. Parked in `council/QUESTIONS.md` / `docs/OPEN_DECISIONS.md`.
-- SMAP is context-only (`environment_context`), never status/ranking; unavailable/expired
-  is a warning, never zero. E7 warnings all OFF (wheat 35/35 hidden; mustard 1/35 held).
+- SMAP is context-only (`environment_context`), never status/ranking. `example_response.json`
+  uses the real cached AppEEARS fixture: 24 observations, 2025-01-01T01:30Z..2025-01-03T22:30Z,
+  SPL4SMGP.008 9 km/3-hourly; no token. E7 warnings all OFF.
+- Waiting gaps (window-only, prep unknown): transitions n=590 min 0 / median 206 /
+  max 282, >90 461, >180 340; branch totals n=295 min 0 / median 389 / max 546,
+  >90 282, >180 237. No limit configured; report `E9-waiting-gaps.md`.
+- Handoff examples: 1-branch `example_response.json`, 10-branch
+  `example_response_first_crop_selected.json`, small states, contract checker 11/11.
 - Docs: `docs/FRONTEND_HANDOFF.md`, `docs/EXPLAINER.md`, `docs/OPEN_DECISIONS.md`,
   `docs/SETUP.md`, `docs/CONTRACT.md`; examples in `examples/`.
 - Server: `python -m src.server --port 8000`; `POST /api/explore`, `GET /health`.

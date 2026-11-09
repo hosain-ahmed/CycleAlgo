@@ -253,4 +253,11 @@ context block and source metadata differ.
 
 The shipped `example_response.json` and `example_response_smap_context.json` are
 trimmed to one branch with `config.max_branches=1` for handoff size; a live Boro
-selection returns 42 branches. Both examples remain schema-complete.
+selection returns 42 branches. The fuller handoff sample is
+`example_response_first_crop_selected.json` (selected Boro, `config.max_branches=10`,
+10 conditional branches); `examples/example_request_first_crop_selected.json`
+documents that request.
+
+The SMAP examples use the cached real AppEEARS task result
+`tests/fixtures/appeears_spl4smgp_rajshahi_20250101_20250103.csv` (24 observations,
+2025-01-01..03 UTC); no live token is needed.

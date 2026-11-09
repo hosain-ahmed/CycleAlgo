@@ -18,31 +18,31 @@ from src.branch_metrics import rank_branches
 from src.crop_profiles import load_crop_profiles
 from src.explore import explore
 from src.request_validation import RequestValidationError
+from src.smap_api import parse_appeears_csv
 
 DATA = ROOT.parent / "Data" / "fosol_cycle_rajshahi_crop_dataset.csv"
+SMAP_FIXTURE = (
+    ROOT
+    / "tests"
+    / "fixtures"
+    / "appeears_spl4smgp_rajshahi_20250101_20250103.csv"
+)
 CONFIG = {"max_initial_wait_days": 180, "max_waiting_days": None}
 NOW = dt.datetime(2026, 11, 9, 0, 0, tzinfo=dt.timezone.utc)
 START = "2026-11-06"
 PROFILES = None
 
-SMAP_AVAILABLE = {
-    "product": "SPL4SMGP.008",
-    "product_version": "008",
-    "provider": "NASA SMAP via AppEEARS",
-    "spatial_resolution": "9 km EASE-Grid 2.0",
-    "temporal_resolution": "3-hourly",
-    "observations": [
-        {
-            "timestamp": "2026-11-01T00:00:00Z",
-            "sm_surface": 0.2,
-            "sm_rootzone": 0.25,
-        }
-    ],
-    "observation_start": "2026-11-01T00:00:00Z",
-    "observation_end": "2026-11-01T00:00:00Z",
-    "retrieved_at": "2026-11-07T00:00:00+00:00",
-    "warnings": [],
-}
+
+def _real_smap_context() -> dict:
+    context = parse_appeears_csv(
+        SMAP_FIXTURE.read_text(encoding="utf-8"),
+        retrieved_at="2026-11-09T12:00:00+00:00",
+    )
+    context["product"] = "SPL4SMGP.008"
+    return context
+
+
+SMAP_AVAILABLE = _real_smap_context()
 SMAP_UNAVAILABLE = {
     **SMAP_AVAILABLE,
     "status": "unavailable",
@@ -388,6 +388,39 @@ def main() -> int:
             available_smap["environment_context"]["status"] == "available",
             "SMAP available context status",
         )
+        available_context = available_smap["environment_context"]
+        require(
+            available_context["product"] == "SPL4SMGP.008",
+            "SMAP context product",
+        )
+        require(
+            available_context["resolution"] == "9 km EASE-Grid 2.0",
+            "SMAP context resolution",
+        )
+        require(
+            available_context["temporal_resolution"] == "3-hourly",
+            "SMAP context temporal resolution",
+        )
+        require(
+            available_context["label"]
+            == "Context only - no effect on status or ranking",
+            "SMAP context label",
+        )
+        observations = available_context["observations"]
+        require(len(observations) == 24, "SMAP observation count")
+        require(
+            observations[0]["timestamp"].startswith("2025-01-01T")
+            and observations[-1]["timestamp"].startswith("2025-01-03T"),
+            "SMAP observation dates",
+        )
+        require(
+            all(
+                observation.get("sm_surface") is not None
+                and observation.get("sm_rootzone") is not None
+                for observation in observations
+            ),
+            "SMAP real observation values",
+        )
         for key in ("status", "district", "request", "crop_options", "branches", "branch_summary", "ranking", "data_sources"):
             require(
                 unavailable_smap[key] == available_smap[key],
@@ -450,7 +483,12 @@ def main() -> int:
             "cost/net/irrigation/upfront unranked/no_winner"
         )
         print("water: rainfed/irrigation_available/unknown -> partial")
-        print("smap: status/branch IDs/status/ranking identical; context available/unavailable")
+        print(
+            "smap: status/branch IDs/status/ranking identical; "
+            "context available/unavailable; "
+            f"observations={len(available_context['observations'])} "
+            f"{available_context['observation_start']}..{available_context['observation_end']}"
+        )
         print("offline: unavailable/expired SMAP -> partial with warning; no moisture zero-fill")
         print("determinism: identical")
         print("PASS")
