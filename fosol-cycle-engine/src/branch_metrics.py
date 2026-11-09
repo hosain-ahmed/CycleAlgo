@@ -956,7 +956,11 @@ def _ranking_branch_id(branch: object):
 
 
 def _ranking_base(item: dict) -> dict:
-    return {"branch_id": item["branch_id"], "status": item["status"]}
+    return {
+        "branch_id": item["branch_id"],
+        "status": item["status"],
+        "initial_wait_days": item["branch"].get("initial_wait_days"),
+    }
 
 
 def _ranking_reasons(item: dict) -> tuple[list, list]:

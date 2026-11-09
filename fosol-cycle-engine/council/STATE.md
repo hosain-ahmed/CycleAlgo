@@ -1,33 +1,24 @@
 # Council State
 
-Last updated: 2026-11-07 (E9 initial wait 180 committed; E9 envelope/demo_check next)
+Last updated: 2026-11-09 (E9/E10/E11 complete; final handoff)
 
-## RESUME HERE
-1. Read this file, `council/CHECKLIST.md`, `council/TESTING_POLICY.md`,
-   `council/reports/E9-preflight.md`, and `council/reports/E8-preflight.md`.
-2. Run: `cd fosol-cycle-engine` then `python -X utf8 -m unittest discover -s tests -v`
-   (expect 275 tests, OK). E6 regression smoke with 365/365 must stay
-   420 branches / 0 candidate / 420 conditional / 15 exclusions.
-3. E8 accepted. E9 initial wait: **180 days**, product relevance limit,
-   configurable, engine default `None`; transition max remains `None`.
-   Committed `e887489`. Counts:
-   - 365/365: 420 / 0 / 420 / 15
-   - 180/None: **295 / 0 / 295 / 56**
-   - 180/365: 358 / 0 / 358 / 14
-   First crops at 180/None: Boro 42, Lentil 55, Maize 42, Mustard 54, Potato 54,
-   Wheat 48. Aman excluded at 246 d; Mung geography. 56 exclusions: 1 future >180,
-   45 outside supported window, 10 geography. Boundary tests 179/180/181 pass.
-4. Next: build `src/explore.py` envelope + crop_options/branch metrics/ranking/status
-   and `scripts/demo_check.py`. **No E9 envelope commit until demo_check exists and passes.**
-5. E9 hard requirements: status `partial` (0 candidate / 295 conditional); explicit
-   “No candidate branches — 295 conditional branches shown” in the response;
-   `initial_wait_days` per branch; window-only gap separate from prep/waiting; unknown
-   `null`; 400 invalid / 500 generic with no stack trace; unsupported-district
-   precedence; `data_sources`, `assumptions`, `warnings`.
-6. E7 warnings all OFF (wheat 35/35 hidden; mustard corrected 1/35 held). Local 1990
-   CSV `PRECTOTCORR` is 24× the API/2000 file; never raw. §6.2 current-season climate
-   exposure remains unimplemented. SMAP token expiry is operational.
-7. `v1.md` has no leftover council prompt; it remains uncommitted.
+## FINAL
+- Algorithm complete for v1 scope. **310 tests**, `demo_check.py` PASS, 9/9 example
+  contract checks PASS.
+- Initial request: `partial`; 0 candidate / **295 conditional** / 56 exclusions;
+  6 selectable first crops; Aman/Mung unsupported. Selected branch counts: Boro 42,
+  Lentil 55, Maize 42, Mustard 54, Potato 54, Wheat 48.
+- Fastest/diversity ranked within the conditional group; economics/irrigation unranked,
+  `no_winner=true`; §17.16 N/A (no financial values).
+- §6.2 current-season climate deferred; preparation/soil/economic evidence missing, so
+  no candidate branches. Parked in `council/QUESTIONS.md` / `docs/OPEN_DECISIONS.md`.
+- SMAP is context-only (`environment_context`), never status/ranking; unavailable/expired
+  is a warning, never zero. E7 warnings all OFF (wheat 35/35 hidden; mustard 1/35 held).
+- Docs: `docs/FRONTEND_HANDOFF.md`, `docs/EXPLAINER.md`, `docs/OPEN_DECISIONS.md`,
+  `docs/SETUP.md`, `docs/CONTRACT.md`; examples in `examples/`.
+- Server: `python -m src.server --port 8000`; `POST /api/explore`, `GET /health`.
+- `v1.md` remains uncommitted; no leftover council prompt.
+- Next: none unless sourced preparation/soil/water/economic evidence is supplied.
 
 ## Current
 - E1–E5 PASS. Commits: `4711b3e`, `fc92802`, `68220d1`, `a528c26`, `8fdbd5d`.
@@ -186,3 +177,5 @@ Last updated: 2026-11-07 (E9 initial wait 180 committed; E9 envelope/demo_check 
 | E8 W1 rev | PASS | PASS | PASS | PASS | PASS | d0a7e8d |
 | E8 final | PASS | PASS | PASS | PASS | PASS | 1de054c |
 | E9 initial wait | PASS | PASS | PASS | PASS | PASS | e887489 |
+| E9 | PASS | PASS | PASS | PASS | PASS | pending |
+| E10/E11 | PASS | PASS | PASS | PASS | PASS | pending |

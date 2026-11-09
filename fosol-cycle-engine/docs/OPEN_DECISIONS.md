@@ -1,0 +1,27 @@
+# Open decisions and current defaults
+
+These are unresolved evidence/configuration decisions. They are intentionally
+visible in responses; none is silently replaced by a favorable value.
+
+| Decision | Current default | Impact on the product |
+|---|---|---|
+| §6.2 current-season climate exposure | Deferred. `climate` check is `unknown` with `CLIMATE_EXPOSURE_DEFERRED`; `current_season_climate_exposure` is missing. | No climate-driven candidate or rejection. Weather warnings are not current-season evidence. |
+| Sourced preparation times | Missing. All crop-CSV `turnaround_days_*` cells are blank; `preparation_range`, `ready_range`, `waiting_range`, and `total_interval_range_days` are null. | Readiness is unknown, never zero. Next planting is window-only; the harvest-to-window gap is not field-ready waiting. |
+| Duration reference stage | Unconfirmed. The CSV gives variety duration but not whether it starts at sowing or transplanting. `DURATION_REFERENCE_UNRESOLVED`; timing is conditional. | Timeline remains conditional; nursery age is shown but not added to duration. |
+| Local soil/land evidence | Missing. No district BARC/SRDI pH, texture, drainage, or salinity evidence; soil checks are `unknown`. Crop-CSV EcoCrop text is guidance only. | No soil pass; branches remain conditional. SMAP is not used as a substitute. |
+| Sourced water/comparability evidence | Missing. Water checks return caution/unknown; irrigation guidance and FAO/phase values are context only, not a comparable dependence measure. | `least_irrigation_dependence` is unranked; no irrigation total or score is calculated. |
+| Sourced economics | Missing. No farm-gate prices, production costs, cash-flow schedule, or validated typical yields. All monetary metrics are `unavailable`/null; scenarios empty. | Cost, net-return, and upfront-cash preferences are unranked with `no_winner=true`; reference yields are context only. |
+| Warning thresholds | Config-only and all OFF: wheat `T2M_MAX > 30 C` / `T2M_MIN < 15 C`, mustard `PRECTOTCORR > 50 mm/day`. Wheat hidden; the corrected mustard heavy-rain audit is 1/35 and remains held. | No active warning indicators or thresholds. Enabling them requires a sourced stage-specific rule. |
+| SMAP outlook | Out of status/ranking and out of E7. If supplied, `environment_context` is context only; if missing/expired, unavailable with a warning. | No moisture threshold, no status change, no forecast. A missing token is not zero moisture. |
+| `v1.md` | User work, uncommitted; source of truth for the spec. | Documentation/code changes must not commit or rewrite it; spec and implementation can drift until the user confirms. |
+
+## Configured (not silently invented)
+
+- Server initial-wait policy: **180 days**, product relevance cutoff, caller/engine
+  configurable; engine default remains `None`.
+- Transition waiting limit: **None** on the server; no numeric product maximum is
+  claimed.
+- Historical analysis period: **1991–2025** by default, configurable.
+- Supported district: **Rajshahi only**; other valid district IDs return
+  `unsupported_district` with no fabricated results.
+- `lowest_upfront_cash` is rejected until a sourced cash-flow schedule exists.

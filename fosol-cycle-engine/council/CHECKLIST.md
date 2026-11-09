@@ -26,38 +26,38 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 
 ## B. Spec §14.6 — required handoff artifacts (7)
 
-- [ ] 14.6.1 Runnable algorithm code with a short command showing how to execute it.
-- [ ] 14.6.2 Documented callable entry point and the HTTP endpoint if hosted separately.
-- [ ] 14.6.3 Finalized JSON request/response contract, every nested field documented.
-- [ ] 14.6.4 `example_request.json` and matching complete, schema-consistent `example_response.json`
+- [x] 14.6.1 Runnable algorithm code with a short command showing how to execute it.
+- [x] 14.6.2 Documented callable entry point and the HTTP endpoint if hosted separately.
+- [x] 14.6.3 Finalized JSON request/response contract, every nested field documented.
+- [x] 14.6.4 `example_request.json` and matching complete, schema-consistent `example_response.json`
       from the implemented algorithm, including all three crops when a first crop is selected.
-- [ ] 14.6.5 Small saved examples for initial options, conditional branches/missing economics,
+- [x] 14.6.5 Small saved examples for initial options, conditional branches/missing economics,
       no supported paths, unsupported district, and invalid input.
-- [ ] 14.6.6 Runnable checks proving valid JSON, consistent required keys/statuses, existing
+- [x] 14.6.6 Runnable checks proving valid JSON, consistent required keys/statuses, existing
       branch/source ID references, and full paths with exactly three crops and two transitions.
-- [ ] 14.6.7 Setup/environment instructions naming required credentials without secrets,
+- [x] 14.6.7 Setup/environment instructions naming required credentials without secrets,
       supported districts, data limitations, and API startup configuration.
 
 ## C. Spec §20 — acceptance criteria (8)
 
-- [ ] 20.1 Select Rajshahi from the Bangladesh map or district list.
+- [x] 20.1 Select Rajshahi from the Bangladesh map or district list.
       (Algorithm side only: `district_id=rajshahi` is accepted and supported; map UI out of scope.)
-- [ ] 20.2 Understand the planting-date assumption and environmental data freshness.
-- [ ] 20.3 See why first crops are candidates, conditional, or outside support.
-- [ ] 20.4 Choose a first crop and explore two subsequent crops with actual timeline ranges.
-- [ ] 20.5 See preparation, waiting, and excluded-path explanations.
-- [ ] 20.6 Compare complete branches by supported time/resource/economic/diversity metrics.
-- [ ] 20.7 Select a preference and understand why a branch is highlighted.
-- [ ] 20.8 Identify missing evidence and distinguish historical outlooks from forecasts or guarantees.
+- [x] 20.2 Understand the planting-date assumption and environmental data freshness.
+- [x] 20.3 See why first crops are candidates, conditional, or outside support.
+- [x] 20.4 Choose a first crop and explore two subsequent crops with actual timeline ranges.
+- [x] 20.5 See preparation, waiting, and excluded-path explanations.
+- [x] 20.6 Compare complete branches by supported time/resource/economic/diversity metrics.
+- [x] 20.7 Select a preference and understand why a branch is highlighted.
+- [x] 20.8 Identify missing evidence and distinguish historical outlooks from forecasts or guarantees.
 
 ## D. Mission Definition of Done extras
 
-- [ ] D.1 Contract check: responses serialize as valid JSON; referenced branch/source IDs exist;
+- [x] D.1 Contract check: responses serialize as valid JSON; referenced branch/source IDs exist;
       every full path has exactly three crops and two transitions.
-- [ ] D.2 `docs/OPEN_DECISIONS.md` lists unresolved §19 decisions; results surface them as
+- [x] D.2 `docs/OPEN_DECISIONS.md` lists unresolved §19 decisions; results surface them as
       missing evidence, not silent defaults.
-- [ ] D.3 Final Integrity Auditor report with zero unsourced numbers, strings, endpoints, or defaults.
-- [ ] D.4 Full test suite passes, with real command output pasted in the gate report.
+- [x] D.3 Final Integrity Auditor report with zero unsourced numbers, strings, endpoints, or defaults.
+- [x] D.4 Full test suite passes, with real command output pasted in the gate report.
 
 ## E. Build-order milestones (spec §18 + mission Step 1)
 
@@ -69,17 +69,17 @@ Spec Auditor, and Integrity Auditor all report PASS for the item that proves it.
 - [x] E6 Timeline, preparation, waiting, 3-crop expansion (§10, §11).
 - [x] E7 Historical seasonal replay with coverage rules (§9).
 - [x] E8 Metrics, economics, rankings, preferences (§12, §13).
-- [ ] E9 Response envelope, status precedence, warnings (§14.3, §14.4).
-      Initial wait 180 decided; demo_check.py is the hard pre-commit gate.
-- [ ] E10 Thin HTTP wrapper `POST /api/explore`.
-- [ ] E11 Handoff artifacts and docs (§14.6).
+- [x] E9 Response envelope, status precedence, warnings (§14.3, §14.4).
+      Initial wait 180 decided; demo_check.py passed before commit.
+- [x] E10 Thin HTTP wrapper `POST /api/explore`.
+- [x] E11 Handoff artifacts and docs (§14.6).
 
 ## F. Testing-policy amendment (2026-11-06)
 
 - [x] Policy recorded in `council/TESTING_POLICY.md`; reports now < 30 lines.
 - [x] E4 fault log + test grouping produced; no test deleted before the mutation check.
 - [x] E4 mutation check: 5 critical lines, each mutation caught, code restored (hash verified).
-- [ ] E5–E11 follow the per-function light gate and per-milestone full gate.
-- [ ] E8–E9 demo safety suite + `scripts/demo_check.py`; rerun at every later milestone.
+- [x] E5–E11 follow the per-function light gate and per-milestone full gate.
+- [x] E8–E9 demo safety suite + `scripts/demo_check.py`; rerun at every later milestone.
       **E9 hard gate: build and run before any E9 commit; do not defer again.**
 - [ ] E1–E3 budget overage reviewed (E1 14 vs 8–12; E3 54 vs 12–20) — deferred, not blocking.
