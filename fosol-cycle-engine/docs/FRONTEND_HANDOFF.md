@@ -244,9 +244,13 @@ python scripts/contract_check.py examples/example_error_invalid_input.json --err
 ```
 
 Small-state examples: `example_response_unsupported_district.json` (dhaka),
-`example_response_no_options.json` (`2026-08-01`, initial limit 0),
+`example_response_no_options.json` (Aman selected at the 180-day initial limit),
 `example_response_data_unavailable.json` (empty profiles),
 `example_error_invalid_input.json` (bad start date), and
 `example_response_smap_context.json` (synthetic context, one-branch cap). Status and
 ranking in the SMAP file are identical to the unavailable-context response; only the
 context block and source metadata differ.
+
+The shipped `example_response.json` and `example_response_smap_context.json` are
+trimmed to one branch with `config.max_branches=1` for handoff size; a live Boro
+selection returns 42 branches. Both examples remain schema-complete.
