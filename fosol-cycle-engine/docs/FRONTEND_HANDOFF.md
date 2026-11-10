@@ -1,5 +1,8 @@
 # Frontend handoff — Fosol-Cycle explore API
 
+**Quick connection guide: [`docs/CONNECT.md`](CONNECT.md).** This page is the full
+contract/handoff.
+
 This is the practical contract for a web developer. The frozen schema is in
 `docs/CONTRACT.md`; this page explains how to run it and how to render every state.
 

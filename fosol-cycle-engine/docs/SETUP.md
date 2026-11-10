@@ -54,16 +54,19 @@ curl.exe -s -X POST http://127.0.0.1:8000/api/explore `
   --data-binary "@examples/example_request_initial.json"
 ```
 
-The server loads local crop profiles only. It does **not** call POWER or SMAP, so
-`outlook` is unavailable, `environment_context` is unavailable with a warning, and
-the response is `partial`. A host application can pass `environment` and
-`smap_context` to `src.explore.explore`; the development server does not.
+The server loads local crop profiles and local POWER. It does **not** call POWER or
+SMAP live. The outlook therefore uses local POWER 2000–2025; `environment_context`
+(SMAP) is unavailable with a warning, and the response is `partial`. A host
+application can pass `environment` and `smap_context` to `src.explore.explore`; the
+development server does not load SMAP. The cached SMAP sample is used by
+`examples/` and `scripts/demo_check.py`.
 
 Server configuration defaults:
 
 - initial-wait policy: 180 days (`max_initial_wait_days`);
 - transition waiting limit: `None` (`max_waiting_days`);
-- historical analysis: 1991–2025;
+- historical analysis: 2000–2025 (local POWER B; 1991–1999 excluded because the local
+  precipitation series is invalid);
 - no live provider calls, no credentials required.
 
 ## Environment variables (names only; never commit values)
