@@ -33,7 +33,17 @@ Last updated: 2026-11-10 (E7 local-POWER outlook wired; final rerun)
   context-only, never current, never status/ranking.
 - Inter-crop wait sensitivity (initial 180): 90 d 11 branches/5 first crops; 120 d 20/6;
   180 d 74/6; 240 d 135/6; no limit 295/6. No limit configured.
-- Clean clone from `origin/vv1` PASS: tests/demo/contract and live curl.
+- `docs/CONNECT.md` added and linked from `README.md` and
+  `docs/FRONTEND_HANDOFF.md`; SETUP corrected to local POWER 2000–2025 and server
+  SMAP-context limitation.
+- Fresh clone of `vv1` in a temp folder, new venv (`3.13.2`), server started from a
+  different cwd (`PYTHONPATH` + `--data-dir`): health `{"status":"ok"}`, both POSTs
+  `200 partial` (`0/295/56` initial; `42` selected), both live outputs contract-check
+  PASS. Saved examples are trimmed (1/10 branches); docs explain the difference.
+- Merge-ready checks: full suite 314, demo_check PASS, contract PASS; `.gitignore`
+  covers venv/cache/pyc/tokens/local config; secret/size/log checks recorded in the
+  final report.
+- Tag: `v1-handoff` on `vv1`.
 - Next: none unless sourced preparation/soil/water/economic evidence is supplied.
 
 ## Current
