@@ -40,9 +40,11 @@ Last updated: 2026-11-10 (E7 local-POWER outlook wired; final rerun)
   different cwd (`PYTHONPATH` + `--data-dir`): health `{"status":"ok"}`, both POSTs
   `200 partial` (`0/295/56` initial; `42` selected), both live outputs contract-check
   PASS. Saved examples are trimmed (1/10 branches); docs explain the difference.
-- Merge-ready checks: full suite 314, demo_check PASS, contract PASS; `.gitignore`
-  covers venv/cache/pyc/tokens/local config; secret/size/log checks recorded in the
-  final report.
+- Merge-ready checks: full suite 314, demo_check PASS, contract 11/11 PASS; `.gitignore`
+  covers venv/cache/pyc/logs/tokens/local config; secret scan clean in diff and
+  history; no tracked file >5 MB; Data tracked 7 files/1.05 MB.
+- `main..vv1`: 51 commits, 177 files, +130,947/−1; `main` is an ancestor of `vv1`
+  (fast-forward yes, no conflicts). `git status` only `M v1.md`.
 - Tag: `v1-handoff` on `vv1`.
 - Next: none unless sourced preparation/soil/water/economic evidence is supplied.
 
