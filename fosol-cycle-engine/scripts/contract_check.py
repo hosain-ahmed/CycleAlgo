@@ -59,6 +59,66 @@ def _check_economics(value: object, field: str, errors: list[str]) -> None:
         errors.append(f"{field}.price_evidence.price_value must be null when unavailable")
 
 
+def _check_outlook(
+    value: object, field: str, catalog: set[str], errors: list[str]
+) -> None:
+    if not isinstance(value, dict):
+        errors.append(f"{field} must be an object")
+        return
+    if value.get("status") not in {"ok", "partial", "unavailable"}:
+        errors.append(f"{field}.status invalid")
+    if not isinstance(value.get("label"), str) or not value["label"]:
+        errors.append(f"{field}.label must be non-empty")
+    for source in value.get("sources", []):
+        if isinstance(source, dict) and source.get("source_id") not in catalog:
+            errors.append(f"{field}.sources references unknown source_id")
+    ranges = value.get("seasonal_ranges")
+    if ranges is None:
+        return
+    if not isinstance(ranges, dict):
+        errors.append(f"{field}.seasonal_ranges must be an object")
+        return
+    if ranges.get("status") not in {"ok", "partial", "unavailable"}:
+        errors.append(f"{field}.seasonal_ranges.status invalid")
+    if not isinstance(ranges.get("label"), str) or not ranges["label"]:
+        errors.append(f"{field}.seasonal_ranges.label must be non-empty")
+    coverage = ranges.get("coverage")
+    if not isinstance(coverage, dict):
+        errors.append(f"{field}.seasonal_ranges.coverage must be an object")
+    else:
+        for key in ("start_year", "end_year", "seasons_total"):
+            if not isinstance(coverage.get(key), int):
+                errors.append(f"{field}.seasonal_ranges.coverage.{key} must be int")
+    if ranges.get("thresholds_applied") is not False:
+        errors.append(f"{field}.seasonal_ranges.thresholds_applied must be false")
+    if ranges.get("warnings") != []:
+        errors.append(f"{field}.seasonal_ranges.warnings must be empty")
+    _source_ids(
+        ranges.get("source_ids"),
+        f"{field}.seasonal_ranges.source_ids",
+        catalog,
+        errors,
+    )
+    for indicator in ranges.get("indicators", []):
+        if not isinstance(indicator, dict):
+            errors.append(f"{field}.seasonal_ranges.indicators must contain objects")
+            continue
+        for key in ("min", "median", "max"):
+            if not isinstance(indicator.get(key), (int, float)):
+                errors.append(
+                    f"{field}.seasonal_ranges indicator {key} must be numeric"
+                )
+        if all(
+            isinstance(indicator.get(key), (int, float))
+            for key in ("min", "median", "max")
+        ) and not (
+            indicator["min"] <= indicator["median"] <= indicator["max"]
+        ):
+            errors.append(
+                f"{field}.seasonal_ranges indicator ordering invalid"
+            )
+
+
 def _strict_load(path: Path) -> dict:
     def reject(value: str) -> None:
         raise ValueError(f"non-finite JSON constant: {value}")
@@ -254,6 +314,13 @@ def validate_response(payload: dict) -> list[str]:
                 continue
             if not isinstance(crop.get("crop_id"), str):
                 errors.append(f"{label}.crops[{position - 1}] missing crop_id")
+            if "outlook" in crop:
+                _check_outlook(
+                    crop["outlook"],
+                    f"{label}.crops[{position - 1}].outlook",
+                    source_ids,
+                    errors,
+                )
             for key in ("planting_range", "harvest_range"):
                 if crop.get(key) is not None:
                     _range(crop[key], f"{label}.crops[{position - 1}].{key}", errors)
@@ -276,6 +343,10 @@ def validate_response(payload: dict) -> list[str]:
             errors.append(f"{label}.metrics must be an object")
         else:
             _check_economics(metrics.get("economics"), f"{label}.metrics.economics", errors)
+        if "outlook" in branch:
+            _check_outlook(
+                branch["outlook"], f"{label}.outlook", source_ids, errors
+            )
 
     summary = payload.get("branch_summary")
     if not isinstance(summary, dict):

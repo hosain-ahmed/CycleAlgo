@@ -1,6 +1,6 @@
 # Council State
 
-Last updated: 2026-11-09 (final; clean clone PASS; 310 tests)
+Last updated: 2026-11-10 (E7 local-POWER outlook wired; final rerun)
 
 ## FINAL
 - Algorithm complete for v1 scope. **310 tests**, `demo_check.py` PASS, 9/9 example
@@ -24,9 +24,16 @@ Last updated: 2026-11-09 (final; clean clone PASS; 310 tests)
   `docs/SETUP.md`, `docs/CONTRACT.md`; examples in `examples/`.
 - Server: `python -m src.server --port 8000`; `POST /api/explore`, `GET /health`.
 - `v1.md` remains uncommitted; no leftover council prompt.
-- Clean clone from `origin/vv1` PASS: 310 tests, demo_check PASS, contract checker
-  PASS; `GET /health` -> `{"status":"ok"}`; `POST /api/explore` -> `200 partial`,
-  42 branches/0 candidate/42 conditional for the trimmed Boro example.
+- E7 demo outlook wired from local POWER B (2000–2026), analysis 2000–2025, 26 seasons:
+  T2M per-season mean, PRECTOTCORR per-season total, GWETTOP per-season mean
+  (MERRA-2, not SMAP); min/median/max, `thresholds_applied=false`, warnings empty;
+  1991–1999 excluded (local precipitation invalid 24×). All 3 crop outlooks in the
+  1-branch example and 30/30 in the 10-branch example are `ok`.
+- SMAP examples use the cached live-task sample: 24 observations, 2025-01-01..03 UTC;
+  context-only, never current, never status/ranking.
+- Inter-crop wait sensitivity (initial 180): 90 d 11 branches/5 first crops; 120 d 20/6;
+  180 d 74/6; 240 d 135/6; no limit 295/6. No limit configured.
+- Clean clone from `origin/vv1` PASS: tests/demo/contract and live curl.
 - Next: none unless sourced preparation/soil/water/economic evidence is supplied.
 
 ## Current

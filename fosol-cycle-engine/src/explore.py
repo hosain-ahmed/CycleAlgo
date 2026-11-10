@@ -20,7 +20,7 @@ from src.branch_metrics import (
     rank_branches,
 )
 from src.calendar_evaluator import evaluate_calendar_fit
-from src.outlook import build_outlook
+from src.outlook import build_outlook, build_seasonal_ranges
 from src.outlook_config import OUTLOOK_LABEL
 from src.request_validation import validate_explore_request
 from src.soil_water import evaluate_soil_water
@@ -399,18 +399,25 @@ def _branch_outlook(
             per_crop.append(_unavailable_outlook("crop span unavailable"))
             continue
         try:
-            per_crop.append(
-                build_outlook(
-                    str(crop.get("crop_id") or ""),
-                    planting["earliest"],
-                    harvest["latest"],
-                    environment,
-                    start_year=settings["analysis_start_year"],
-                    end_year=settings["analysis_end_year"],
-                    last_complete_data_date=last_complete,
-                    warning_config=settings["warning_config"],
-                )
+            outlook = build_outlook(
+                str(crop.get("crop_id") or ""),
+                planting["earliest"],
+                harvest["latest"],
+                environment,
+                start_year=settings["analysis_start_year"],
+                end_year=settings["analysis_end_year"],
+                last_complete_data_date=last_complete,
+                warning_config=settings["warning_config"],
             )
+            outlook["seasonal_ranges"] = build_seasonal_ranges(
+                environment,
+                planting["earliest"],
+                harvest["latest"],
+                start_year=settings["analysis_start_year"],
+                end_year=settings["analysis_end_year"],
+                last_complete_data_date=last_complete,
+            )
+            per_crop.append(outlook)
         except (TypeError, ValueError) as exc:
             message = str(exc) or "outlook calculation failed"
             per_crop.append(_unavailable_outlook(message))
@@ -468,26 +475,27 @@ def _branch_summary(
     conditional = sum(
         1 for branch in branches if branch.get("status") == "conditional"
     )
+    branch_word = "branch" if conditional == 1 else "branches"
     if candidate == 0 and conditional == 0:
         message = "No candidate or conditional branches available."
     elif candidate == 0 and not visible:
         message = (
-            f"No candidate branches - {conditional} conditional branches "
+            f"No candidate branches - {conditional} conditional {branch_word} "
             "available; select a first crop to view them."
         )
     elif candidate == 0:
         message = (
-            f"No candidate branches - {conditional} conditional branches shown."
+            f"No candidate branches - {conditional} conditional {branch_word} shown."
         )
     elif visible:
         message = (
             f"{candidate} candidate branches and {conditional} conditional "
-            "branches shown."
+            f"{branch_word} shown."
         )
     else:
         message = (
             f"{candidate} candidate branches and {conditional} conditional "
-            "branches available; select a first crop to view them."
+            f"{branch_word} available; select a first crop to view them."
         )
     return {
         "candidate_count": candidate,
@@ -792,11 +800,17 @@ def _data_sources(
         if source_id in entries or source_id in (
             "nasa_power_daily",
             "nasa_smap_appeears",
+            "local_power_2000_2026",
         ):
             continue
         entries[source_id] = _generic_source(source_id)
     if environment is not None or "nasa_power_daily" in source_ids:
         entries["nasa_power_daily"] = _power_source(environment)
+    if environment is not None and (
+        environment.get("source_id") == "local_power_2000_2026"
+        or "local_power_2000_2026" in source_ids
+    ):
+        entries["local_power_2000_2026"] = _local_power_source(environment)
     if smap_context is not None or "nasa_smap_appeears" in source_ids:
         entries["nasa_smap_appeears"] = _smap_source(smap_context)
     ordered = [entries["crop_profiles_rajshahi_v1"]]
@@ -840,6 +854,25 @@ def _power_source(environment: object) -> dict:
         "provider": env.get("provider") or "NASA POWER",
         "product": env.get("product") or "NASA POWER Daily Point",
         "version": env.get("product_version") or "unknown",
+        "coverage": coverage,
+        "retrieved_at": env.get("retrieved_at"),
+    }
+
+
+def _local_power_source(environment: object) -> dict:
+    env = environment if isinstance(environment, dict) else {}
+    start = env.get("observation_start")
+    end = env.get("observation_end")
+    coverage = (
+        f"{start}..{end}"
+        if isinstance(start, str) and isinstance(end, str)
+        else "Local 2000-2026 POWER daily observations"
+    )
+    return {
+        "source_id": "local_power_2000_2026",
+        "provider": env.get("provider") or "Local POWER CSV",
+        "product": env.get("product") or "NASA POWER Daily Point (local subset)",
+        "version": env.get("product_version") or "local_2000_2026",
         "coverage": coverage,
         "retrieved_at": env.get("retrieved_at"),
     }

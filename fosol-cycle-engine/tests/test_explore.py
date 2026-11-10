@@ -392,6 +392,19 @@ class ExploreTests(unittest.TestCase):
             "No candidate or conditional branches available.",
         )
 
+    def test_single_conditional_branch_uses_singular_message(self) -> None:
+        """Spec §14.3 | Bug it catches: one branch is labeled 'branches'."""
+        result = explore(
+            _payload("boro_brri_dhan28"),
+            profiles=self.profiles,
+            config={**CONFIG, "max_branches": 1},
+            now=NOW,
+        )
+        self.assertEqual(
+            result["branch_summary"]["message"],
+            "No candidate branches - 1 conditional branch shown.",
+        )
+
     def test_repeated_request_is_deterministic(self) -> None:
         """Spec §14.4 | Bug it catches: identical requests produce different envelopes."""
         first = self._run("boro_brri_dhan28")

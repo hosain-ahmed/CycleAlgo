@@ -17,17 +17,25 @@ from contract_check import validate_response
 from src.branch_metrics import rank_branches
 from src.crop_profiles import load_crop_profiles
 from src.explore import explore
+from src.local_power import load_local_power
 from src.request_validation import RequestValidationError
 from src.smap_api import parse_appeears_csv
 
 DATA = ROOT.parent / "Data" / "fosol_cycle_rajshahi_crop_dataset.csv"
+LOCAL_POWER = load_local_power(DATA.parent / "NASA_RAJ_DATA_2000_2026.csv")
 SMAP_FIXTURE = (
     ROOT
     / "tests"
     / "fixtures"
     / "appeears_spl4smgp_rajshahi_20250101_20250103.csv"
 )
-CONFIG = {"max_initial_wait_days": 180, "max_waiting_days": None}
+CONFIG = {
+    "max_initial_wait_days": 180,
+    "max_waiting_days": None,
+    "analysis_start_year": 2000,
+    "analysis_end_year": 2025,
+    "max_branches": None,
+}
 NOW = dt.datetime(2026, 11, 9, 0, 0, tzinfo=dt.timezone.utc)
 START = "2026-11-06"
 PROFILES = None
@@ -95,12 +103,13 @@ def run(
     *,
     environment=None,
     smap_context=None,
+    config=None,
     label=None,
 ) -> dict:
     response = explore(
         payload(first_crop_id, preference, water_access),
         profiles=PROFILES,
-        config=CONFIG,
+        config=config or CONFIG,
         environment=environment,
         smap_context=smap_context,
         now=NOW,
@@ -280,6 +289,60 @@ def main() -> int:
 
         boro = run("boro_brri_dhan28", label="boro")
         boro_branches = boro["branches"]
+        power_config = {**CONFIG, "max_branches": 1}
+        local_power = run(
+            "boro_brri_dhan28",
+            environment=LOCAL_POWER,
+            config=power_config,
+            label="boro:local-power",
+        )
+        no_environment = run(
+            "boro_brri_dhan28",
+            environment=None,
+            config=power_config,
+            label="boro:no-environment",
+        )
+        require(
+            no_environment["status"] == local_power["status"],
+            "local POWER changed status",
+        )
+        require(
+            json.dumps(no_environment["ranking"], sort_keys=True)
+            == json.dumps(local_power["ranking"], sort_keys=True),
+            "local POWER changed ranking",
+        )
+        for branch in local_power["branches"]:
+            for crop in branch["crops"]:
+                outlook = crop["outlook"]
+                require(
+                    outlook["status"] in ("ok", "partial"),
+                    "local POWER outlook status",
+                )
+                ranges = outlook["seasonal_ranges"]
+                require(
+                    ranges["status"] in ("ok", "partial"),
+                    "seasonal ranges status",
+                )
+                require(
+                    ranges["analysis_period"]
+                    == {"start_year": 2000, "end_year": 2025},
+                    "seasonal ranges coverage years",
+                )
+                require(
+                    [item["variable"] for item in ranges["indicators"]]
+                    == ["T2M", "PRECTOTCORR", "GWETTOP"],
+                    "seasonal range indicators",
+                )
+                for indicator in ranges["indicators"]:
+                    require(
+                        indicator["min"] <= indicator["median"] <= indicator["max"],
+                        "seasonal range ordering",
+                    )
+                require(
+                    ranges["thresholds_applied"] is False,
+                    "seasonal thresholds applied",
+                )
+                require(ranges["warnings"] == [], "seasonal warnings")
         boro_ids = {branch["branch_id"] for branch in boro_branches}
         allowed = (
             "fastest_completion",

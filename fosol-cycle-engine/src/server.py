@@ -11,16 +11,19 @@ from urllib.parse import urlsplit
 from src.api import handle_explore
 from src.crop_profiles import load_crop_profiles
 from src.error_contract import build_error_response
+from src.local_power import load_local_power
 from src.request_validation import RequestValidationError, validate_explore_request
 
 PROFILE_FILENAME = "fosol_cycle_rajshahi_crop_dataset.csv"
+POWER_FILENAME = "NASA_RAJ_DATA_2000_2026.csv"
 MAX_BODY_BYTES = 64 * 1024
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "Data"
 DEFAULT_CONFIG = {
     "max_initial_wait_days": 180,
     "max_waiting_days": None,
-    "start_year": 1991,
-    "end_year": 2025,
+    "analysis_start_year": 2000,
+    "analysis_end_year": 2025,
+    "max_branches": None,
 }
 
 
@@ -82,6 +85,7 @@ class ExploreHandler(BaseHTTPRequestHandler):
             explore_fn=self.server.explore_fn,
             profiles=self.server.profiles,
             config=self.server.config,
+            environment=self.server.environment,
         )
         self._send_json(status, body)
 
@@ -152,11 +156,13 @@ def create_server(
     """Build a server from the local crop profiles; providers are untouched."""
     directory = Path(data_dir) if data_dir is not None else DEFAULT_DATA_DIR
     profiles = load_crop_profiles(directory / PROFILE_FILENAME)
+    environment = load_local_power(directory / POWER_FILENAME)
     server = ThreadingHTTPServer((host, port), ExploreHandler)
     server.daemon_threads = True
     server.explore_fn = explore_fn
     server.profiles = profiles
     server.config = dict(DEFAULT_CONFIG)
+    server.environment = environment
     server.data_dir = str(directory)
     return server
 

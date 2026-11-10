@@ -77,8 +77,10 @@ missing.
 4. **“Does wet SMAP soil mean the crop passes?”** No. SMAP is a separate context block
    and has no effect on checks, status, or ranking; no moisture threshold is validated.
 5. **“Is the seasonal outlook a forecast?”** No. It is historical replay labelled
-   “based on historical conditions, not a weather forecast”; §6.2 current-season
-   climate is deferred, so do not present it as prediction.
+   “based on historical conditions, not a weather forecast”; the demo shows 2000–2025
+   per-season T2M mean, PRECIP total, and GWETTOP mean (MERRA-2, not SMAP) min/median/max,
+   with no warnings or thresholds. 1991–1999 is excluded because local precipitation is
+   invalid; §6.2 current-season climate is deferred, so do not present it as prediction.
 
 ## What is safe to claim
 

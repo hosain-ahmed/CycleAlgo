@@ -168,6 +168,13 @@ statistic, coverage rule, unit, statistics), `period`, `sample`, `coverage`, `st
 (null when unavailable), `notes`, and `source_ids`. It is historical context, not a
 forecast. With the bare server/POWER absent it is `unavailable` and `indicators=[]`.
 
+When local POWER is supplied, each crop outlook also carries `seasonal_ranges`:
+coverage 2000-2025 (26 seasons), T2M/PRECTOTCORR/GWETTOP min/median/max,
+`thresholds_applied=false`, and empty `warnings`; source is
+`local_power_2000_2026`. The ranges are historical, not a forecast; 1991-1999 is
+excluded because the local precipitation series is invalid; GWETTOP is MERRA-2
+surface soil wetness, not SMAP.
+
 ## 7. Ranking, summary, and warnings
 
 `ranking.groups.candidate` and `.conditional` each have `count`, `ranked`, and
@@ -183,7 +190,8 @@ do not infer a candidate from a conditional branch.
 `environment_context` is a separate SMAP context block. `status` is available or
 unavailable; the label is always “Context only - no effect on status or ranking”.
 Show observations if available; show the warning if unavailable. It never changes
-checks, status, or ranking.
+checks, status, or ranking. The shipped SMAP examples use a dated cached AppEEARS
+sample (2025-01-01..03 UTC), never current conditions.
 
 ## 8. UI states
 
@@ -209,7 +217,9 @@ If `outlook.status` is unavailable, show the reason; never label it a forecast.
   `ranking_value_days` (max). Show the range, not only the max; use
   `earliest/latest_completion_date` and the overlap note.
 - **Preparation:** `crops[].preparation_range`; null = unknown, never zero.
-- **Waiting:** `transitions[].waiting_range`; null when readiness is unknown.
+- **Waiting:** `transitions[].waiting_range`; null when readiness is unknown. Waiting
+  gaps mean waiting for the next planting window when preparation is unknown; do not
+  present them as field-ready waiting.
 - **Window-only gap:** `transitions[].harvest_to_next_window_days` with
   `window_only_gap:true`; label it “window gap”, not “waiting”.
 - **Total interval:** `transitions[].total_interval_range_days`; null when
@@ -261,3 +271,7 @@ documents that request.
 The SMAP examples use the cached real AppEEARS task result
 `tests/fixtures/appeears_spl4smgp_rajshahi_20250101_20250103.csv` (24 observations,
 2025-01-01..03 UTC); no live token is needed.
+
+`config.max_branches` caps returned branches: the shipped examples use 1 and 10, while
+a live Boro run returns 42; there is no paging. For the UI, offer a max-wait filter
+(90/120/180/240 days) rather than presenting every branch at once.

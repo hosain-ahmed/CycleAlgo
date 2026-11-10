@@ -21,7 +21,9 @@ visible in responses; none is silently replaced by a favorable value.
   configurable; engine default remains `None`.
 - Transition waiting limit: **None** on the server; no numeric product maximum is
   claimed.
-- Historical analysis period: **1991–2025** by default, configurable.
+- Historical analysis period: engine default **1991–2025**, configurable. The local
+  POWER demo uses **2000–2025** because 1991–1999 precipitation in the local export is
+  invalid (24×); supplying valid 1991–1999 POWER restores 1991–2025.
 - Supported district: **Rajshahi only**; other valid district IDs return
   `unsupported_district` with no fabricated results.
 - `lowest_upfront_cash` is rejected until a sourced cash-flow schedule exists.

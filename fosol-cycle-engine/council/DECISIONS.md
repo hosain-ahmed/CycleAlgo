@@ -47,7 +47,14 @@
   “shown” when branches are present. Reverse by changing the message policy.
 - Handoff examples trimmed: `example_response.json` 1 branch; 10-branch sample separate
   (`max_branches`). Reverse by regenerating without the cap (42 for Boro).
+- E7 demo uses the local POWER B export `Data/NASA_RAJ_DATA_2000_2026.csv` normalized
+  per E3; analysis 2000–2025; 1991–1999 excluded because the local precipitation is
+  invalid (24×). Reverse by supplying valid 1991–1999 POWER and setting the analysis
+  start year back to 1991.
+- E7 shows per-season ranges only (T2M mean, PRECIP total, GWETTOP mean); no warning
+  thresholds. Reverse by supplying sourced stage-specific thresholds and enabling the
+  warning config.
 - E7 outlook is `unavailable` when no normalized POWER environment is supplied.
-  Reverse by injecting a POWER environment and attaching `build_outlook`.
+  Reverse by injecting a POWER environment and attaching the outlook.
 - SMAP context is omitted/unavailable when no cached context is supplied; reverse by
   supplying the cached fixture or a live normalized SMAP payload.

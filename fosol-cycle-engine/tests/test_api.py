@@ -150,8 +150,8 @@ class ApiServerTests(unittest.TestCase):
         self.assertTrue(body["has_profiles"])
         self.assertEqual(body["config"]["max_initial_wait_days"], 180)
         self.assertIsNone(body["config"]["max_waiting_days"])
-        self.assertEqual(body["config"]["start_year"], 1991)
-        self.assertEqual(body["config"]["end_year"], 2025)
+        self.assertEqual(body["config"]["analysis_start_year"], 2000)
+        self.assertEqual(body["config"]["analysis_end_year"], 2025)
 
     def test_cors_allowlist_and_preflight(self) -> None:
         """Spec §14.5 | Bug it catches: wildcard CORS or disallowed origin is accepted."""

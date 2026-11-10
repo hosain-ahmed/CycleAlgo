@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import math
+import statistics
 
 from src.outlook_config import OUTLOOK_LABEL, WARNING_DEFINITIONS
 from src.outlook_indicators import (
@@ -192,6 +193,147 @@ def build_outlook(
         },
         "sources": sources,
         "notes": _dedupe(notes),
+    }
+
+
+def build_seasonal_ranges(
+    environment: dict,
+    period_start: dt.date | str,
+    period_end: dt.date | str,
+    *,
+    start_year: int = 2000,
+    end_year: int = 2025,
+    last_complete_data_date: dt.date | str,
+) -> dict:
+    """Return historical per-season ranges for the local POWER outlook demo."""
+    if not isinstance(environment, dict):
+        raise TypeError("environment must be a dict")
+    observations = environment.get("observations")
+    if not isinstance(observations, dict):
+        raise ValueError("environment must contain an observations dict")
+    sanitized = _sanitize_observations(observations, environment.get("fill_value"))
+
+    specifications = (
+        ("T2M", "Temperature at 2 Meters", "C", "stats_min_90", "mean"),
+        (
+            "PRECTOTCORR",
+            "Precipitation Corrected",
+            "mm",
+            "warnings_100",
+            "total",
+        ),
+        (
+            "GWETTOP",
+            "MERRA-2 Surface Soil Wetness (not SMAP)",
+            "1",
+            "stats_min_90",
+            "mean",
+        ),
+    )
+    indicators = []
+    seasons_total = None
+    for variable, label, unit, rule, statistic in specifications:
+        result = map_schedule_to_seasons(
+            period_start,
+            period_end,
+            sanitized,
+            variable,
+            start_year=start_year,
+            end_year=end_year,
+            last_complete_data_date=last_complete_data_date,
+            coverage_rule=rule,
+        )
+        if seasons_total is None:
+            seasons_total = len(result["seasons"])
+        values = []
+        for season in result["evaluated_seasons"]:
+            season_values = _season_values(sanitized, variable, season)
+            if not season_values:
+                continue
+            values.append(
+                sum(season_values)
+                if statistic == "total"
+                else sum(season_values) / len(season_values)
+            )
+        stats = _range_stats(values)
+        indicators.append(
+            {
+                "variable": variable,
+                "label": label,
+                "unit": unit,
+                "statistic": (
+                    "per_season_total" if statistic == "total" else "per_season_mean"
+                ),
+                "coverage_rule": rule,
+                "seasons_total": len(result["seasons"]),
+                "seasons_evaluated": len(result["evaluated_seasons"]),
+                "seasons_excluded": len(result["excluded_seasons"]),
+                "min": stats["min"],
+                "median": stats["median"],
+                "max": stats["max"],
+            }
+        )
+
+    has_values = all(item["min"] is not None for item in indicators)
+    has_exclusions = any(item["seasons_excluded"] for item in indicators)
+    if not has_values:
+        status = "unavailable"
+    elif has_exclusions:
+        status = "partial"
+    else:
+        status = "ok"
+
+    return {
+        "status": status,
+        "label": OUTLOOK_LABEL,
+        "period_basis": "union_span",
+        "period_start": str(period_start),
+        "period_end": str(period_end),
+        "analysis_period": {"start_year": start_year, "end_year": end_year},
+        "coverage": {
+            "start_year": start_year,
+            "end_year": end_year,
+            "seasons_total": seasons_total or 0,
+            "seasons_evaluated": indicators[0]["seasons_evaluated"],
+            "seasons_excluded": indicators[0]["seasons_excluded"],
+        },
+        "indicators": indicators,
+        "thresholds_applied": False,
+        "warnings": [],
+        "notes": [
+            "Seasonal ranges are historical ranges, not a forecast.",
+            "1991-1999 is excluded because the local precipitation series is invalid.",
+            "GWETTOP is MERRA-2 surface soil wetness, not SMAP.",
+        ],
+        "source_ids": [environment.get("source_id") or "local_power_2000_2026"],
+    }
+
+
+def _season_values(observations: dict, variable: str, season: dict) -> list[float]:
+    start = dt.date.fromisoformat(season["start_date"])
+    end = dt.date.fromisoformat(season["end_date"])
+    values = []
+    current = start
+    while current <= end:
+        record = observations.get(current.isoformat())
+        value = record.get(variable) if isinstance(record, dict) else None
+        if (
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and math.isfinite(float(value))
+        ):
+            values.append(float(value))
+        current += dt.timedelta(days=1)
+    return values
+
+
+def _range_stats(values: list[float]) -> dict:
+    if not values:
+        return {"min": None, "median": None, "max": None}
+    return {
+        "min": min(values),
+        "median": statistics.median(values),
+        "max": max(values),
     }
 
 
