@@ -20,7 +20,12 @@ from src.branch_metrics import (
     rank_branches,
 )
 from src.calendar_evaluator import evaluate_calendar_fit
-from src.outlook import build_outlook, build_seasonal_ranges
+from src.climate_metrics import build_climate_metrics, strip_climate_raw
+from src.outlook import (
+    build_outlook,
+    build_seasonal_ranges,
+    sanitize_observations,
+)
 from src.outlook_config import OUTLOOK_LABEL
 from src.request_validation import validate_explore_request
 from src.soil_water import evaluate_soil_water
@@ -55,9 +60,34 @@ def explore(
     config: dict | None = None,
     environment: dict | None = None,
     smap_context: dict | None = None,
+    soil_evidence: dict | None = None,
+    preparation_lookup: object = None,
+    duration_reference_verified: bool = False,
+    duration_reference_verified_crop_ids: object = None,
+    environment_error: str | None = None,
     now: dt.datetime | dt.date | None = None,
+    retain_climate_raw: bool = False,
 ) -> dict:
-    """Return the §14.3 explore envelope."""
+    """Return the §14.3 explore envelope.
+
+    ``soil_evidence``, ``preparation_lookup``, and duration-reference
+    verification are trusted host/server inputs, never request-payload fields.
+    Missing evidence remains unknown. ``retain_climate_raw`` is an internal
+    offline-demo hook; the API path leaves it false and keeps the normal stripped
+    response shape.
+    """
+    if not isinstance(retain_climate_raw, bool):
+        raise TypeError("retain_climate_raw must be a bool")
+    if soil_evidence is not None and not isinstance(soil_evidence, dict):
+        raise TypeError("soil_evidence must be a dict or None")
+    if preparation_lookup is not None and not callable(preparation_lookup) and not isinstance(
+        preparation_lookup, dict
+    ):
+        raise TypeError(
+            "preparation_lookup must be a mapping, a preparation dict, a callable, or None"
+        )
+    if not isinstance(duration_reference_verified, bool):
+        raise TypeError("duration_reference_verified must be a bool")
     known = set(profiles) if isinstance(profiles, dict) else set()
     request = validate_explore_request(payload, known)
     settings = _config(config)
@@ -79,6 +109,10 @@ def explore(
         profiles,
         request["start_date"],
         water_access=request["water_access"],
+        soil_evidence=soil_evidence,
+        preparation_lookup=preparation_lookup,
+        duration_reference_verified=duration_reference_verified,
+        duration_reference_verified_crop_ids=duration_reference_verified_crop_ids,
         max_waiting_days=settings["max_waiting_days"],
         max_initial_wait_days=settings["max_initial_wait_days"],
         environment=environment,
@@ -110,6 +144,7 @@ def explore(
         profiles,
         request["start_date"],
         request["water_access"],
+        soil_evidence,
         environment,
         settings["max_initial_wait_days"],
         internal_branches,
@@ -119,6 +154,8 @@ def explore(
         returned_branches, profiles, environment, settings
     )
     ranking = rank_branches(branches, request["preference"], profiles)
+    if not retain_climate_raw:
+        strip_climate_raw(branches)
     summary = _branch_summary(
         summary_branches,
         len(summary_exclusions),
@@ -135,8 +172,17 @@ def explore(
         summary_branches,
         settings,
         visible=bool(returned_branches),
+        environment_error=environment_error,
     )
-    assumptions = _assumptions(request, settings, context)
+    assumptions = _assumptions(
+        request,
+        settings,
+        context,
+        soil_evidence=soil_evidence,
+        preparation_lookup=preparation_lookup,
+        duration_reference_verified=duration_reference_verified,
+        duration_reference_verified_crop_ids=duration_reference_verified_crop_ids,
+    )
     missing = _missing_evidence(
         summary_branches, crop_options, environment, context
     )
@@ -210,6 +256,7 @@ def _crop_options(
     profiles: dict,
     start_date: str,
     water_access: str,
+    soil_evidence: dict | None,
     environment: dict | None,
     initial_limit: int | None,
     branches: list[dict],
@@ -237,7 +284,10 @@ def _crop_options(
         else:
             calendar = evaluate_calendar_fit(profile, start_date, initial_limit)
             soil_water = evaluate_soil_water(
-                profile, water_access=water_access, environment=environment
+                profile,
+                water_access=water_access,
+                soil_evidence=soil_evidence,
+                environment=environment,
             )
             checks = {
                 "calendar": calendar,
@@ -311,14 +361,34 @@ def _prepare_branches(
     settings: dict,
 ) -> list[dict]:
     prepared = []
+    request_cache = {}
+    sanitized_observations = None
+    if isinstance(environment, dict) and isinstance(
+        environment.get("observations"), dict
+    ):
+        sanitized_observations = sanitize_observations(
+            environment["observations"], environment.get("fill_value")
+        )
     for raw in raw_branches:
         branch = copy.deepcopy(raw)
         branch["initial_wait_days"] = raw.get("initial_wait_days")
+        completion = calculate_completion_time(branch)
         branch["metrics"] = {
-            "completion": calculate_completion_time(branch),
+            "completion": completion,
             "resources": build_resource_metrics(branch, profiles),
             "economics": build_economics_metrics(branch, profiles),
             "diversity": calculate_diversity_metrics(branch, profiles),
+            "climate": build_climate_metrics(
+                branch,
+                profiles,
+                environment,
+                completion,
+                start_year=settings["analysis_start_year"],
+                end_year=settings["analysis_end_year"],
+                last_complete_data_date=_last_complete(settings, environment),
+                sanitized_observations=sanitized_observations,
+                cache=request_cache,
+            ),
         }
         for transition in branch.get("transitions", []):
             _attach_harvest_gap(transition, branch)
@@ -332,7 +402,13 @@ def _prepare_branches(
             list(branch.get("missing_evidence") or [])
             + ["current_season_climate_exposure"]
         )
-        outlook, per_crop = _branch_outlook(branch, environment, settings)
+        outlook, per_crop = _branch_outlook(
+            branch,
+            environment,
+            settings,
+            cache=request_cache,
+            sanitized_observations=sanitized_observations,
+        )
         branch["outlook"] = outlook
         for crop, crop_outlook in zip(branch.get("crops", []), per_crop):
             crop["outlook"] = crop_outlook
@@ -382,7 +458,12 @@ def _harvest_to_window_days(
 
 
 def _branch_outlook(
-    branch: dict, environment: dict | None, settings: dict
+    branch: dict,
+    environment: dict | None,
+    settings: dict,
+    *,
+    cache: dict | None = None,
+    sanitized_observations: dict | None = None,
 ) -> tuple[dict, list[dict]]:
     if environment is None:
         block = _unavailable_outlook("POWER environment not supplied")
@@ -398,9 +479,24 @@ def _branch_outlook(
         if not isinstance(planting, dict) or not isinstance(harvest, dict):
             per_crop.append(_unavailable_outlook("crop span unavailable"))
             continue
+        crop_id = str(crop.get("crop_id") or "")
+        cache_key = (
+            "crop-outlook",
+            crop_id,
+            planting.get("earliest"),
+            harvest.get("latest"),
+            settings["analysis_start_year"],
+            settings["analysis_end_year"],
+            str(last_complete),
+            repr(settings.get("warning_config")),
+            id(environment),
+        )
+        if cache is not None and cache_key in cache:
+            per_crop.append(copy.deepcopy(cache[cache_key]))
+            continue
         try:
             outlook = build_outlook(
-                str(crop.get("crop_id") or ""),
+                crop_id,
                 planting["earliest"],
                 harvest["latest"],
                 environment,
@@ -408,6 +504,7 @@ def _branch_outlook(
                 end_year=settings["analysis_end_year"],
                 last_complete_data_date=last_complete,
                 warning_config=settings["warning_config"],
+                sanitized_observations=sanitized_observations,
             )
             outlook["seasonal_ranges"] = build_seasonal_ranges(
                 environment,
@@ -416,7 +513,10 @@ def _branch_outlook(
                 start_year=settings["analysis_start_year"],
                 end_year=settings["analysis_end_year"],
                 last_complete_data_date=last_complete,
+                sanitized_observations=sanitized_observations,
             )
+            if cache is not None:
+                cache[cache_key] = copy.deepcopy(outlook)
             per_crop.append(outlook)
         except (TypeError, ValueError) as exc:
             message = str(exc) or "outlook calculation failed"
@@ -527,6 +627,7 @@ def _warnings(
     settings: dict,
     *,
     visible: bool,
+    environment_error: str | None = None,
 ) -> list[dict]:
     warnings = [
         {
@@ -544,10 +645,23 @@ def _warnings(
     if environment is None:
         warnings.append(
             {
-                "code": "POWER_OUTLOOK_UNAVAILABLE",
-                "message": "POWER environment was not supplied; outlook is unavailable.",
+                "code": (
+                    "POWER_UNAVAILABLE"
+                    if environment_error
+                    else "POWER_OUTLOOK_UNAVAILABLE"
+                ),
+                "message": (
+                    "POWER history could not be loaded; outlook is unavailable. "
+                    + environment_error
+                    if environment_error
+                    else "POWER environment was not supplied; outlook is unavailable."
+                ),
             }
         )
+    elif isinstance(environment, dict):
+        for warning in environment.get("warnings", []):
+            if isinstance(warning, dict):
+                warnings.append(dict(warning))
     for warning in context.get("warnings", []):
         warnings.append(dict(warning))
     if not any(branch.get("status") == "candidate" for branch in branches):
@@ -563,7 +677,14 @@ def _warnings(
 
 
 def _assumptions(
-    request: dict, settings: dict, context: dict
+    request: dict,
+    settings: dict,
+    context: dict,
+    *,
+    soil_evidence: dict | None = None,
+    preparation_lookup: object = None,
+    duration_reference_verified: bool = False,
+    duration_reference_verified_crop_ids: object = None,
 ) -> list[dict]:
     initial = settings.get("max_initial_wait_days")
     transition = settings.get("max_waiting_days")
@@ -587,17 +708,10 @@ def _assumptions(
             ),
         },
         {
-            "code": "DURATION_REFERENCE_UNVERIFIED",
+            "code": "THREE_CROP_SEQUENCE_NOT_REPEATING_ROTATION",
             "message": (
-                "Crop duration reference stage (sowing versus transplanting) "
-                "is unconfirmed; timing remains conditional."
-            ),
-        },
-        {
-            "code": "PREPARATION_EVIDENCE_MISSING",
-            "message": (
-                "Preparation evidence was not supplied; readiness and waiting "
-                "remain unknown rather than zero."
+                "A branch is one three-crop sequence, not a verified repeating "
+                "rotation; repeated cycles require separate evidence."
             ),
         },
         {
@@ -612,6 +726,77 @@ def _assumptions(
             ),
         },
     ]
+    if soil_evidence is None:
+        assumptions.append(
+            {
+                "code": "SOIL_EVIDENCE_MISSING",
+                "message": (
+                    "No local district soil evidence was supplied; soil fit "
+                    "remains unknown rather than an automatic pass."
+                ),
+            }
+        )
+    else:
+        assumptions.append(
+            {
+                "code": "SOIL_EVIDENCE_SUPPLIED",
+                "message": (
+                    "Host-supplied soil evidence is used only where it passes "
+                    "the documented crop rules; missing fields remain unknown."
+                ),
+            }
+        )
+    if preparation_lookup is None:
+        assumptions.append(
+            {
+                "code": "PREPARATION_EVIDENCE_MISSING",
+                "message": (
+                    "Preparation evidence was not supplied; readiness and waiting "
+                    "remain unknown rather than zero."
+                ),
+            }
+        )
+    else:
+        assumptions.append(
+            {
+                "code": "PREPARATION_EVIDENCE_SUPPLIED",
+                "message": (
+                    "Host-supplied preparation evidence is used only for the "
+                    "crops it covers; unspecified preparation remains unknown."
+                ),
+            }
+        )
+    if not duration_reference_verified:
+        assumptions.append(
+            {
+                "code": "DURATION_REFERENCE_UNVERIFIED",
+                "message": (
+                    "Crop duration reference stage (sowing versus transplanting) "
+                    "is unconfirmed; timing remains conditional."
+                ),
+            }
+        )
+    else:
+        if isinstance(
+            duration_reference_verified_crop_ids,
+            (list, tuple, set, frozenset),
+        ):
+            crop_ids = sorted(
+                {str(value) for value in duration_reference_verified_crop_ids}
+            )
+            coverage = ", ".join(crop_ids) if crop_ids else "no crops (empty set)"
+        else:
+            coverage = "all crops"
+        assumptions.append(
+            {
+                "code": "DURATION_REFERENCE_VERIFIED",
+                "message": (
+                    "Duration reference verification is applied only to: "
+                    + coverage
+                    + "; other crops remain conditional."
+                ),
+            }
+        )
     if context.get("status") == "available":
         assumptions.append(
             {
@@ -855,7 +1040,14 @@ def _power_source(environment: object) -> dict:
         "product": env.get("product") or "NASA POWER Daily Point",
         "version": env.get("product_version") or "unknown",
         "coverage": coverage,
+        "observation_start": start,
+        "observation_end": end,
         "retrieved_at": env.get("retrieved_at"),
+        "temporal_resolution": env.get("temporal_resolution"),
+        "spatial_resolution": env.get("spatial_resolution"),
+        "is_forecast": False,
+        "cache": copy.deepcopy(env.get("cache")),
+        "warnings": copy.deepcopy(env.get("warnings") or []),
     }
 
 

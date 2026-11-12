@@ -15,15 +15,44 @@ visible in responses; none is silently replaced by a favorable value.
 | SMAP outlook | Out of status/ranking and out of E7. If supplied, `environment_context` is context only; if missing/expired, unavailable with a warning. | No moisture threshold, no status change, no forecast. A missing token is not zero moisture. |
 | `v1.md` | User work, uncommitted; source of truth for the spec. | Documentation/code changes must not commit or rewrite it; spec and implementation can drift until the user confirms. |
 
+Trusted preparation, soil, and duration-reference evidence can be supplied only by
+the server/host through `src.explore.explore` and `create_server`. It is never read
+from the HTTP request, and missing fields remain unknown. No questionnaire or
+user-supplied verification path exists.
+
+## Iteration-2 climate views
+
+- Temperature is an exploratory EcoCrop optimum-distance proxy, not a stage-specific
+  damage or variety-suitability rule. Daily T2M becomes a per-season median; tolerance
+  is context only. The actual FAO EcoCrop species entries are recorded; the
+  seasonal-median matching convention is project-defined.
+- Dry day is `PRECTOTCORR < 1 mm/day`; the metric is the longest consecutive run per
+  crop period. Heavy rain is `PRECTOTCORR >= 20 mm/day`; ordering uses heavy days per
+  valid growing day. Both are growing-period adaptations of meteorological indices,
+  not annual Climdex outputs or crop-damage thresholds.
+- `T2M` units must be Celsius and `PRECTOTCORR` units mm/day (documented equivalents
+  accepted). Missing/incompatible temperature units do not disable rain views, and
+  vice versa.
+- Temperature and rain coverage are independent. Only common complete seasons for the
+  selected view are compared. Missing rainfall is never zero-filled or joined across
+  gaps.
+- `min_realization` and `max_realization` are completion-optimized examples. Ordering
+  uses the higher exposure of the two, not a worst-case bound.
+- Three crop summaries are equally weighted as a disclosed product convention; there
+  is no overall weighted climate score.
+
 ## Configured (not silently invented)
 
 - Server initial-wait policy: **180 days**, product relevance cutoff, caller/engine
   configurable; engine default remains `None`.
 - Transition waiting limit: **None** on the server; no numeric product maximum is
   claimed.
-- Historical analysis period: engine default **1991–2025**, configurable. The local
-  POWER demo uses **2000–2025** because 1991–1999 precipitation in the local export is
-  invalid (24×); supplying valid 1991–1999 POWER restores 1991–2025.
+- Historical analysis period: engine default **1991–2025**, configurable. The
+  development server uses the POWER API/cache for the stable period
+  **1991-01-01..2025-12-31**; cross-year seasons needing 2026 observations are
+  excluded. The offline `scripts/demo_check.py` snapshot uses local POWER
+  **2000–2025** because 1991–1999 precipitation in the local export is invalid
+  (24×); this is not the server path.
 - Supported district: **Rajshahi only**; other valid district IDs return
   `unsupported_district` with no fabricated results.
 - `lowest_upfront_cash` is rejected until a sourced cash-flow schedule exists.

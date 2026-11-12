@@ -7,6 +7,8 @@ from src.error_contract import build_error_response, http_status_for_error
 from src.request_validation import (
     DEFAULT_PREFERENCE,
     DEFAULT_WATER_ACCESS,
+    MAX_START_DATE,
+    MIN_START_DATE,
     PREFERENCE_VALUES,
     WATER_ACCESS_VALUES,
     RequestValidationError,
@@ -133,6 +135,17 @@ class RequestValidationTests(unittest.TestCase):
         )
         self.assertEqual(result["start_date"], "2024-02-29")
         self.assert_invalid(make_payload(start_date="2026-02-29"), "start_date")
+
+    def test_planning_date_limits_leave_room_for_calendar_calculations(self) -> None:
+        for value in ("0001-01-01", "9991-01-01", "9998-01-01", "9999-12-31"):
+            with self.subTest(value=value):
+                self.assert_invalid(make_payload(start_date=value), "start_date")
+        for value in (MIN_START_DATE, MAX_START_DATE):
+            with self.subTest(value=value):
+                result = validate_explore_request(
+                    make_payload(start_date=value), KNOWN_CROP_IDS
+                )
+                self.assertEqual(result["start_date"], value)
 
     def test_first_crop_id_null_is_accepted(self) -> None:
         result = validate_explore_request(make_payload(), KNOWN_CROP_IDS)

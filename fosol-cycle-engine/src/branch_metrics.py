@@ -4,6 +4,15 @@ from __future__ import annotations
 
 import datetime as dt
 
+from src.climate_metrics import (
+    CLIMATE_METRICS,
+    CLIMATE_PREFERENCES,
+    branch_common_seasons,
+    climate_definitions,
+    climate_limitations,
+    evaluate_climate,
+)
+
 _BASIS = "third_harvest_minus_first_planting"
 _DIVERSITY_BASIS = "crop_family_count_product_convention"
 _DIVERSITY_NOTE = (
@@ -16,6 +25,9 @@ _PREFERENCE_CONFIG = {
     "highest_net_return": ("net_return_bdt_per_ha", "unavailable"),
     "more_crop_diversity": ("distinct_family_count", "descending"),
     "lowest_upfront_cash": ("upfront_cash_bdt_per_ha", "unavailable"),
+    "closest_temperature_match": ("temperature_distance_c", "ascending"),
+    "least_dry_spell_exposure": ("dry_spell_days", "ascending"),
+    "least_heavy_rain_exposure": ("heavy_rain_frequency", "ascending"),
 }
 _ECONOMIC_REASON = "Economic estimate unavailable."
 _ECONOMIC_MISSING = [
@@ -27,35 +39,46 @@ _ECONOMIC_MISSING = [
 
 
 def calculate_completion_time(branch: dict) -> dict:
-    """Return completion from the actual fastest and slowest realized schedules."""
+    """Return completion from two chronologically valid realized schedules.
+
+    A realization is accepted only when every crop follows the previous
+    harvest, stays inside its planting window and duration range, and obeys
+    any sourced preparation lower bound. There is no endpoint-only fallback:
+    an infeasible chain is unavailable rather than a fabricated completion.
+    """
     first_planting, third_harvest, error = _completion_ranges(branch)
     if error is not None:
         return error
 
     fastest = realize_completion(branch, "fastest")
     slowest = realize_completion(branch, "slowest")
-    if fastest["status"] == "ok" and slowest["status"] == "ok":
-        completion_min = fastest["completion_days"]
-        completion_max = slowest["completion_days"]
-        if (
-            completion_min >= 0
-            and completion_max >= 0
-            and completion_min <= completion_max
-        ):
-            return _realized_result(
-                first_planting, third_harvest, fastest, slowest
-            )
-
-    enumerated = enumerate_completion_range(branch)
-    if enumerated["status"] == "ok":
-        return _enumerated_calculation_result(
-            first_planting, third_harvest, enumerated
+    if fastest["status"] != "ok" or slowest["status"] != "ok":
+        return _completion_unavailable(first_planting, third_harvest, fastest, slowest)
+    completion_min = fastest["completion_days"]
+    completion_max = slowest["completion_days"]
+    if (
+        completion_min < 0
+        or completion_max < 0
+        or completion_min > completion_max
+    ):
+        return _completion_unavailable(
+            first_planting,
+            third_harvest,
+            fastest,
+            slowest,
+            code="COMPLETION_RANGE_INVALID",
         )
-    return enumerated
+    return _realized_result(first_planting, third_harvest, fastest, slowest)
 
 
 def realize_completion(branch: dict, mode: str) -> dict:
-    """Realize the fastest or slowest schedule from crop ranges and durations."""
+    """Realize a chronologically valid fastest or slowest schedule.
+
+    The first planting date is searched inside its documented range. For each
+    candidate, the next crop is planted no earlier than the previous realized
+    harvest, inside its own window, and after any sourced preparation minimum.
+    No crop-specific branch is used.
+    """
     if mode not in ("fastest", "slowest"):
         raise ValueError("mode must be 'fastest' or 'slowest'")
     if not _valid_branch_shape(branch):
@@ -78,24 +101,144 @@ def realize_completion(branch: dict, mode: str) -> dict:
             mode, "COMPLETION_EVIDENCE_MISSING", ["first_crop_duration"]
         )
 
-    p1 = first_range[1] if mode == "fastest" else first_range[0]
-    h1 = p1 + dt.timedelta(days=_pick_duration(first_duration, mode))
-    p2, h2, prep2, error = _next_realization(
-        crops[1], transitions[0], h1, mode, "second"
+    second_range, missing = _planting_limits(
+        crops[1], transitions[0], "second"
+    )
+    if missing:
+        return _realization_unavailable(
+            mode, "COMPLETION_EVIDENCE_MISSING", missing
+        )
+    third_range, missing = _planting_limits(
+        crops[2], transitions[1], "third"
+    )
+    if missing:
+        return _realization_unavailable(
+            mode, "COMPLETION_EVIDENCE_MISSING", missing
+        )
+    second_duration = _crop_duration(crops[1])
+    if second_duration is None:
+        return _realization_unavailable(
+            mode, "COMPLETION_EVIDENCE_MISSING", ["second_crop_duration"]
+        )
+    third_duration = _crop_duration(crops[2])
+    if third_duration is None:
+        return _realization_unavailable(
+            mode, "COMPLETION_EVIDENCE_MISSING", ["third_crop_duration"]
+        )
+
+    prep2, prep2_known, error = _transition_preparation(
+        transitions[0], "second"
     )
     if error is not None:
         return _realization_unavailable(mode, *error)
-    p3, h3, prep3, error = _next_realization(
-        crops[2], transitions[1], h2, mode, "third"
+    prep3, prep3_known, error = _transition_preparation(
+        transitions[1], "third"
     )
     if error is not None:
         return _realization_unavailable(mode, *error)
 
+    best = None
+    last_error = None
+    for p1 in _iter_dates(*first_range):
+        candidate, error = _schedule_from_p1(
+            p1=p1,
+            mode=mode,
+            first_duration=first_duration,
+            second_range=second_range,
+            third_range=third_range,
+            second_duration=second_duration,
+            third_duration=third_duration,
+            prep2=prep2,
+            prep2_known=prep2_known,
+            prep3=prep3,
+            prep3_known=prep3_known,
+        )
+        if error is not None:
+            last_error = error
+            continue
+        if best is None:
+            best = candidate
+            continue
+        key = (
+            candidate["completion_days"],
+            candidate["h3"],
+            candidate["p1"],
+        )
+        current = (
+            best["completion_days"],
+            best["h3"],
+            best["p1"],
+        )
+        if (mode == "fastest" and key < current) or (
+            mode == "slowest" and key > current
+        ):
+            best = candidate
+
+    if best is None:
+        code, missing = last_error or (
+            "COMPLETION_RANGE_INVALID",
+            ["completion_range"],
+        )
+        return _realization_unavailable(mode, code, missing)
+    return best
+
+
+def _schedule_from_p1(
+    *,
+    p1: dt.date,
+    mode: str,
+    first_duration: tuple[int, int],
+    second_range: tuple[dt.date, dt.date],
+    third_range: tuple[dt.date, dt.date],
+    second_duration: tuple[int, int],
+    third_duration: tuple[int, int],
+    prep2: tuple[int, int] | None,
+    prep2_known: bool,
+    prep3: tuple[int, int] | None,
+    prep3_known: bool,
+):
+    """Build one valid schedule for a fixed first-planting date."""
+    # Shorter early durations never remove a feasible schedule and never
+    # reduce the latest achievable third harvest. The third duration is the
+    # only one that directly extends the final harvest, so only that bound
+    # changes for the slowest realization.
+    d1 = first_duration[0]
+    d2 = second_duration[0]
+    d3 = third_duration[0] if mode == "fastest" else third_duration[1]
+    prep2_min = prep2[0] if prep2_known and prep2 is not None else 0
+    prep3_min = prep3[0] if prep3_known and prep3 is not None else 0
+
+    h1 = p1 + dt.timedelta(days=d1)
+    second_low, second_high = second_range
+    third_low, third_high = third_range
+
+    if mode == "fastest":
+        p2 = max(second_low, h1 + dt.timedelta(days=prep2_min))
+        if p2 > second_high:
+            return None, ("COMPLETION_RANGE_INVALID", ["completion_range"])
+        h2 = p2 + dt.timedelta(days=d2)
+        p3 = max(third_low, h2 + dt.timedelta(days=prep3_min))
+        if p3 > third_high:
+            return None, ("COMPLETION_RANGE_INVALID", ["completion_range"])
+    else:
+        # Maximize the final harvest by using the earliest feasible second
+        # planting and the latest third planting. A longer early duration can
+        # only make the following window harder to reach, so bounds are not
+        # forced to their maxima.
+        p2 = max(second_low, h1 + dt.timedelta(days=prep2_min))
+        if p2 > second_high:
+            return None, ("COMPLETION_RANGE_INVALID", ["completion_range"])
+        h2 = p2 + dt.timedelta(days=d2)
+        p3 = third_high
+        if p3 < third_low or p3 < h2 + dt.timedelta(days=prep3_min):
+            return None, ("COMPLETION_RANGE_INVALID", ["completion_range"])
+
+    h3 = p3 + dt.timedelta(days=d3)
+    if not (p1 <= h1 <= p2 <= h2 <= p3 <= h3):
+        return None, ("COMPLETION_RANGE_INVALID", ["completion_range"])
     days = (h3 - p1).days
     if days < 0:
-        return _realization_unavailable(
-            mode, "COMPLETION_RANGE_INVALID", ["completion_range"]
-        )
+        return None, ("COMPLETION_RANGE_INVALID", ["completion_range"])
     return {
         "status": "ok",
         "mode": mode,
@@ -106,85 +249,73 @@ def realize_completion(branch: dict, mode: str) -> dict:
         "h2": h2.isoformat(),
         "p3": p3.isoformat(),
         "h3": h3.isoformat(),
-        "preparation_known": [prep2, prep3],
+        "preparation_known": [prep2_known, prep3_known],
+        "preparation_days": [
+            _preparation_used(h1, p2, prep2, prep2_known),
+            _preparation_used(h2, p3, prep3, prep3_known),
+        ],
         "range_basis": "realized_corners",
         "reason": None,
         "reasons": [],
         "missing_evidence": [],
-    }
+    }, None
 
 
-def _next_realization(
-    crop: dict,
-    transition: dict,
-    previous_harvest: dt.date,
-    mode: str,
-    label: str,
-):
-    if not isinstance(transition, dict):
-        return None, None, False, (
-            "INVALID_BRANCH_SHAPE",
-            ["branch_shape"],
-        )
-    prep_known = bool(transition.get("preparation_known"))
-    if prep_known:
-        prep = _prep_days(transition.get("preparation_range"))
-        if prep is None:
-            return None, None, True, (
-                "COMPLETION_EVIDENCE_MISSING",
-                [f"{label}_preparation_range"],
-            )
-        window = _window_bounds(transition.get("window"))
-        if window is None:
-            return None, None, True, (
-                "COMPLETION_EVIDENCE_MISSING",
-                [f"{label}_window"],
-            )
-        if mode == "fastest":
-            ready = previous_harvest + dt.timedelta(days=prep[0])
-            planting = max(ready, window["window_start"])
-            if planting > window["support_end"]:
-                return None, None, True, (
-                    "COMPLETION_RANGE_INVALID",
-                    ["completion_range"],
-                )
-        else:
-            target = window["support_end"]
-            required = (target - previous_harvest).days
-            if required < prep[0]:
-                return None, None, True, (
-                    "COMPLETION_RANGE_INVALID",
-                    ["completion_range"],
-                )
-            # Use the latest feasible prep that still allows planting at the
-            # latest window end; extra prep becomes waiting.
-            prep_used = min(prep[1], required)
-            ready = previous_harvest + dt.timedelta(days=prep_used)
-            planting = target
-            if ready > planting:
-                return None, None, True, (
-                    "COMPLETION_RANGE_INVALID",
-                    ["completion_range"],
-                )
-    else:
-        crop_range, missing = _range(
-            crop.get("planting_range"), f"{label}_planting_range"
-        )
-        if missing:
-            return None, None, False, (
-                "COMPLETION_EVIDENCE_MISSING",
-                missing,
-            )
-        planting = crop_range[0] if mode == "fastest" else crop_range[1]
+def _planting_limits(
+    crop: dict, transition: dict, label: str
+) -> tuple[tuple[dt.date, dt.date] | None, list[str]]:
+    crop_range, missing = _range(
+        crop.get("planting_range"), f"{label}_planting_range"
+    )
+    if missing:
+        return None, missing
+    low, high = crop_range
+    window = transition.get("window") if isinstance(transition, dict) else None
+    if isinstance(window, dict):
+        bounds = _window_bounds(window)
+        if bounds is None:
+            return None, [f"{label}_window"]
+        low = max(low, bounds["window_start"])
+        high = min(high, bounds["support_end"])
+    if low > high:
+        return None, [f"{label}_planting_range"]
+    return (low, high), []
 
-    duration = _crop_duration(crop)
-    if duration is None:
-        return None, None, prep_known, (
+
+def _transition_preparation(
+    transition: dict, label: str
+) -> tuple[tuple[int, int] | None, bool, tuple[str, list[str]] | None]:
+    known = bool(transition.get("preparation_known"))
+    if not known:
+        return None, False, None
+    prep = _prep_days(transition.get("preparation_range"))
+    if prep is None:
+        return None, True, (
             "COMPLETION_EVIDENCE_MISSING",
-            [f"{label}_crop_duration"],
+            [f"{label}_preparation_range"],
         )
-    harvest = planting + dt.timedelta(days=_pick_duration(duration, mode))
-    return planting, harvest, prep_known, None
+    return prep, True, None
+
+
+def _preparation_used(
+    previous_harvest: dt.date,
+    planting: dt.date,
+    prep: tuple[int, int] | None,
+    known: bool,
+) -> int | None:
+    if not known or prep is None:
+        return None
+    elapsed = (planting - previous_harvest).days
+    if elapsed < prep[0]:
+        return None
+    return min(prep[1], elapsed)
+
+
+def _iter_dates(start: dt.date, end: dt.date):
+    current = start
+    while current <= end:
+        yield current
+        current += dt.timedelta(days=1)
 
 
 def _crop_duration(crop: dict) -> tuple[int, int] | None:
@@ -219,10 +350,6 @@ def _valid_duration_pair(minimum: object, maximum: object) -> bool:
         and maximum >= 0
         and minimum <= maximum
     )
-
-
-def _pick_duration(duration: tuple[int, int], mode: str) -> int:
-    return duration[0] if mode == "fastest" else duration[1]
 
 
 def _prep_days(value: object) -> tuple[int, int] | None:
@@ -271,6 +398,37 @@ def _window_bounds(value: object) -> dict | None:
     }
 
 
+def _completion_unavailable(
+    first_planting: tuple[dt.date, dt.date] | None,
+    third_harvest: tuple[dt.date, dt.date] | None,
+    fastest: dict,
+    slowest: dict,
+    *,
+    code: str | None = None,
+) -> dict:
+    failed = [
+        result
+        for result in (fastest, slowest)
+        if result.get("status") != "ok"
+    ]
+    reason = code or next(
+        (result.get("reason") for result in failed if result.get("reason")),
+        "COMPLETION_RANGE_INVALID",
+    )
+    missing: list[str] = []
+    for result in failed:
+        missing.extend(result.get("missing_evidence") or [])
+    if not missing:
+        missing = ["completion_range"]
+    result = _unavailable(reason, _dedupe(missing))
+    if first_planting is not None:
+        result["first_planting_range"] = _iso_range(*first_planting)
+    if third_harvest is not None:
+        result["third_harvest_range"] = _iso_range(*third_harvest)
+    result["enumeration_used"] = False
+    return result
+
+
 def _realization_unavailable(
     mode: str, code: str, missing: list[str]
 ) -> dict:
@@ -285,6 +443,7 @@ def _realization_unavailable(
         "p3": None,
         "h3": None,
         "preparation_known": [],
+        "preparation_days": [None, None],
         "range_basis": None,
         "reason": code,
         "reasons": [code],
@@ -365,62 +524,55 @@ def _enumerated_calculation_result(
 
 
 def _enumerated_dates(realization: dict) -> dict:
+    p1 = realization.get("p1", realization.get("first_planting"))
+    h3 = realization.get("h3", realization.get("third_harvest"))
     return {
-        "p1": realization.get("first_planting"),
-        "h1": None,
-        "p2": None,
-        "h2": None,
-        "p3": None,
-        "h3": realization.get("third_harvest"),
+        "first_planting": p1,
+        "third_harvest": h3,
+        "p1": p1,
+        "h1": realization.get("h1"),
+        "p2": realization.get("p2"),
+        "h2": realization.get("h2"),
+        "p3": realization.get("p3"),
+        "h3": h3,
     }
 
 
 def enumerate_completion_range(branch: dict) -> dict:
-    """Enumerate every first-planting/third-harvest date pair in the ranges."""
+    """Return the same valid schedule bounds used by completion calculation.
+
+    This compatibility helper no longer pairs first planting with third harvest
+    independently. It uses the chronologically checked realizations, so it
+    cannot turn an infeasible intermediate crop into an ``ok`` result.
+    """
     first_planting, third_harvest, error = _completion_ranges(branch)
     if error is not None:
         error["enumeration_used"] = False
         return error
 
-    planting_earliest, planting_latest = first_planting
-    harvest_earliest, harvest_latest = third_harvest
-    minimum = None
-    maximum = None
-    min_realization = None
-    max_realization = None
-    planting = planting_earliest
-    while planting <= planting_latest:
-        harvest = harvest_earliest
-        while harvest <= harvest_latest:
-            days = (harvest - planting).days
-            if minimum is None or days < minimum:
-                minimum = days
-                min_realization = (planting, harvest)
-            if maximum is None or days > maximum:
-                maximum = days
-                max_realization = (planting, harvest)
-            harvest += dt.timedelta(days=1)
-        planting += dt.timedelta(days=1)
-
-    if (
-        minimum is None
-        or maximum is None
-        or minimum < 0
-        or maximum < 0
-        or minimum > maximum
-    ):
-        result = _unavailable("COMPLETION_RANGE_INVALID", ["completion_range"])
+    fastest = realize_completion(branch, "fastest")
+    slowest = realize_completion(branch, "slowest")
+    if fastest["status"] != "ok" or slowest["status"] != "ok":
+        result = _completion_unavailable(
+            first_planting, third_harvest, fastest, slowest
+        )
         result["enumeration_used"] = True
         return result
 
-    result = _completion_result(
+    result = _enumerated_calculation_result(
         first_planting,
         third_harvest,
-        minimum,
-        maximum,
-        min_realization,
-        max_realization,
-        range_basis="enumerated_realizations",
+        {
+            "completion_days": {
+                "min": fastest["completion_days"],
+                "max": slowest["completion_days"],
+            },
+            "earliest_completion_date": fastest["h3"],
+            "latest_completion_date": slowest["h3"],
+            "ranking_value_days": slowest["completion_days"],
+            "min_realization": fastest,
+            "max_realization": slowest,
+        },
     )
     result["enumeration_used"] = True
     return result
@@ -788,6 +940,7 @@ def rank_branches(
         group_items[status]["items"].append(item)
         prepared.append(item)
 
+    climate_meta = None
     if preference == "fastest_completion":
         for item in prepared:
             completion = item["completion"]
@@ -860,6 +1013,107 @@ def rank_branches(
                     entry["branch_id"] or "",
                 )
             )
+    elif preference in CLIMATE_PREFERENCES:
+        climate_meta = {
+            "definitions": climate_definitions(),
+            "limitations": climate_limitations(),
+            "common_seasons": {},
+            "common_season_counts": {},
+            "top_ties": {},
+            "equal_crop_weighting": True,
+            "ordering_basis": (
+                "higher exposure of the two completion-optimized schedules; "
+                "not a worst-case bound over all possible schedules"
+            ),
+            "no_overall_score": True,
+        }
+        metric_name = CLIMATE_METRICS[preference]
+        view = (
+            "temperature"
+            if preference == "closest_temperature_match"
+            else "rain"
+        )
+        climate_meta["view"] = view
+        for name in group_items:
+            items = group_items[name]["items"]
+            eligible = []
+            for item in items:
+                climate = item["branch"].get("metrics", {}).get("climate")
+                seasons = branch_common_seasons(climate, view)
+                if seasons:
+                    eligible.append((item, climate, seasons))
+            common = None
+            for _item, _climate, seasons in eligible:
+                common = seasons if common is None else common & seasons
+            common = common or set()
+            climate_meta["common_seasons"][name] = sorted(common)
+            climate_meta["common_season_counts"][name] = len(common)
+            for item in items:
+                climate = item["branch"].get("metrics", {}).get("climate")
+                seasons = branch_common_seasons(climate, view)
+                if not seasons:
+                    _append_unranked(
+                        group_items[name],
+                        item,
+                        "CLIMATE_EVIDENCE_MISSING",
+                        ["climate_exposure_evidence"],
+                    )
+                    continue
+                if not common or not common <= seasons:
+                    _append_unranked(
+                        group_items[name],
+                        item,
+                        "NO_COMMON_CLIMATE_SEASONS",
+                        ["common_complete_climate_seasons"],
+                    )
+                    continue
+                result = evaluate_climate(climate, common, preference)
+                if result is None:
+                    _append_unranked(
+                        group_items[name],
+                        item,
+                        "CLIMATE_EVIDENCE_MISSING",
+                        ["climate_exposure_evidence"],
+                    )
+                    continue
+                reasons, cautions = _ranking_reasons(item)
+                reasons.append(result["ordering_basis"])
+                group_items[name]["ranked"].append(
+                    {
+                        **_ranking_base(item),
+                        "metric_value": result["value"],
+                        "metric": metric_name,
+                        "unit": result["unit"],
+                        "schedule_values": result["schedule_values"],
+                        "ordering_basis": result["ordering_basis"],
+                        "common_seasons": result["common_seasons"],
+                        "climate": {
+                            "view": result["view"],
+                            "per_schedule": result["schedule_summaries"],
+                            "common_seasons": result["common_seasons"],
+                            "ordering_basis": result["ordering_basis"],
+                        },
+                        "reasons": reasons,
+                        "cautions": cautions,
+                    }
+                )
+            group_items[name]["ranked"].sort(
+                key=lambda entry: (
+                    entry["metric_value"],
+                    entry["branch_id"] or "",
+                )
+            )
+            ranked = group_items[name]["ranked"]
+            if ranked:
+                top_value = ranked[0]["metric_value"]
+                climate_meta["top_ties"][name] = {
+                    "value": top_value,
+                    "branch_ids": [
+                        entry["branch_id"]
+                        for entry in ranked
+                        if entry["metric_value"] == top_value
+                    ],
+                }
     else:
         for item in prepared:
             if preference == "least_irrigation_dependence":
@@ -912,6 +1166,23 @@ def rank_branches(
             "Family-count ordering is a product convention, not a "
             "soil-health ranking; legume presence is reported separately."
         )
+    elif preference in CLIMATE_PREFERENCES:
+        notes.append(
+            "Climate views use only common complete historical seasons; "
+            "missing evidence and branches without a common season set are unranked."
+        )
+        notes.append(
+            "Three crop summaries are equally weighted as a disclosed product "
+            "convention; this is not duration neutrality or agricultural suitability."
+        )
+        if climate_meta is not None:
+            for name, tie in climate_meta.get("top_ties", {}).items():
+                if len(tie["branch_ids"]) > 1:
+                    notes.append(
+                        f"{name.capitalize()} group: {len(tie['branch_ids'])} "
+                        f"branches share the top value {tie['value']}; "
+                        "branch_id order is display-only."
+                    )
     else:
         notes.append(
             f"No comparable {metric} evidence; all branches are unranked."
@@ -929,13 +1200,34 @@ def rank_branches(
             "distinct_family_count descending; ties by branch_id ascending; "
             "family count is a product convention, not a soil-health ranking."
         )
+    elif preference == "closest_temperature_match":
+        method = (
+            "Rank candidate and conditional groups separately by the mean of "
+            "three crop median seasonal T2M distances from the EcoCrop optimum; "
+            "higher exposure of the two completion-optimized schedules; ties "
+            "by branch_id ascending; no weighted score."
+        )
+    elif preference == "least_dry_spell_exposure":
+        method = (
+            "Rank candidate and conditional groups separately by the mean of "
+            "three crop median longest dry runs (<1 mm/day); higher exposure "
+            "of the two completion-optimized schedules; ties by branch_id "
+            "ascending; spell length is not normalized away."
+        )
+    elif preference == "least_heavy_rain_exposure":
+        method = (
+            "Rank candidate and conditional groups separately by the mean of "
+            "three crop heavy-rain frequencies (>=20 mm/day divided by valid "
+            "growing days); higher exposure of the two completion-optimized "
+            "schedules; ties by branch_id ascending; no overall score."
+        )
     else:
         method = (
             f"No comparable {metric} evidence; all candidate and conditional "
             "branches are unranked; no winner is forced."
         )
 
-    return {
+    result = {
         "preference": preference,
         "metric": metric,
         "direction": direction,
@@ -945,6 +1237,9 @@ def rank_branches(
         "notes": notes,
         "no_winner": no_winner,
     }
+    if climate_meta is not None:
+        result["climate"] = climate_meta
+    return result
 
 
 def _ranking_branch_id(branch: object):
@@ -1199,6 +1494,7 @@ def _unavailable(code: str, missing: list[str]) -> dict:
         "reason": code,
         "reasons": [code],
         "missing_evidence": list(missing),
+        "enumeration_used": False,
     }
 
 

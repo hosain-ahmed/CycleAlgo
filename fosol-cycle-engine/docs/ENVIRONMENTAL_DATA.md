@@ -28,6 +28,52 @@ Variables used by default:
 `GWETTOP` is **MERRA-2 surface soil wetness**. It is **not SMAP**, is not root-zone
 moisture, and must never be labelled as SMAP.
 
+### Historical exposure views
+
+Iteration 2 uses POWER `T2M` and `PRECTOTCORR` only, over complete seasons of the crop
+periods in the two completion-optimized schedules. Temperature and rain coverage are
+independent: temperature needs complete `T2M`, dry/heavy views need complete
+`PRECTOTCORR`. Units are validated (`C` and `mm/day`, with documented equivalent
+labels); missing or incompatible units disable only that view. Temperature is the
+per-season median daily T2M compared with the crop profile’s EcoCrop optimum
+(tolerance is context only). Dry spell is the longest run of daily
+`PRECTOTCORR < 1 mm/day`; heavy rain is days `>=20 mm/day` divided by valid growing
+days. These are growing-period adaptations of meteorological indices, not standard
+annual Climdex outputs, crop-damage thresholds, or irrigation demand. Temperature
+provenance uses the actual FAO EcoCrop species entries; the seasonal-median match is
+our project convention. Verified entries: `Oryza sativa` 1574, `Triticum aestivum`
+2114, `Brassica juncea` 548, `Lens culinaris` 7209, `Vigna radiata` 2150,
+`Zea mays` 2175, `Solanum tuberosum` 1971, from
+`https://github.com/OpenCLIM/ecocrop/blob/main/EcoCrop_DB.csv` (FAO EcoCrop
+database mirror). These are species/crop-level general ranges, not variety- or
+stage-specific thresholds. Rainfall totals and IQR are descriptive. Missing days exclude
+a season and are never zero-filled. Equal crop weighting and the
+higher-exposure-of-two-schedules rule are product conventions disclosed in the ranking.
+
+### Temperature provenance: exactly what is confirmed
+
+**Confirmed:** the mirror contains the cited species entries and their numbers
+(for example mustard `Brassica juncea` 548, rice `Oryza sativa` 1574, mung
+`Vigna radiata` 2150, wheat `Triticum aestivum` 2114). The project compares the
+median daily T2M over the realized growing period with the published optimum
+range; distance is 0 inside the range.
+
+**Not confirmed:** that those species-level ranges are Rajshahi variety- or
+stage-specific field meanings; that a 0 °C distance means no heat stress; or that
+the mirror alone is independent agronomic validation. The seasonal-median rule is
+a project-defined convention, not an EcoCrop field definition. Do not describe a
+software check or a mirror match as agricultural validation.
+
+The development server uses this API through `src/environment.py` and the
+`.cache/power/` cache, not the local environmental CSV. It requests one history for
+Rajshahi (`24.3767/88.6029`, three variables, stable period
+1991-01-01..2025-12-31). The stable end date keeps the cache key reusable across
+offline restarts. The documented limit is 20 parameters per single-point
+submission; no date range split is required for this request. A stale cache is used
+only with a `STALE_CACHE` warning, and no usable cache yields an unavailable
+outlook, never a local-CSV fallback. Local POWER files remain for offline demo
+snapshots.
+
 ### POWER failures
 
 - `422`: validation failure, not retried.

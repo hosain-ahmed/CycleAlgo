@@ -603,6 +603,41 @@ class BranchExpanderTests(unittest.TestCase):
         self.assertEqual(second["waiting_limit_status"], "within")
         self.assertEqual(branch["crops"][0]["timing_status"], "known")
 
+    def test_duration_verification_applies_only_to_listed_crops(self) -> None:
+        """Spec §10 | Bug it catches: one global duration flag verifies every crop."""
+        profiles = {crop_id: self.profiles[crop_id] for crop_id in SUBSET}
+        result = self._run(
+            profiles,
+            max_waiting_days=365,
+            duration_reference_verified=True,
+            duration_reference_verified_crop_ids={"mustard_binasarisha9"},
+        )
+        branches = self._branches_with(result, "mustard_binasarisha9", position=1)
+        self.assertTrue(branches)
+        branch = branches[0]
+        for crop in branch["crops"]:
+            expected = crop["crop_id"] == "mustard_binasarisha9"
+            self.assertEqual(
+                crop["duration"]["reference_verified"], expected
+            )
+        self.assertEqual(
+            result["request"]["duration_reference_verified_crop_ids"],
+            ["mustard_binasarisha9"],
+        )
+
+    def test_duration_verification_ids_are_validated(self) -> None:
+        """Spec §10 | Bug it catches: unknown crop IDs silently verify unrelated crops."""
+        with self.assertRaises(ValueError):
+            self._run(
+                duration_reference_verified=True,
+                duration_reference_verified_crop_ids={"unknown_crop"},
+            )
+        with self.assertRaises(ValueError):
+            self._run(
+                duration_reference_verified=False,
+                duration_reference_verified_crop_ids={"mustard_binasarisha9"},
+            )
+
     def test_small_waiting_limit_excludes_future_third_crop(self) -> None:
         """Spec §17.8 | Bug it catches: a future path beyond the configured waiting limit is kept."""
         profiles = {crop_id: self.profiles[crop_id] for crop_id in SUBSET}

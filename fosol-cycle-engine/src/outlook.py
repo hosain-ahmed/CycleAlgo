@@ -30,6 +30,7 @@ def build_outlook(
     end_year: int = 2025,
     last_complete_data_date: dt.date | str,
     warning_config: dict | None = None,
+    sanitized_observations: dict | None = None,
 ) -> dict:
     """Assemble the seasonal outlook from W1 mappings and W2 indicators.
 
@@ -46,7 +47,11 @@ def build_outlook(
         raise ValueError("environment must contain an observations dict")
 
     fill_value = environment.get("fill_value")
-    sanitized = _sanitize_observations(observations, fill_value)
+    sanitized = (
+        sanitized_observations
+        if isinstance(sanitized_observations, dict)
+        else _sanitize_observations(observations, fill_value)
+    )
     definitions = _warning_definitions(warning_config)
     enabled = [
         definition
@@ -204,6 +209,7 @@ def build_seasonal_ranges(
     start_year: int = 2000,
     end_year: int = 2025,
     last_complete_data_date: dt.date | str,
+    sanitized_observations: dict | None = None,
 ) -> dict:
     """Return historical per-season ranges for the local POWER outlook demo."""
     if not isinstance(environment, dict):
@@ -211,7 +217,11 @@ def build_seasonal_ranges(
     observations = environment.get("observations")
     if not isinstance(observations, dict):
         raise ValueError("environment must contain an observations dict")
-    sanitized = _sanitize_observations(observations, environment.get("fill_value"))
+    sanitized = (
+        sanitized_observations
+        if isinstance(sanitized_observations, dict)
+        else _sanitize_observations(observations, environment.get("fill_value"))
+    )
 
     specifications = (
         ("T2M", "Temperature at 2 Meters", "C", "stats_min_90", "mean"),
@@ -300,13 +310,22 @@ def build_seasonal_ranges(
         "indicators": indicators,
         "thresholds_applied": False,
         "warnings": [],
-        "notes": [
-            "Seasonal ranges are historical ranges, not a forecast.",
-            "1991-1999 is excluded because the local precipitation series is invalid.",
-            "GWETTOP is MERRA-2 surface soil wetness, not SMAP.",
-        ],
-        "source_ids": [environment.get("source_id") or "local_power_2000_2026"],
+        "notes": _seasonal_range_notes(environment),
+        "source_ids": [environment.get("source_id") or "nasa_power_daily"],
     }
+
+
+def _seasonal_range_notes(environment: dict) -> list[str]:
+    notes = [
+        "Seasonal ranges are historical ranges, not a forecast.",
+        "GWETTOP is MERRA-2 surface soil wetness, not SMAP.",
+    ]
+    if environment.get("source_id") == "local_power_2000_2026":
+        notes.insert(
+            1,
+            "1991-1999 is excluded because the local precipitation series is invalid.",
+        )
+    return notes
 
 
 def _season_values(observations: dict, variable: str, season: dict) -> list[float]:
@@ -373,6 +392,11 @@ def _used_variables(enabled: list[dict]) -> list[str]:
         if isinstance(variable, str) and variable.strip() and variable not in variables:
             variables.append(variable)
     return variables
+
+
+def sanitize_observations(observations: dict, fill_value: object) -> dict:
+    """Return a fresh observation map with provider fill values set to None."""
+    return _sanitize_observations(observations, fill_value)
 
 
 def _sanitize_observations(observations: dict, fill_value: object) -> dict:

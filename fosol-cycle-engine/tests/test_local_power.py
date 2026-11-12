@@ -49,6 +49,25 @@ class LocalPowerTests(unittest.TestCase):
         self.assertTrue(any("1991-1999" in note for note in ranges["notes"]))
         self.assertTrue(any("not SMAP" in note for note in ranges["notes"]))
 
+    def test_api_history_does_not_inherit_local_precipitation_note(self) -> None:
+        """Spec §9.1 | Bug it catches: API history is described with the local 1991-1999 exclusion."""
+        api_environment = {
+            **self.environment,
+            "source_id": "nasa_power_daily",
+        }
+        ranges = build_seasonal_ranges(
+            api_environment,
+            "2027-12-25",
+            "2028-07-10",
+            start_year=2000,
+            end_year=2025,
+            last_complete_data_date="2026-10-20",
+        )
+        self.assertEqual(ranges["source_ids"], ["nasa_power_daily"])
+        self.assertFalse(
+            any("1991-1999" in note for note in ranges["notes"])
+        )
+
     def test_missing_observations_make_ranges_unavailable(self) -> None:
         """Spec §9.1 | Bug it catches: missing POWER data becomes a zero range."""
         ranges = build_seasonal_ranges(
