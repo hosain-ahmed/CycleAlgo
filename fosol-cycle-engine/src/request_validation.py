@@ -18,10 +18,17 @@ PREFERENCE_VALUES = (
     "least_irrigation_dependence",
     "highest_net_return",
     "more_crop_diversity",
+    "closest_temperature_match",
+    "least_dry_spell_exposure",
+    "least_heavy_rain_exposure",
 )
 
 DEFAULT_WATER_ACCESS = "unknown"
 DEFAULT_PREFERENCE = "fastest_completion"
+
+# Leave room for the previous calendar year and multi-year three-crop schedules.
+MIN_START_DATE = "0002-01-01"
+MAX_START_DATE = "9990-12-31"
 
 _DATE_RE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
@@ -71,6 +78,11 @@ def validate_explore_request(
         raise RequestValidationError(
             "start_date must be a valid YYYY-MM-DD date.", "start_date"
         ) from None
+    if not MIN_START_DATE <= start_date <= MAX_START_DATE:
+        raise RequestValidationError(
+            f"start_date must be between {MIN_START_DATE} and {MAX_START_DATE}.",
+            "start_date",
+        )
 
     if "first_crop_id" not in payload:
         raise RequestValidationError(

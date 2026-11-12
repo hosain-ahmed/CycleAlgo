@@ -27,6 +27,9 @@ VALID_PREFERENCES = {
     "least_irrigation_dependence",
     "highest_net_return",
     "more_crop_diversity",
+    "closest_temperature_match",
+    "least_dry_spell_exposure",
+    "least_heavy_rain_exposure",
 }
 _ECONOMIC_VALUE_KEYS = (
     "gross_revenue_bdt_per_ha",
@@ -34,6 +37,12 @@ _ECONOMIC_VALUE_KEYS = (
     "net_return_bdt_per_ha",
     "upfront_cash_bdt_per_ha",
 )
+CLIMATE_PREFERENCES = {
+    "closest_temperature_match",
+    "least_dry_spell_exposure",
+    "least_heavy_rain_exposure",
+}
+CLIMATE_SCHEDULES = ("min_realization", "max_realization")
 
 
 def _check_economics(value: object, field: str, errors: list[str]) -> None:
@@ -57,6 +66,351 @@ def _check_economics(value: object, field: str, errors: list[str]) -> None:
         errors.append(f"{field}.price_evidence must be an object")
     elif price.get("price_value") is not None:
         errors.append(f"{field}.price_evidence.price_value must be null when unavailable")
+
+
+def _climate_number(
+    value: object,
+    field: str,
+    errors: list[str],
+    *,
+    minimum: float | None = None,
+    maximum: float | None = None,
+) -> None:
+    if value is None:
+        return
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        errors.append(f"{field} must be numeric or null")
+        return
+    number = float(value)
+    if not math.isfinite(number):
+        errors.append(f"{field} must be finite")
+    elif minimum is not None and number < minimum:
+        errors.append(f"{field} must be >= {minimum}")
+    elif maximum is not None and number > maximum:
+        errors.append(f"{field} must be <= {maximum}")
+
+
+def _climate_range(value: object, field: str, errors: list[str]) -> None:
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        errors.append(f"{field} must be an object or null")
+        return
+    low = value.get("min")
+    high = value.get("max")
+    _climate_number(low, f"{field}.min", errors)
+    _climate_number(high, f"{field}.max", errors)
+    if isinstance(low, (int, float)) and isinstance(high, (int, float)) and low > high:
+        errors.append(f"{field}.min must not exceed max")
+
+
+def _check_climate_crop(value: object, field: str, errors: list[str]) -> None:
+    if not isinstance(value, dict):
+        errors.append(f"{field} must be an object")
+        return
+    if not isinstance(value.get("crop_id"), str):
+        errors.append(f"{field}.crop_id must be a string")
+    position = value.get("position")
+    if not isinstance(position, int) or isinstance(position, bool) or position not in (1, 2, 3):
+        errors.append(f"{field}.position must be 1, 2, or 3")
+    seasons = value.get("seasons")
+    if not isinstance(seasons, int) or isinstance(seasons, bool) or seasons < 0:
+        errors.append(f"{field}.seasons must be a non-negative integer")
+    if "temperature" not in value and "temperature_seasons" in value:
+        for key in ("temperature_seasons", "rain_seasons"):
+            values = value.get(key)
+            if not isinstance(values, list) or any(
+                isinstance(item, bool) or not isinstance(item, int)
+                for item in values
+            ):
+                errors.append(f"{field}.{key} must be a list of integers")
+        if value.get("status") not in {"ok", "partial", "unavailable"}:
+            errors.append(f"{field}.status invalid")
+        return
+    temperature = value.get("temperature")
+    if not isinstance(temperature, dict):
+        errors.append(f"{field}.temperature must be an object")
+    else:
+        _climate_number(
+            temperature.get("median_distance_c"),
+            f"{field}.temperature.median_distance_c",
+            errors,
+            minimum=0,
+        )
+        _climate_number(
+            temperature.get("median_t2m_c"),
+            f"{field}.temperature.median_t2m_c",
+            errors,
+        )
+        _climate_number(
+            temperature.get("within_optimum_fraction"),
+            f"{field}.temperature.within_optimum_fraction",
+            errors,
+            minimum=0,
+            maximum=1,
+        )
+        _climate_number(
+            temperature.get("within_tolerance_fraction"),
+            f"{field}.temperature.within_tolerance_fraction",
+            errors,
+            minimum=0,
+            maximum=1,
+        )
+        _climate_range(
+            temperature.get("optimum_range"),
+            f"{field}.temperature.optimum_range",
+            errors,
+        )
+        _climate_range(
+            temperature.get("tolerance_range"),
+            f"{field}.temperature.tolerance_range",
+            errors,
+        )
+    dry = value.get("dry_spell")
+    if not isinstance(dry, dict):
+        errors.append(f"{field}.dry_spell must be an object")
+    else:
+        for key in (
+            "median_longest_run_days",
+            "min_longest_run_days",
+            "max_longest_run_days",
+            "median_growing_days",
+        ):
+            _climate_number(
+                dry.get(key), f"{field}.dry_spell.{key}", errors, minimum=0
+            )
+        if all(
+            isinstance(dry.get(key), (int, float))
+            for key in (
+                "min_longest_run_days",
+                "median_longest_run_days",
+                "max_longest_run_days",
+            )
+        ) and not (
+            dry["min_longest_run_days"]
+            <= dry["median_longest_run_days"]
+            <= dry["max_longest_run_days"]
+        ):
+            errors.append(f"{field}.dry_spell run bounds are not ordered")
+    heavy = value.get("heavy_rain")
+    if not isinstance(heavy, dict):
+        errors.append(f"{field}.heavy_rain must be an object")
+    else:
+        _climate_number(heavy.get("days"), f"{field}.heavy_rain.days", errors, minimum=0)
+        _climate_number(
+            heavy.get("valid_days"), f"{field}.heavy_rain.valid_days", errors, minimum=0
+        )
+        _climate_number(
+            heavy.get("frequency"),
+            f"{field}.heavy_rain.frequency",
+            errors,
+            minimum=0,
+            maximum=1,
+        )
+        if (
+            isinstance(heavy.get("days"), (int, float))
+            and isinstance(heavy.get("valid_days"), (int, float))
+            and heavy["days"] > heavy["valid_days"]
+        ):
+            errors.append(f"{field}.heavy_rain.days must not exceed valid_days")
+    rainfall = value.get("rainfall")
+    if not isinstance(rainfall, dict):
+        errors.append(f"{field}.rainfall must be an object")
+    else:
+        for key in (
+            "median_total_mm",
+            "iqr_total_mm",
+            "min_total_mm",
+            "max_total_mm",
+        ):
+            _climate_number(
+                rainfall.get(key), f"{field}.rainfall.{key}", errors, minimum=0
+            )
+        if all(
+            isinstance(rainfall.get(key), (int, float))
+            for key in ("min_total_mm", "median_total_mm", "max_total_mm")
+        ) and not (
+            rainfall["min_total_mm"]
+            <= rainfall["median_total_mm"]
+            <= rainfall["max_total_mm"]
+        ):
+            errors.append(f"{field}.rainfall totals are not ordered")
+
+
+def _check_climate_summary(value: object, field: str, errors: list[str]) -> None:
+    if not isinstance(value, dict):
+        errors.append(f"{field} must be an object")
+        return
+    if value.get("status") not in {"ok", "partial", "unavailable"}:
+        errors.append(f"{field}.status invalid")
+    for key in (
+        "temperature_distance_c",
+        "dry_spell_days",
+        "heavy_rain_frequency",
+        "rainfall_median_mm",
+        "growing_days_median",
+    ):
+        _climate_number(value.get(key), f"{field}.{key}", errors, minimum=0)
+    per_crop = value.get("per_crop")
+    if per_crop is not None:
+        if not isinstance(per_crop, list):
+            errors.append(f"{field}.per_crop must be a list")
+        else:
+            for index, crop in enumerate(per_crop):
+                _check_climate_crop(crop, f"{field}.per_crop[{index}]", errors)
+
+
+def _check_climate_metrics(value: object, field: str, errors: list[str]) -> None:
+    if not isinstance(value, dict):
+        errors.append(f"{field} must be an object")
+        return
+    if value.get("status") not in {"ok", "partial", "unavailable"}:
+        errors.append(f"{field}.status invalid")
+    if value.get("status") == "unavailable":
+        return
+    for key in ("definitions", "unit_validation", "views"):
+        if not isinstance(value.get(key), dict):
+            errors.append(f"{field}.{key} must be an object")
+    if not isinstance(value.get("limitations"), list):
+        errors.append(f"{field}.limitations must be a list")
+    period = value.get("analysis_period")
+    if not isinstance(period, dict) or not all(
+        isinstance(period.get(key), int) for key in ("start_year", "end_year")
+    ):
+        errors.append(f"{field}.analysis_period must contain integer years")
+    per_schedule = value.get("per_schedule")
+    if not isinstance(per_schedule, dict):
+        errors.append(f"{field}.per_schedule must be an object")
+        return
+    for schedule in CLIMATE_SCHEDULES:
+        record = per_schedule.get(schedule)
+        label = f"{field}.per_schedule.{schedule}"
+        if not isinstance(record, dict):
+            errors.append(f"{label} must be an object")
+            continue
+        if record.get("status") not in {"ok", "partial", "unavailable"}:
+            errors.append(f"{label}.status invalid")
+        for key in ("temperature_complete_seasons", "rain_complete_seasons", "complete_seasons"):
+            values = record.get(key)
+            if not isinstance(values, list) or any(
+                isinstance(item, bool) or not isinstance(item, int)
+                for item in values
+            ):
+                errors.append(f"{label}.{key} must be a list of integers")
+        crops = record.get("crops")
+        if not isinstance(crops, list):
+            errors.append(f"{label}.crops must be a list")
+        else:
+            for index, crop in enumerate(crops):
+                _check_climate_crop(crop, f"{label}.crops[{index}]", errors)
+    summary = value.get("summary")
+    if not isinstance(summary, dict):
+        errors.append(f"{field}.summary must be an object")
+    else:
+        for schedule in CLIMATE_SCHEDULES:
+            _check_climate_summary(
+                summary.get(schedule), f"{field}.summary.{schedule}", errors
+            )
+
+
+def _check_climate_ranking(ranking: dict, errors: list[str]) -> None:
+    if ranking.get("preference") in CLIMATE_PREFERENCES and "climate" not in ranking:
+        errors.append("ranking.climate is required for a climate preference")
+        return
+    value = ranking.get("climate")
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        errors.append("ranking.climate must be an object")
+        return
+    for key in ("definitions", "common_seasons", "common_season_counts", "top_ties"):
+        if not isinstance(value.get(key), dict):
+            errors.append(f"ranking.climate.{key} must be an object")
+    if not isinstance(value.get("limitations"), list):
+        errors.append("ranking.climate.limitations must be a list")
+    if not isinstance(value.get("equal_crop_weighting"), bool):
+        errors.append("ranking.climate.equal_crop_weighting must be boolean")
+    if value.get("no_overall_score") is not True:
+        errors.append("ranking.climate.no_overall_score must be true")
+    if not isinstance(value.get("ordering_basis"), str) or not value["ordering_basis"]:
+        errors.append("ranking.climate.ordering_basis must be non-empty")
+    for group in ("candidate", "conditional"):
+        seasons = value.get("common_seasons", {}).get(group)
+        count = value.get("common_season_counts", {}).get(group)
+        if not isinstance(seasons, list) or any(
+            isinstance(item, bool) or not isinstance(item, int) for item in seasons
+        ):
+            errors.append(f"ranking.climate.common_seasons.{group} must be integers")
+        if not isinstance(count, int) or isinstance(count, bool) or count < 0:
+            errors.append(f"ranking.climate.common_season_counts.{group} invalid")
+        elif isinstance(seasons, list) and count != len(seasons):
+            errors.append(
+                f"ranking.climate.common_season_counts.{group} != common_seasons length"
+            )
+        tie = value.get("top_ties", {}).get(group)
+        if tie is not None:
+            if not isinstance(tie, dict):
+                errors.append(f"ranking.climate.top_ties.{group} must be an object")
+            else:
+                _climate_number(
+                    tie.get("value"),
+                    f"ranking.climate.top_ties.{group}.value",
+                    errors,
+                )
+                if not isinstance(tie.get("branch_ids"), list):
+                    errors.append(
+                        f"ranking.climate.top_ties.{group}.branch_ids must be a list"
+                    )
+    if ranking.get("preference") in CLIMATE_PREFERENCES:
+        groups = ranking.get("groups")
+        if isinstance(groups, dict):
+            for group_name in ("candidate", "conditional"):
+                group = groups.get(group_name)
+                if not isinstance(group, dict):
+                    continue
+                for index, entry in enumerate(group.get("ranked", [])):
+                    label = f"ranking.groups.{group_name}.ranked[{index}]"
+                    _climate_number(
+                        entry.get("metric_value"),
+                        f"{label}.metric_value",
+                        errors,
+                    )
+                    if not isinstance(entry.get("unit"), str) or not entry["unit"]:
+                        errors.append(f"{label}.unit must be non-empty")
+                    schedule_values = entry.get("schedule_values")
+                    if not isinstance(schedule_values, dict):
+                        errors.append(f"{label}.schedule_values must be an object")
+                    else:
+                        for schedule in CLIMATE_SCHEDULES:
+                            _climate_number(
+                                schedule_values.get(schedule),
+                                f"{label}.schedule_values.{schedule}",
+                                errors,
+                            )
+                    if not isinstance(entry.get("ordering_basis"), str) or not entry["ordering_basis"]:
+                        errors.append(f"{label}.ordering_basis must be non-empty")
+                    seasons = entry.get("common_seasons")
+                    if not isinstance(seasons, list) or any(
+                        isinstance(item, bool) or not isinstance(item, int)
+                        for item in seasons
+                    ):
+                        errors.append(f"{label}.common_seasons must be integers")
+                    climate = entry.get("climate")
+                    if not isinstance(climate, dict):
+                        errors.append(f"{label}.climate must be an object")
+                        continue
+                    if climate.get("view") not in {"temperature", "rain"}:
+                        errors.append(f"{label}.climate.view invalid")
+                    summaries = climate.get("per_schedule")
+                    if not isinstance(summaries, dict):
+                        errors.append(f"{label}.climate.per_schedule must be an object")
+                    else:
+                        for schedule in CLIMATE_SCHEDULES:
+                            _check_climate_summary(
+                                summaries.get(schedule),
+                                f"{label}.climate.per_schedule.{schedule}",
+                                errors,
+                            )
 
 
 def _check_outlook(
@@ -343,6 +697,10 @@ def validate_response(payload: dict) -> list[str]:
             errors.append(f"{label}.metrics must be an object")
         else:
             _check_economics(metrics.get("economics"), f"{label}.metrics.economics", errors)
+            if "climate" in metrics:
+                _check_climate_metrics(
+                    metrics["climate"], f"{label}.metrics.climate", errors
+                )
         if "outlook" in branch:
             _check_outlook(
                 branch["outlook"], f"{label}.outlook", source_ids, errors
@@ -405,6 +763,7 @@ def validate_response(payload: dict) -> list[str]:
                                 )
                 if group.get("count") != len(group.get("ranked", [])) + len(group.get("unranked", [])):
                     errors.append(f"ranking.groups.{group_name}.count mismatch")
+        _check_climate_ranking(ranking, errors)
 
     context = payload.get("environment_context")
     if not isinstance(context, dict):

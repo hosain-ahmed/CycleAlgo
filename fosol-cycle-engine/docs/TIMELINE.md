@@ -12,6 +12,12 @@ so known durations stay `conditional` / `DURATION_REFERENCE_UNRESOLVED`.
 Aman and Boro are transplanted; their `seedling_age_*` values are reported but
 never added to variety duration (`NURSERY_AGE_NOT_ADDED`, `nursery_age_added=false`).
 
+Verification is per crop. A host/server may pass
+`duration_reference_verified=True` with
+`duration_reference_verified_crop_ids`; only those crop IDs receive
+`duration.reference_verified=true`. Unknown IDs and IDs supplied without the
+verification flag are rejected. The flag is not a request-payload field.
+
 ## Preparation is unknown until supplied
 
 All eight `turnaround_days_min/max` cells are blank and
@@ -41,6 +47,19 @@ are null and `latest_invalid=true`; the earliest endpoint is kept only when its
 own pairing is valid. When preparation is unknown, the next planting range is
 the crop window only (`timing_basis=window_only_preparation_unknown`); the
 engine does not claim the crop follows on time.
+
+Completion realizations are built as one chain, not by pairing independent first
+and third endpoints. Every reported `min_realization` and `max_realization` must
+satisfy `planting1 <= harvest1 <= planting2 <= harvest2 <= planting3 <= harvest3`,
+stay inside each crop’s planting/harvest and duration ranges, and obey a sourced
+preparation minimum when present. If no valid chain exists, completion is
+`unavailable` with `COMPLETION_RANGE_INVALID`; the old enumeration fallback is not
+allowed to turn that into `ok`.
+
+The iteration-2 climate views use those same `min_realization` and `max_realization`
+as two identified example schedules. They optimize completion, not weather. The
+ranking uses the higher exposure of the two and labels it as such; it is not a
+worst-case bound over every possible schedule.
 
 ## Waiting limit is product policy
 

@@ -434,7 +434,8 @@ class ExploreTests(unittest.TestCase):
         branch = self._run("boro_brri_dhan28")["branches"][0]
         metrics = branch["metrics"]
         self.assertEqual(
-            set(metrics), {"completion", "resources", "economics", "diversity"}
+            set(metrics),
+            {"completion", "resources", "economics", "diversity", "climate"},
         )
         self.assertEqual(
             set(metrics["resources"]),
@@ -442,6 +443,7 @@ class ExploreTests(unittest.TestCase):
         )
         self.assertEqual(metrics["economics"]["status"], "unavailable")
         self.assertIn("distinct_family_count", metrics["diversity"])
+        self.assertEqual(metrics["climate"]["status"], "unavailable")
 
     def test_branch_climate_check_is_deferred(self) -> None:
         """Spec §14.3/§6.2 | Bug it catches: branch crop nodes omit the deferred climate check."""
@@ -514,6 +516,108 @@ class ExploreTests(unittest.TestCase):
             "nasa_power_daily",
             {source["source_id"] for source in result["data_sources"]},
         )
+
+    def test_trusted_evidence_threads_to_expansion_without_payload_input(self) -> None:
+        """Spec §10/§14 | Bug it catches: server-side evidence is dropped or user payload evidence is trusted."""
+        preparation = {
+            crop_id: {
+                "min_days": 7,
+                "max_days": 10,
+                "source_ids": ["test://preparation"],
+            }
+            for crop_id in self.profiles
+        }
+        soil = {
+            "ph": {
+                "min": 6.5,
+                "max": 7.0,
+                "source_ids": ["test://soil"],
+            }
+        }
+        payload = _payload("lentil_binamasur9")
+        payload["soil_evidence"] = {"ph": {"min": 0, "max": 0}}
+        result = explore(
+            payload,
+            profiles=self.profiles,
+            config={**CONFIG, "max_waiting_days": 365},
+            soil_evidence=soil,
+            preparation_lookup=preparation,
+            duration_reference_verified=True,
+            duration_reference_verified_crop_ids={"lentil_binamasur9"},
+            now=NOW,
+        )
+        self.assertTrue(result["branches"])
+        for crop in result["branches"][0]["crops"]:
+            self.assertEqual(
+                crop["duration"]["reference_verified"],
+                crop["crop_id"] == "lentil_binamasur9",
+            )
+            self.assertEqual(crop["preparation_range"]["min_days"], 7)
+        codes = {item["code"] for item in result["assumptions"]}
+        self.assertIn("SOIL_EVIDENCE_SUPPLIED", codes)
+        self.assertIn("PREPARATION_EVIDENCE_SUPPLIED", codes)
+        self.assertIn("DURATION_REFERENCE_VERIFIED", codes)
+        self.assertNotIn("soil_evidence", result["request"])
+
+    def test_power_provider_failure_is_explicitly_unavailable(self) -> None:
+        """Spec §9/§14.3 | Bug it catches: a failed POWER load becomes fabricated observations or a silent fallback."""
+        result = explore(
+            _payload("boro_brri_dhan28"),
+            profiles=self.profiles,
+            config=CONFIG,
+            environment=None,
+            environment_error="POWER provider unavailable",
+            now=NOW,
+        )
+        warning = next(
+            item
+            for item in result["warnings"]
+            if item["code"] == "POWER_UNAVAILABLE"
+        )
+        self.assertIn("POWER provider unavailable", warning["message"])
+        self.assertEqual(
+            result["branches"][0]["outlook"]["status"], "unavailable"
+        )
+
+    def test_environment_cache_metadata_and_stale_warning_are_exposed(self) -> None:
+        """Spec §14.3/§9 | Bug it catches: stale POWER metadata is hidden from the caller."""
+        environment = {
+            **POWER_ENVIRONMENT,
+            "cache": {"hit": True, "stale": True, "age_seconds": 900.0},
+            "warnings": [
+                {
+                    "code": "STALE_CACHE",
+                    "message": "POWER data came from a stale cache.",
+                }
+            ],
+        }
+        result = explore(
+            _payload("boro_brri_dhan28"),
+            profiles=self.profiles,
+            config={
+                **CONFIG,
+                "analysis_start_year": 2020,
+                "analysis_end_year": 2021,
+                "last_complete_data_date": "2022-12-31",
+            },
+            environment=environment,
+            now=NOW,
+        )
+        self.assertTrue(
+            any(
+                warning["code"] == "STALE_CACHE"
+                for warning in result["warnings"]
+            )
+        )
+        source = next(
+            item
+            for item in result["data_sources"]
+            if item["source_id"] == "nasa_power_daily"
+        )
+        self.assertEqual(source["observation_start"], "2020-01-01")
+        self.assertEqual(source["observation_end"], "2022-12-31")
+        self.assertFalse(source["is_forecast"])
+        self.assertTrue(source["cache"]["stale"])
 
     def test_data_sources_cover_every_referenced_source_id(self) -> None:
         """Spec §14.4 | Bug it catches: a referenced source ID is missing from data_sources."""

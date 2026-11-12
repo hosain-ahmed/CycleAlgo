@@ -206,6 +206,21 @@ def check_invariants() -> None:
                 f"{label}: blocked branch in branches",
             )
             _check_ranges(branch)
+            completion = branch["metrics"]["completion"]
+            if completion["status"] == "ok":
+                for realization_name in (
+                    "min_realization",
+                    "max_realization",
+                ):
+                    realization = completion[realization_name]
+                    dates = [
+                        realization[key]
+                        for key in ("p1", "h1", "p2", "h2", "p3", "h3")
+                    ]
+                    require(
+                        dates == sorted(dates),
+                        f"{label}: non-chronological {realization_name}",
+                    )
 
         ranking = response["ranking"]["groups"]
         for group_name in ("candidate", "conditional"):
@@ -350,6 +365,9 @@ def main() -> int:
             "least_irrigation_dependence",
             "highest_net_return",
             "more_crop_diversity",
+            "closest_temperature_match",
+            "least_dry_spell_exposure",
+            "least_heavy_rain_exposure",
         )
         for preference in allowed:
             result = run(
@@ -382,6 +400,32 @@ def main() -> int:
                     entry["branch_id"] in boro_ids,
                     f"{preference}: unknown branch ID",
                 )
+
+        climate_config = {**CONFIG, "max_branches": 3}
+        for preference in (
+            "closest_temperature_match",
+            "least_dry_spell_exposure",
+            "least_heavy_rain_exposure",
+        ):
+            result = run(
+                "boro_brri_dhan28",
+                preference,
+                environment=LOCAL_POWER,
+                config=climate_config,
+                label=f"climate:{preference}",
+            )
+            conditional = result["ranking"]["groups"]["conditional"]
+            require(
+                len(conditional["ranked"]) == len(result["branches"]),
+                f"{preference}: climate branches not ranked",
+            )
+            require(
+                result["ranking"]["climate"]["common_season_counts"][
+                    "conditional"
+                ]
+                > 0,
+                f"{preference}: no common climate seasons",
+            )
 
         try:
             run(
@@ -542,7 +586,7 @@ def main() -> int:
             + " ".join(f"{crop_id}={count}" for crop_id, count in selected_counts.items())
         )
         print(
-            "preferences: fastest/diversity ranked; "
+            "preferences: fastest/diversity/climate ranked; "
             "cost/net/irrigation/upfront unranked/no_winner"
         )
         print("water: rainfed/irrigation_available/unknown -> partial")

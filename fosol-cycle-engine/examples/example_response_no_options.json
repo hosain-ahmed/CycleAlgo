@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-11-09T12:00:00+00:00",
+  "generated_at": "2026-11-12T12:00:00+00:00",
   "request": {
     "district_id": "rajshahi",
     "start_date": "2026-11-06",
@@ -27,20 +27,28 @@
       "message": "No maximum transition wait policy is configured."
     },
     {
-      "code": "DURATION_REFERENCE_UNVERIFIED",
-      "message": "Crop duration reference stage (sowing versus transplanting) is unconfirmed; timing remains conditional."
+      "code": "THREE_CROP_SEQUENCE_NOT_REPEATING_ROTATION",
+      "message": "A branch is one three-crop sequence, not a verified repeating rotation; repeated cycles require separate evidence."
+    },
+    {
+      "code": "CLIMATE_EXPOSURE_DEFERRED",
+      "message": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
+    },
+    {
+      "code": "ECONOMICS_UNAVAILABLE",
+      "message": "No sourced economic evidence; cost, net return, and upfront cash remain unavailable."
+    },
+    {
+      "code": "SOIL_EVIDENCE_MISSING",
+      "message": "No local district soil evidence was supplied; soil fit remains unknown rather than an automatic pass."
     },
     {
       "code": "PREPARATION_EVIDENCE_MISSING",
       "message": "Preparation evidence was not supplied; readiness and waiting remain unknown rather than zero."
     },
     {
-      "code": "CLIMATE_EXPOSURE_DEFERRED",
-      "message": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
-    },
-    {
-      "code": "ECONOMICS_UNAVAILABLE",
-      "message": "No sourced economic evidence; cost, net return, and upfront cash remain unavailable."
+      "code": "DURATION_REFERENCE_UNVERIFIED",
+      "message": "Crop duration reference stage (sowing versus transplanting) is unconfirmed; timing remains conditional."
     }
   ],
   "data_sources": [
@@ -129,7 +137,7 @@
     {
       "crop_id": "aman_br11",
       "name_en": "T. Aman rice",
-      "name_bn": "\u0986\u09ae\u09a8 \u09a7\u09be\u09a8",
+      "name_bn": "আমন ধান",
       "reference_variety": "BR11",
       "status": "unsupported",
       "shown": false,
@@ -165,7 +173,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -269,7 +277,7 @@
         "The proposed date is outside the documented window (2026-07-10 to 2026-07-24). No documented late window exists for this profile. This is outside documented planting support; it is not a biological impossibility and the preferred end is not a proven deadline.",
         "Soil fit is unknown. No local district pH evidence was supplied; pH fit is unknown rather than an automatic pass.",
         "Irrigation confirmation required. The crop profile carries quantified water-demand guidance, but water access was not confirmed, so this prerequisite remains unresolved.",
-        "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+        "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
         "The next documented window starts 2027-07-10 (246 days after the reference date), which exceeds this explorer's maximum waiting gap of 180 days. The limit is a product relevance cutoff, not a scientifically safe maximum and not a biological impossibility; longer fallow is not claimed impossible."
       ],
       "missing_evidence": [
@@ -289,7 +297,7 @@
     {
       "crop_id": "boro_brri_dhan28",
       "name_en": "Boro rice",
-      "name_bn": "\u09ac\u09cb\u09b0\u09cb \u09a7\u09be\u09a8",
+      "name_bn": "বোরো ধান",
       "reference_variety": "BRRI dhan28",
       "status": "conditional",
       "shown": true,
@@ -418,7 +426,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -452,7 +460,7 @@
     {
       "crop_id": "lentil_binamasur9",
       "name_en": "Lentil",
-      "name_bn": "\u09ae\u09b8\u09c1\u09b0",
+      "name_bn": "মসুর",
       "reference_variety": "Binamasur-9",
       "status": "conditional",
       "shown": true,
@@ -580,7 +588,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -613,7 +621,7 @@
     {
       "crop_id": "maize_rabi_bari_hybrid13",
       "name_en": "Maize",
-      "name_bn": "\u09ad\u09c1\u099f\u09cd\u099f\u09be",
+      "name_bn": "ভুট্টা",
       "reference_variety": "BARI Hybrid Maize-13",
       "status": "conditional",
       "shown": true,
@@ -742,7 +750,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -775,7 +783,7 @@
     {
       "crop_id": "mung_bari_mung6_kharif1",
       "name_en": "Mung bean",
-      "name_bn": "\u09ae\u09c1\u0997",
+      "name_bn": "মুগ",
       "reference_variety": "BARI Mung-6",
       "status": "unsupported",
       "shown": false,
@@ -811,7 +819,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -914,7 +922,7 @@
         "The window is not Rajshahi-exact (planting_window_type=MODELLED_OPTIMUM_BANGLADESH_NOT_RAJSHI_EXACT, date_precision=DAY_BUT_LOCATION_TRANSFERABILITY_MEDIUM); it cannot support a calendar pass for this district even when the date falls inside the encoded dates.",
         "Soil fit is unknown. No local district pH evidence was supplied; pH fit is unknown rather than an automatic pass.",
         "The crop profile has no quantified water-demand evidence (an FAO range or a local phase water total), so water fit stays unknown even when irrigation is reported available.",
-        "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
+        "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
       ],
       "missing_evidence": [
         "district_soil_ph",
@@ -932,7 +940,7 @@
     {
       "crop_id": "mustard_binasarisha9",
       "name_en": "Mustard",
-      "name_bn": "\u09b8\u09b0\u09bf\u09b7\u09be",
+      "name_bn": "সরিষা",
       "reference_variety": "Binasarisha-9",
       "status": "conditional",
       "shown": true,
@@ -1060,7 +1068,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -1093,7 +1101,7 @@
     {
       "crop_id": "potato_bari_alu41",
       "name_en": "Potato",
-      "name_bn": "\u0986\u09b2\u09c1",
+      "name_bn": "আলু",
       "reference_variety": "BARI Alu-41",
       "status": "conditional",
       "shown": true,
@@ -1221,7 +1229,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -1254,7 +1262,7 @@
     {
       "crop_id": "wheat_bari_gom33",
       "name_en": "Wheat",
-      "name_bn": "\u0997\u09ae",
+      "name_bn": "গম",
       "reference_variety": "BARI Gom-33",
       "status": "conditional",
       "shown": true,
@@ -1383,7 +1391,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -1444,7 +1452,7 @@
   "warnings": [
     {
       "code": "CLIMATE_EXPOSURE_DEFERRED",
-      "message": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
+      "message": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
     },
     {
       "code": "ECONOMICS_UNAVAILABLE",

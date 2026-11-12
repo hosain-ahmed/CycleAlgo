@@ -40,6 +40,7 @@ def expand_branches(
     max_waiting_days: int | None = None,
     max_initial_wait_days: int | None = None,
     duration_reference_verified: bool = False,
+    duration_reference_verified_crop_ids: object = None,
     environment: dict | None = None,
     max_branches: int | None = None,
 ) -> dict:
@@ -57,6 +58,11 @@ def expand_branches(
         )
     if not isinstance(duration_reference_verified, bool):
         raise TypeError("duration_reference_verified must be a bool")
+    verified_crop_ids = _verified_crop_ids(
+        duration_reference_verified,
+        duration_reference_verified_crop_ids,
+        profiles,
+    )
     transition_limit = _validate_limit(max_waiting_days)
     initial_limit = _validate_limit(
         max_initial_wait_days, "max_initial_wait_days"
@@ -111,7 +117,9 @@ def expand_branches(
             profile,
             planting_range,
             _resolve_preparation(preparation_lookup, crop_id),
-            duration_reference_verified,
+            _duration_verified(
+                crop_id, duration_reference_verified, verified_crop_ids
+            ),
             transition_limit,
         )
         if timeline["harvest_range"] is None:
@@ -160,6 +168,7 @@ def expand_branches(
                 path_profiles=[root["profile"]],
                 preparation_lookup=preparation_lookup,
                 duration_reference_verified=duration_reference_verified,
+                duration_reference_verified_crop_ids=verified_crop_ids,
                 max_waiting_days=transition_limit,
                 soil_water=soil_water,
             )
@@ -193,6 +202,7 @@ def expand_branches(
                     path_profiles=[root["profile"], second["profile"]],
                     preparation_lookup=preparation_lookup,
                     duration_reference_verified=duration_reference_verified,
+                    duration_reference_verified_crop_ids=verified_crop_ids,
                     max_waiting_days=transition_limit,
                     soil_water=soil_water,
                 )
@@ -243,6 +253,9 @@ def expand_branches(
             "max_waiting_days": transition_limit,
             "max_initial_wait_days": initial_limit,
             "duration_reference_verified": duration_reference_verified,
+            "duration_reference_verified_crop_ids": (
+                sorted(verified_crop_ids) if verified_crop_ids is not None else None
+            ),
             "max_branches": branch_cap,
         },
         "branches": branches,
@@ -336,6 +349,7 @@ def _try_next(
     path_profiles: list[dict],
     preparation_lookup: object,
     duration_reference_verified: bool,
+    duration_reference_verified_crop_ids: set[str] | None,
     max_waiting_days: int | None,
     soil_water,
 ):
@@ -380,7 +394,11 @@ def _try_next(
         profile,
         planting_range,
         _resolve_preparation(preparation_lookup, _profile_id(profile)),
-        duration_reference_verified,
+        _duration_verified(
+            _profile_id(profile),
+            duration_reference_verified,
+            duration_reference_verified_crop_ids,
+        ),
         max_waiting_days,
     )
     if timeline["harvest_range"] is None:
@@ -1052,6 +1070,39 @@ def _unsupported_check(combined: dict) -> dict | None:
         if check["status"] == "unsupported":
             return check
     return None
+
+
+def _verified_crop_ids(
+    verified: bool, crop_ids: object, profiles: dict
+) -> set[str] | None:
+    if crop_ids is None:
+        return None
+    if isinstance(crop_ids, str) or not isinstance(
+        crop_ids, (list, tuple, set, frozenset)
+    ):
+        raise TypeError(
+            "duration_reference_verified_crop_ids must be a collection of crop IDs or None"
+        )
+    if not verified:
+        raise ValueError(
+            "duration_reference_verified_crop_ids requires duration_reference_verified=True"
+        )
+    resolved = {str(crop_id) for crop_id in crop_ids}
+    unknown = sorted(resolved - {str(crop_id) for crop_id in profiles})
+    if unknown:
+        raise ValueError(
+            "duration_reference_verified_crop_ids contains unknown crop IDs: "
+            + ", ".join(unknown)
+        )
+    return resolved
+
+
+def _duration_verified(
+    crop_id: str, verified: bool, crop_ids: set[str] | None
+) -> bool:
+    if not verified:
+        return False
+    return crop_ids is None or crop_id in crop_ids
 
 
 def _resolve_preparation(lookup: object, crop_id: str) -> dict | None:

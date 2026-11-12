@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-11-09T12:00:00+00:00",
+  "generated_at": "2026-11-12T12:00:00+00:00",
   "request": {
     "district_id": "rajshahi",
     "start_date": "2026-11-06",
@@ -27,20 +27,28 @@
       "message": "No maximum transition wait policy is configured."
     },
     {
-      "code": "DURATION_REFERENCE_UNVERIFIED",
-      "message": "Crop duration reference stage (sowing versus transplanting) is unconfirmed; timing remains conditional."
+      "code": "THREE_CROP_SEQUENCE_NOT_REPEATING_ROTATION",
+      "message": "A branch is one three-crop sequence, not a verified repeating rotation; repeated cycles require separate evidence."
+    },
+    {
+      "code": "CLIMATE_EXPOSURE_DEFERRED",
+      "message": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
+    },
+    {
+      "code": "ECONOMICS_UNAVAILABLE",
+      "message": "No sourced economic evidence; cost, net return, and upfront cash remain unavailable."
+    },
+    {
+      "code": "SOIL_EVIDENCE_MISSING",
+      "message": "No local district soil evidence was supplied; soil fit remains unknown rather than an automatic pass."
     },
     {
       "code": "PREPARATION_EVIDENCE_MISSING",
       "message": "Preparation evidence was not supplied; readiness and waiting remain unknown rather than zero."
     },
     {
-      "code": "CLIMATE_EXPOSURE_DEFERRED",
-      "message": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
-    },
-    {
-      "code": "ECONOMICS_UNAVAILABLE",
-      "message": "No sourced economic evidence; cost, net return, and upfront cash remain unavailable."
+      "code": "DURATION_REFERENCE_UNVERIFIED",
+      "message": "Crop duration reference stage (sowing versus transplanting) is unconfirmed; timing remains conditional."
     },
     {
       "code": "SMAP_CONTEXT_ONLY",
@@ -97,20 +105,23 @@
       "retrieved_at": null
     },
     {
-      "source_id": "local_power_2000_2026",
-      "provider": "Local POWER CSV",
-      "product": "NASA POWER Daily Point (local subset)",
-      "version": "local_2000_2026",
-      "coverage": "2000-01-01..2026-10-20",
-      "retrieved_at": null
-    },
-    {
       "source_id": "nasa_power_daily",
-      "provider": "Local POWER CSV",
-      "product": "NASA POWER Daily Point (local subset)",
-      "version": "local_2000_2026",
-      "coverage": "2000-01-01..2026-10-20",
-      "retrieved_at": null
+      "provider": "NASA POWER",
+      "product": "NASA POWER Daily Point",
+      "version": "v2.10.3",
+      "coverage": "1991-01-01..2025-12-31",
+      "observation_start": "1991-01-01",
+      "observation_end": "2025-12-31",
+      "retrieved_at": "2026-11-12T12:13:00+00:00",
+      "temporal_resolution": "daily",
+      "spatial_resolution": "0.5 x 0.625 degree lat/lon region (MERRA-2)",
+      "is_forecast": false,
+      "cache": {
+        "hit": true,
+        "stale": false,
+        "age_seconds": 14392.737641
+      },
+      "warnings": []
     },
     {
       "source_id": "nasa_smap_appeears",
@@ -118,7 +129,7 @@
       "product": "SPL4SMGP.008",
       "version": "008",
       "coverage": "SMAP context only",
-      "retrieved_at": "2026-11-09T12:00:00+00:00"
+      "retrieved_at": "2026-11-12T12:00:00+00:00"
     },
     {
       "source_id": "rotation_family_rule",
@@ -165,7 +176,7 @@
     {
       "crop_id": "aman_br11",
       "name_en": "T. Aman rice",
-      "name_bn": "\u0986\u09ae\u09a8 \u09a7\u09be\u09a8",
+      "name_bn": "আমন ধান",
       "reference_variety": "BR11",
       "status": "unsupported",
       "shown": false,
@@ -201,7 +212,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -305,7 +316,7 @@
         "The proposed date is outside the documented window (2026-07-10 to 2026-07-24). No documented late window exists for this profile. This is outside documented planting support; it is not a biological impossibility and the preferred end is not a proven deadline.",
         "Soil fit is unknown. No local district pH evidence was supplied; pH fit is unknown rather than an automatic pass.",
         "Irrigation confirmation required. The crop profile carries quantified water-demand guidance, but water access was not confirmed, so this prerequisite remains unresolved.",
-        "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+        "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
         "The next documented window starts 2027-07-10 (246 days after the reference date), which exceeds this explorer's maximum waiting gap of 180 days. The limit is a product relevance cutoff, not a scientifically safe maximum and not a biological impossibility; longer fallow is not claimed impossible."
       ],
       "missing_evidence": [
@@ -325,7 +336,7 @@
     {
       "crop_id": "boro_brri_dhan28",
       "name_en": "Boro rice",
-      "name_bn": "\u09ac\u09cb\u09b0\u09cb \u09a7\u09be\u09a8",
+      "name_bn": "বোরো ধান",
       "reference_variety": "BRRI dhan28",
       "status": "conditional",
       "shown": true,
@@ -454,7 +465,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -488,7 +499,7 @@
     {
       "crop_id": "lentil_binamasur9",
       "name_en": "Lentil",
-      "name_bn": "\u09ae\u09b8\u09c1\u09b0",
+      "name_bn": "মসুর",
       "reference_variety": "Binamasur-9",
       "status": "unsupported",
       "shown": false,
@@ -524,7 +535,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -627,7 +638,7 @@
         "The proposed date is inside the documented preferred window (2026-10-25 to 2026-11-14), but the boundary is approximate (WEEK_APPROX), not exact. The window end is not a proven biological deadline.",
         "Soil fit is unknown. No local district pH evidence was supplied; pH fit is unknown rather than an automatic pass.",
         "The crop profile has no quantified water-demand evidence (an FAO range or a local phase water total), so water fit stays unknown even when irrigation is reported available.",
-        "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
+        "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
       ],
       "missing_evidence": [
         "district_soil_ph",
@@ -645,7 +656,7 @@
     {
       "crop_id": "maize_rabi_bari_hybrid13",
       "name_en": "Maize",
-      "name_bn": "\u09ad\u09c1\u099f\u09cd\u099f\u09be",
+      "name_bn": "ভুট্টা",
       "reference_variety": "BARI Hybrid Maize-13",
       "status": "unsupported",
       "shown": false,
@@ -681,7 +692,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -785,7 +796,7 @@
         "The proposed date is inside the documented preferred window (2026-10-15 to 2026-11-15). The window end is a sourced calendar boundary, not a proven biological deadline.",
         "Soil fit is unknown. No local district pH evidence was supplied; pH fit is unknown rather than an automatic pass.",
         "Irrigation confirmation required. The crop profile carries quantified water-demand guidance, but water access was not confirmed, so this prerequisite remains unresolved.",
-        "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
+        "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
       ],
       "missing_evidence": [
         "district_soil_ph",
@@ -804,7 +815,7 @@
     {
       "crop_id": "mung_bari_mung6_kharif1",
       "name_en": "Mung bean",
-      "name_bn": "\u09ae\u09c1\u0997",
+      "name_bn": "মুগ",
       "reference_variety": "BARI Mung-6",
       "status": "unsupported",
       "shown": false,
@@ -840,7 +851,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -943,7 +954,7 @@
         "The window is not Rajshahi-exact (planting_window_type=MODELLED_OPTIMUM_BANGLADESH_NOT_RAJSHI_EXACT, date_precision=DAY_BUT_LOCATION_TRANSFERABILITY_MEDIUM); it cannot support a calendar pass for this district even when the date falls inside the encoded dates.",
         "Soil fit is unknown. No local district pH evidence was supplied; pH fit is unknown rather than an automatic pass.",
         "The crop profile has no quantified water-demand evidence (an FAO range or a local phase water total), so water fit stays unknown even when irrigation is reported available.",
-        "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
+        "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
       ],
       "missing_evidence": [
         "district_soil_ph",
@@ -961,7 +972,7 @@
     {
       "crop_id": "mustard_binasarisha9",
       "name_en": "Mustard",
-      "name_bn": "\u09b8\u09b0\u09bf\u09b7\u09be",
+      "name_bn": "সরিষা",
       "reference_variety": "Binasarisha-9",
       "status": "unsupported",
       "shown": false,
@@ -997,7 +1008,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -1100,7 +1111,7 @@
         "The proposed date is inside the documented preferred window (2026-10-25 to 2026-11-15), but the boundary is approximate (WEEK_APPROX), not exact. The window end is not a proven biological deadline.",
         "Soil fit is unknown. No local district pH evidence was supplied; pH fit is unknown rather than an automatic pass.",
         "The crop profile has no quantified water-demand evidence (an FAO range or a local phase water total), so water fit stays unknown even when irrigation is reported available.",
-        "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
+        "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
       ],
       "missing_evidence": [
         "district_soil_ph",
@@ -1118,7 +1129,7 @@
     {
       "crop_id": "potato_bari_alu41",
       "name_en": "Potato",
-      "name_bn": "\u0986\u09b2\u09c1",
+      "name_bn": "আলু",
       "reference_variety": "BARI Alu-41",
       "status": "unsupported",
       "shown": false,
@@ -1154,7 +1165,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -1257,7 +1268,7 @@
         "The proposed date is inside the documented preferred window (2026-11-01 to 2026-11-07), but the boundary is approximate (WEEK_APPROX), not exact. The window end is not a proven biological deadline.",
         "Soil fit is unknown. No local district pH evidence was supplied; pH fit is unknown rather than an automatic pass.",
         "Irrigation confirmation required. The crop profile carries quantified water-demand guidance, but water access was not confirmed, so this prerequisite remains unresolved.",
-        "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
+        "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
       ],
       "missing_evidence": [
         "district_soil_ph",
@@ -1275,7 +1286,7 @@
     {
       "crop_id": "wheat_bari_gom33",
       "name_en": "Wheat",
-      "name_bn": "\u0997\u09ae",
+      "name_bn": "গম",
       "reference_variety": "BARI Gom-33",
       "status": "unsupported",
       "shown": false,
@@ -1311,7 +1322,7 @@
         "climate": {
           "status": "unknown",
           "code": "CLIMATE_EXPOSURE_DEFERRED",
-          "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+          "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
           "source_ids": [],
           "missing_evidence": [
             "current_season_climate_exposure"
@@ -1415,7 +1426,7 @@
         "The next documented preferred window starts 2026-11-15 (9 days after the proposed date), within the configured maximum waiting limit of 180 days. This is a future option, not a plant-now option.",
         "Soil fit is unknown. No local district pH evidence was supplied; pH fit is unknown rather than an automatic pass.",
         "Irrigation confirmation required. The crop profile carries quantified water-demand guidance, but water access was not confirmed, so this prerequisite remains unresolved.",
-        "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
+        "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
       ],
       "missing_evidence": [
         "district_soil_ph",
@@ -1442,7 +1453,7 @@
           "position": 1,
           "crop_id": "boro_brri_dhan28",
           "name_en": "Boro rice",
-          "name_bn": "\u09ac\u09cb\u09b0\u09cb \u09a7\u09be\u09a8",
+          "name_bn": "বোরো ধান",
           "reference_variety": "BRRI dhan28",
           "family": "Poaceae",
           "establishment_method": "transplanting",
@@ -1571,7 +1582,7 @@
             "climate": {
               "status": "unknown",
               "code": "CLIMATE_EXPOSURE_DEFERRED",
-              "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+              "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
               "source_ids": [],
               "missing_evidence": [
                 "current_season_climate_exposure"
@@ -1636,13 +1647,13 @@
             "variety_duration_max_days"
           ],
           "outlook": {
-            "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+            "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
             "crop_id": "boro_brri_dhan28",
-            "status": "ok",
+            "status": "partial",
             "period_basis": "union_span",
             "period_definition": "E6 union span from planting_range.earliest to harvest_range.latest; the end month-day maps to the next year when it precedes the start month-day.",
             "analysis_period": {
-              "start_year": 2000,
+              "start_year": 1991,
               "end_year": 2025
             },
             "coverage_rule": {
@@ -1650,15 +1661,34 @@
               "warnings": "required_100_percent_valid_days"
             },
             "season_coverage": {
-              "seasons_total": 26,
-              "seasons_evaluated_statistics": 26,
-              "seasons_evaluated_warnings": 26,
-              "excluded_seasons": []
+              "seasons_total": 35,
+              "seasons_evaluated_statistics": 34,
+              "seasons_evaluated_warnings": 34,
+              "excluded_seasons": [
+                {
+                  "season_start_year": 2025,
+                  "start_date": "2025-12-25",
+                  "end_date": "2026-05-30",
+                  "valid_days": 7,
+                  "total_days": 157,
+                  "coverage_fraction": 0.044586,
+                  "coverage_percent": 4.46,
+                  "included": false,
+                  "reason": "Mapped season end 2026-05-30 is after last_complete_data_date 2025-12-31.",
+                  "rules": [
+                    "statistics",
+                    "warnings"
+                  ],
+                  "reasons": [
+                    "Mapped season end 2026-05-30 is after last_complete_data_date 2025-12-31."
+                  ]
+                }
+              ]
             },
             "indicators": [
               {
                 "indicator": "temperature_statistics",
-                "status": "ok",
+                "status": "partial",
                 "definition": {
                   "variable": "T2M",
                   "statistic": "pooled_daily",
@@ -1679,40 +1709,42 @@
                   "period_start": "2026-12-25",
                   "period_end": "2027-05-30",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": true,
                   "coverage_rule": "stats_min_90"
                 },
                 "sample": {
-                  "valid_days": 4088,
-                  "seasons": 26,
-                  "total_days": 4088
+                  "valid_days": 5347,
+                  "seasons": 34,
+                  "total_days": 5347
                 },
                 "coverage": {
                   "rule": "stats_min_90",
-                  "valid_days": 4088,
-                  "total_days": 4088,
+                  "valid_days": 5347,
+                  "total_days": 5347,
                   "coverage_percent": 100.0,
-                  "excluded_seasons": 0
+                  "excluded_seasons": 1
                 },
                 "stats": {
-                  "median": 26.185000000000002,
-                  "iqr": 11.462500000000002,
-                  "q1": 18.987499999999997,
-                  "q3": 30.45,
+                  "median": 26.2,
+                  "iqr": 11.41,
+                  "q1": 19.35,
+                  "q3": 30.76,
                   "min": 9.67,
-                  "max": 36.84
+                  "max": 37.75
                 },
-                "notes": [],
+                "notes": [
+                  "1 historical season(s) were excluded by the stats_min_90 coverage rule."
+                ],
                 "source_ids": [
                   "nasa_power_daily"
                 ]
               },
               {
                 "indicator": "precipitation_statistics",
-                "status": "ok",
+                "status": "partial",
                 "definition": {
                   "variable": "PRECTOTCORR",
                   "statistic": "per_season_totals",
@@ -1733,24 +1765,96 @@
                   "period_start": "2026-12-25",
                   "period_end": "2027-05-30",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": true,
                   "coverage_rule": "warnings_100"
                 },
                 "sample": {
-                  "seasons": 26
+                  "seasons": 34
                 },
                 "coverage": {
                   "rule": "warnings_100",
-                  "valid_days": 4088,
-                  "total_days": 4088,
+                  "valid_days": 5347,
+                  "total_days": 5347,
                   "coverage_percent": 100.0,
-                  "seasons": 26,
-                  "excluded_seasons": 0
+                  "seasons": 34,
+                  "excluded_seasons": 1
                 },
                 "per_season_totals": [
+                  {
+                    "season_start_year": 1991,
+                    "start_date": "1991-12-25",
+                    "end_date": "1992-05-30",
+                    "total_mm": 86.55000000000003,
+                    "valid_days": 158,
+                    "total_days": 158
+                  },
+                  {
+                    "season_start_year": 1992,
+                    "start_date": "1992-12-25",
+                    "end_date": "1993-05-30",
+                    "total_mm": 158.74000000000004,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1993,
+                    "start_date": "1993-12-25",
+                    "end_date": "1994-05-30",
+                    "total_mm": 69.53,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1994,
+                    "start_date": "1994-12-25",
+                    "end_date": "1995-05-30",
+                    "total_mm": 41.650000000000006,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1995,
+                    "start_date": "1995-12-25",
+                    "end_date": "1996-05-30",
+                    "total_mm": 66.07999999999997,
+                    "valid_days": 158,
+                    "total_days": 158
+                  },
+                  {
+                    "season_start_year": 1996,
+                    "start_date": "1996-12-25",
+                    "end_date": "1997-05-30",
+                    "total_mm": 175.07,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1997,
+                    "start_date": "1997-12-25",
+                    "end_date": "1998-05-30",
+                    "total_mm": 287.8,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1998,
+                    "start_date": "1998-12-25",
+                    "end_date": "1999-05-30",
+                    "total_mm": 168.14000000000001,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1999,
+                    "start_date": "1999-12-25",
+                    "end_date": "2000-05-30",
+                    "total_mm": 377.6199999999999,
+                    "valid_days": 158,
+                    "total_days": 158
+                  },
                   {
                     "season_start_year": 2000,
                     "start_date": "2000-12-25",
@@ -1950,26 +2054,20 @@
                     "total_mm": 383.8099999999999,
                     "valid_days": 157,
                     "total_days": 157
-                  },
-                  {
-                    "season_start_year": 2025,
-                    "start_date": "2025-12-25",
-                    "end_date": "2026-05-30",
-                    "total_mm": 478.48,
-                    "valid_days": 157,
-                    "total_days": 157
                   }
                 ],
                 "stats": {
-                  "median": 265.84,
-                  "iqr": 135.78750000000002,
-                  "q1": 217.66250000000002,
-                  "q3": 353.45000000000005,
-                  "min": 144.61,
+                  "median": 243.59499999999997,
+                  "iqr": 156.035,
+                  "q1": 175.2775,
+                  "q3": 331.3125,
+                  "min": 41.650000000000006,
                   "max": 579.1700000000002
                 },
                 "unit": "mm",
-                "notes": [],
+                "notes": [
+                  "1 historical season(s) were excluded by the warnings_100 coverage rule."
+                ],
                 "source_ids": [
                   "nasa_power_daily"
                 ]
@@ -1977,49 +2075,51 @@
             ],
             "missing": {
               "fill_value": -999.0,
-              "missing_days": 0,
+              "missing_days": 300,
               "failed_requests": null
             },
             "sources": [
               {
                 "source_id": "nasa_power_daily",
-                "provider": "Local POWER CSV",
-                "product": "NASA POWER Daily Point (local subset)",
-                "version": "local_2000_2026",
+                "provider": "NASA POWER",
+                "product": "NASA POWER Daily Point",
+                "version": "v2.10.3",
                 "variables": [
                   "T2M",
                   "PRECTOTCORR"
                 ],
                 "coverage": {
-                  "observation_start": "2000-01-01",
-                  "observation_end": "2026-10-20",
-                  "seasons_total": 26,
-                  "seasons_evaluated_statistics": 26,
-                  "seasons_evaluated_warnings": 26
+                  "observation_start": "1991-01-01",
+                  "observation_end": "2025-12-31",
+                  "seasons_total": 35,
+                  "seasons_evaluated_statistics": 34,
+                  "seasons_evaluated_warnings": 34
                 },
-                "retrieved_at": null
+                "retrieved_at": "2026-11-12T12:13:00+00:00"
               }
             ],
             "notes": [
               "The union span from earliest planting to latest harvest is conservative; it may include days from alternative timing realizations rather than one actual crop.",
-              "Coverage counts only finite numeric observations; missing dates, None, non-finite values, and provider fill values are invalid."
+              "Coverage counts only finite numeric observations; missing dates, None, non-finite values, and provider fill values are invalid.",
+              "1 historical season(s) were excluded from statistics; see season_coverage.excluded_seasons.",
+              "1 historical season(s) were excluded from warnings; see season_coverage.excluded_seasons."
             ],
             "seasonal_ranges": {
-              "status": "ok",
-              "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+              "status": "partial",
+              "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
               "period_basis": "union_span",
               "period_start": "2026-12-25",
               "period_end": "2027-05-30",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "coverage": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025,
-                "seasons_total": 26,
-                "seasons_evaluated": 26,
-                "seasons_excluded": 0
+                "seasons_total": 35,
+                "seasons_evaluated": 34,
+                "seasons_excluded": 1
               },
               "indicators": [
                 {
@@ -2028,12 +2128,12 @@
                   "unit": "C",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
                   "min": 22.866645569620253,
-                  "median": 25.051305732484074,
-                  "max": 26.443291139240507
+                  "median": 25.18455414012739,
+                  "max": 27.115063291139244
                 },
                 {
                   "variable": "PRECTOTCORR",
@@ -2041,11 +2141,11 @@
                   "unit": "mm",
                   "statistic": "per_season_total",
                   "coverage_rule": "warnings_100",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
-                  "min": 144.61,
-                  "median": 265.84000000000003,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
+                  "min": 41.65,
+                  "median": 243.595,
                   "max": 579.17
                 },
                 {
@@ -2054,11 +2154,11 @@
                   "unit": "1",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
-                  "min": 0.36962025316455693,
-                  "median": 0.4292356687898089,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
+                  "min": 0.17605095541401275,
+                  "median": 0.402000524066758,
                   "max": 0.6055696202531646
                 }
               ],
@@ -2066,11 +2166,10 @@
               "warnings": [],
               "notes": [
                 "Seasonal ranges are historical ranges, not a forecast.",
-                "1991-1999 is excluded because the local precipitation series is invalid.",
                 "GWETTOP is MERRA-2 surface soil wetness, not SMAP."
               ],
               "source_ids": [
-                "local_power_2000_2026"
+                "nasa_power_daily"
               ]
             }
           }
@@ -2079,7 +2178,7 @@
           "position": 2,
           "crop_id": "aman_br11",
           "name_en": "T. Aman rice",
-          "name_bn": "\u0986\u09ae\u09a8 \u09a7\u09be\u09a8",
+          "name_bn": "আমন ধান",
           "reference_variety": "BR11",
           "family": "Poaceae",
           "establishment_method": "transplanting",
@@ -2293,7 +2392,7 @@
             "climate": {
               "status": "unknown",
               "code": "CLIMATE_EXPOSURE_DEFERRED",
-              "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+              "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
               "source_ids": [],
               "missing_evidence": [
                 "current_season_climate_exposure"
@@ -2387,13 +2486,13 @@
             "variety_duration_max_days"
           ],
           "outlook": {
-            "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+            "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
             "crop_id": "aman_br11",
             "status": "ok",
             "period_basis": "union_span",
             "period_definition": "E6 union span from planting_range.earliest to harvest_range.latest; the end month-day maps to the next year when it precedes the start month-day.",
             "analysis_period": {
-              "start_year": 2000,
+              "start_year": 1991,
               "end_year": 2025
             },
             "coverage_rule": {
@@ -2401,9 +2500,9 @@
               "warnings": "required_100_percent_valid_days"
             },
             "season_coverage": {
-              "seasons_total": 26,
-              "seasons_evaluated_statistics": 26,
-              "seasons_evaluated_warnings": 26,
+              "seasons_total": 35,
+              "seasons_evaluated_statistics": 35,
+              "seasons_evaluated_warnings": 35,
               "excluded_seasons": []
             },
             "indicators": [
@@ -2430,31 +2529,31 @@
                   "period_start": "2027-07-10",
                   "period_end": "2027-12-16",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": false,
                   "coverage_rule": "stats_min_90"
                 },
                 "sample": {
-                  "valid_days": 4160,
-                  "seasons": 26,
-                  "total_days": 4160
+                  "valid_days": 5600,
+                  "seasons": 35,
+                  "total_days": 5600
                 },
                 "coverage": {
                   "rule": "stats_min_90",
-                  "valid_days": 4160,
-                  "total_days": 4160,
+                  "valid_days": 5600,
+                  "total_days": 5600,
                   "coverage_percent": 100.0,
                   "excluded_seasons": 0
                 },
                 "stats": {
-                  "median": 27.455,
-                  "iqr": 5.504999999999999,
-                  "q1": 23.055,
-                  "q3": 28.56,
+                  "median": 27.55,
+                  "iqr": 5.272499999999997,
+                  "q1": 23.427500000000002,
+                  "q3": 28.7,
                   "min": 14.42,
-                  "max": 31.7
+                  "max": 33.41
                 },
                 "notes": [],
                 "source_ids": [
@@ -2484,24 +2583,96 @@
                   "period_start": "2027-07-10",
                   "period_end": "2027-12-16",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": false,
                   "coverage_rule": "warnings_100"
                 },
                 "sample": {
-                  "seasons": 26
+                  "seasons": 35
                 },
                 "coverage": {
                   "rule": "warnings_100",
-                  "valid_days": 4160,
-                  "total_days": 4160,
+                  "valid_days": 5600,
+                  "total_days": 5600,
                   "coverage_percent": 100.0,
-                  "seasons": 26,
+                  "seasons": 35,
                   "excluded_seasons": 0
                 },
                 "per_season_totals": [
+                  {
+                    "season_start_year": 1991,
+                    "start_date": "1991-07-10",
+                    "end_date": "1991-12-16",
+                    "total_mm": 369.88,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1992,
+                    "start_date": "1992-07-10",
+                    "end_date": "1992-12-16",
+                    "total_mm": 194.2299999999999,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1993,
+                    "start_date": "1993-07-10",
+                    "end_date": "1993-12-16",
+                    "total_mm": 255.16000000000014,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1994,
+                    "start_date": "1994-07-10",
+                    "end_date": "1994-12-16",
+                    "total_mm": 177.15000000000006,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1995,
+                    "start_date": "1995-07-10",
+                    "end_date": "1995-12-16",
+                    "total_mm": 392.89999999999986,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1996,
+                    "start_date": "1996-07-10",
+                    "end_date": "1996-12-16",
+                    "total_mm": 296.96000000000004,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1997,
+                    "start_date": "1997-07-10",
+                    "end_date": "1997-12-16",
+                    "total_mm": 645.8199999999999,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1998,
+                    "start_date": "1998-07-10",
+                    "end_date": "1998-12-16",
+                    "total_mm": 930.69,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1999,
+                    "start_date": "1999-07-10",
+                    "end_date": "1999-12-16",
+                    "total_mm": 779.7399999999999,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
                   {
                     "season_start_year": 2000,
                     "start_date": "2000-07-10",
@@ -2712,11 +2883,11 @@
                   }
                 ],
                 "stats": {
-                  "median": 790.5449999999997,
-                  "iqr": 313.1175000000003,
-                  "q1": 665.1550000000002,
-                  "q3": 978.2725000000005,
-                  "min": 576.56,
+                  "median": 703.6399999999998,
+                  "iqr": 310.4100000000001,
+                  "q1": 602.355,
+                  "q3": 912.7650000000001,
+                  "min": 177.15000000000006,
                   "max": 1246.3899999999994
                 },
                 "unit": "mm",
@@ -2734,21 +2905,21 @@
             "sources": [
               {
                 "source_id": "nasa_power_daily",
-                "provider": "Local POWER CSV",
-                "product": "NASA POWER Daily Point (local subset)",
-                "version": "local_2000_2026",
+                "provider": "NASA POWER",
+                "product": "NASA POWER Daily Point",
+                "version": "v2.10.3",
                 "variables": [
                   "T2M",
                   "PRECTOTCORR"
                 ],
                 "coverage": {
-                  "observation_start": "2000-01-01",
-                  "observation_end": "2026-10-20",
-                  "seasons_total": 26,
-                  "seasons_evaluated_statistics": 26,
-                  "seasons_evaluated_warnings": 26
+                  "observation_start": "1991-01-01",
+                  "observation_end": "2025-12-31",
+                  "seasons_total": 35,
+                  "seasons_evaluated_statistics": 35,
+                  "seasons_evaluated_warnings": 35
                 },
-                "retrieved_at": null
+                "retrieved_at": "2026-11-12T12:13:00+00:00"
               }
             ],
             "notes": [
@@ -2757,19 +2928,19 @@
             ],
             "seasonal_ranges": {
               "status": "ok",
-              "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+              "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
               "period_basis": "union_span",
               "period_start": "2027-07-10",
               "period_end": "2027-12-16",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "coverage": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025,
-                "seasons_total": 26,
-                "seasons_evaluated": 26,
+                "seasons_total": 35,
+                "seasons_evaluated": 35,
                 "seasons_excluded": 0
               },
               "indicators": [
@@ -2779,12 +2950,12 @@
                   "unit": "C",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 35,
                   "seasons_excluded": 0,
                   "min": 24.703,
-                  "median": 25.72959375,
-                  "max": 26.4801875
+                  "median": 25.784750000000003,
+                  "max": 28.05725
                 },
                 {
                   "variable": "PRECTOTCORR",
@@ -2792,11 +2963,11 @@
                   "unit": "mm",
                   "statistic": "per_season_total",
                   "coverage_rule": "warnings_100",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 35,
                   "seasons_excluded": 0,
-                  "min": 576.56,
-                  "median": 790.5450000000001,
+                  "min": 177.15,
+                  "median": 703.64,
                   "max": 1246.39
                 },
                 {
@@ -2805,11 +2976,11 @@
                   "unit": "1",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 35,
                   "seasons_excluded": 0,
-                  "min": 0.6361875,
-                  "median": 0.77215625,
+                  "min": 0.3510625,
+                  "median": 0.7623125,
                   "max": 0.8773125
                 }
               ],
@@ -2817,11 +2988,10 @@
               "warnings": [],
               "notes": [
                 "Seasonal ranges are historical ranges, not a forecast.",
-                "1991-1999 is excluded because the local precipitation series is invalid.",
                 "GWETTOP is MERRA-2 surface soil wetness, not SMAP."
               ],
               "source_ids": [
-                "local_power_2000_2026"
+                "nasa_power_daily"
               ]
             }
           }
@@ -2830,7 +3000,7 @@
           "position": 3,
           "crop_id": "boro_brri_dhan28",
           "name_en": "Boro rice",
-          "name_bn": "\u09ac\u09cb\u09b0\u09cb \u09a7\u09be\u09a8",
+          "name_bn": "বোরো ধান",
           "reference_variety": "BRRI dhan28",
           "family": "Poaceae",
           "establishment_method": "transplanting",
@@ -3046,7 +3216,7 @@
             "climate": {
               "status": "unknown",
               "code": "CLIMATE_EXPOSURE_DEFERRED",
-              "reason": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option.",
+              "reason": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option.",
               "source_ids": [],
               "missing_evidence": [
                 "current_season_climate_exposure"
@@ -3142,13 +3312,13 @@
             "variety_duration_max_days"
           ],
           "outlook": {
-            "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+            "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
             "crop_id": "boro_brri_dhan28",
-            "status": "ok",
+            "status": "partial",
             "period_basis": "union_span",
             "period_definition": "E6 union span from planting_range.earliest to harvest_range.latest; the end month-day maps to the next year when it precedes the start month-day.",
             "analysis_period": {
-              "start_year": 2000,
+              "start_year": 1991,
               "end_year": 2025
             },
             "coverage_rule": {
@@ -3156,15 +3326,34 @@
               "warnings": "required_100_percent_valid_days"
             },
             "season_coverage": {
-              "seasons_total": 26,
-              "seasons_evaluated_statistics": 26,
-              "seasons_evaluated_warnings": 26,
-              "excluded_seasons": []
+              "seasons_total": 35,
+              "seasons_evaluated_statistics": 34,
+              "seasons_evaluated_warnings": 34,
+              "excluded_seasons": [
+                {
+                  "season_start_year": 2025,
+                  "start_date": "2025-12-25",
+                  "end_date": "2026-05-29",
+                  "valid_days": 7,
+                  "total_days": 156,
+                  "coverage_fraction": 0.044872,
+                  "coverage_percent": 4.49,
+                  "included": false,
+                  "reason": "Mapped season end 2026-05-29 is after last_complete_data_date 2025-12-31.",
+                  "rules": [
+                    "statistics",
+                    "warnings"
+                  ],
+                  "reasons": [
+                    "Mapped season end 2026-05-29 is after last_complete_data_date 2025-12-31."
+                  ]
+                }
+              ]
             },
             "indicators": [
               {
                 "indicator": "temperature_statistics",
-                "status": "ok",
+                "status": "partial",
                 "definition": {
                   "variable": "T2M",
                   "statistic": "pooled_daily",
@@ -3185,40 +3374,42 @@
                   "period_start": "2027-12-25",
                   "period_end": "2028-05-29",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": true,
                   "coverage_rule": "stats_min_90"
                 },
                 "sample": {
-                  "valid_days": 4062,
-                  "seasons": 26,
-                  "total_days": 4062
+                  "valid_days": 5313,
+                  "seasons": 34,
+                  "total_days": 5313
                 },
                 "coverage": {
                   "rule": "stats_min_90",
-                  "valid_days": 4062,
-                  "total_days": 4062,
+                  "valid_days": 5313,
+                  "total_days": 5313,
                   "coverage_percent": 100.0,
-                  "excluded_seasons": 0
+                  "excluded_seasons": 1
                 },
                 "stats": {
                   "median": 26.09,
-                  "iqr": 11.46,
-                  "q1": 18.97,
-                  "q3": 30.43,
+                  "iqr": 11.379999999999999,
+                  "q1": 19.32,
+                  "q3": 30.7,
                   "min": 9.67,
-                  "max": 36.84
+                  "max": 37.75
                 },
-                "notes": [],
+                "notes": [
+                  "1 historical season(s) were excluded by the stats_min_90 coverage rule."
+                ],
                 "source_ids": [
                   "nasa_power_daily"
                 ]
               },
               {
                 "indicator": "precipitation_statistics",
-                "status": "ok",
+                "status": "partial",
                 "definition": {
                   "variable": "PRECTOTCORR",
                   "statistic": "per_season_totals",
@@ -3239,24 +3430,96 @@
                   "period_start": "2027-12-25",
                   "period_end": "2028-05-29",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": true,
                   "coverage_rule": "warnings_100"
                 },
                 "sample": {
-                  "seasons": 26
+                  "seasons": 34
                 },
                 "coverage": {
                   "rule": "warnings_100",
-                  "valid_days": 4062,
-                  "total_days": 4062,
+                  "valid_days": 5313,
+                  "total_days": 5313,
                   "coverage_percent": 100.0,
-                  "seasons": 26,
-                  "excluded_seasons": 0
+                  "seasons": 34,
+                  "excluded_seasons": 1
                 },
                 "per_season_totals": [
+                  {
+                    "season_start_year": 1991,
+                    "start_date": "1991-12-25",
+                    "end_date": "1992-05-29",
+                    "total_mm": 86.53000000000003,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1992,
+                    "start_date": "1992-12-25",
+                    "end_date": "1993-05-29",
+                    "total_mm": 142.72000000000003,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1993,
+                    "start_date": "1993-12-25",
+                    "end_date": "1994-05-29",
+                    "total_mm": 69.37,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1994,
+                    "start_date": "1994-12-25",
+                    "end_date": "1995-05-29",
+                    "total_mm": 41.440000000000005,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1995,
+                    "start_date": "1995-12-25",
+                    "end_date": "1996-05-29",
+                    "total_mm": 60.70999999999997,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1996,
+                    "start_date": "1996-12-25",
+                    "end_date": "1997-05-29",
+                    "total_mm": 171.95,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1997,
+                    "start_date": "1997-12-25",
+                    "end_date": "1998-05-29",
+                    "total_mm": 285.45,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1998,
+                    "start_date": "1998-12-25",
+                    "end_date": "1999-05-29",
+                    "total_mm": 161.9,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1999,
+                    "start_date": "1999-12-25",
+                    "end_date": "2000-05-29",
+                    "total_mm": 368.4299999999999,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
                   {
                     "season_start_year": 2000,
                     "start_date": "2000-12-25",
@@ -3456,26 +3719,20 @@
                     "total_mm": 375.6799999999999,
                     "valid_days": 156,
                     "total_days": 156
-                  },
-                  {
-                    "season_start_year": 2025,
-                    "start_date": "2025-12-25",
-                    "end_date": "2026-05-29",
-                    "total_mm": 465.70000000000005,
-                    "valid_days": 156,
-                    "total_days": 156
                   }
                 ],
                 "stats": {
-                  "median": 263.84999999999997,
-                  "iqr": 127.935,
-                  "q1": 215.29500000000002,
-                  "q3": 343.23,
-                  "min": 142.63000000000002,
+                  "median": 230.68999999999997,
+                  "iqr": 153.25000000000006,
+                  "q1": 172.69,
+                  "q3": 325.94000000000005,
+                  "min": 41.440000000000005,
                   "max": 571.3400000000001
                 },
                 "unit": "mm",
-                "notes": [],
+                "notes": [
+                  "1 historical season(s) were excluded by the warnings_100 coverage rule."
+                ],
                 "source_ids": [
                   "nasa_power_daily"
                 ]
@@ -3483,49 +3740,51 @@
             ],
             "missing": {
               "fill_value": -999.0,
-              "missing_days": 0,
+              "missing_days": 298,
               "failed_requests": null
             },
             "sources": [
               {
                 "source_id": "nasa_power_daily",
-                "provider": "Local POWER CSV",
-                "product": "NASA POWER Daily Point (local subset)",
-                "version": "local_2000_2026",
+                "provider": "NASA POWER",
+                "product": "NASA POWER Daily Point",
+                "version": "v2.10.3",
                 "variables": [
                   "T2M",
                   "PRECTOTCORR"
                 ],
                 "coverage": {
-                  "observation_start": "2000-01-01",
-                  "observation_end": "2026-10-20",
-                  "seasons_total": 26,
-                  "seasons_evaluated_statistics": 26,
-                  "seasons_evaluated_warnings": 26
+                  "observation_start": "1991-01-01",
+                  "observation_end": "2025-12-31",
+                  "seasons_total": 35,
+                  "seasons_evaluated_statistics": 34,
+                  "seasons_evaluated_warnings": 34
                 },
-                "retrieved_at": null
+                "retrieved_at": "2026-11-12T12:13:00+00:00"
               }
             ],
             "notes": [
               "The union span from earliest planting to latest harvest is conservative; it may include days from alternative timing realizations rather than one actual crop.",
-              "Coverage counts only finite numeric observations; missing dates, None, non-finite values, and provider fill values are invalid."
+              "Coverage counts only finite numeric observations; missing dates, None, non-finite values, and provider fill values are invalid.",
+              "1 historical season(s) were excluded from statistics; see season_coverage.excluded_seasons.",
+              "1 historical season(s) were excluded from warnings; see season_coverage.excluded_seasons."
             ],
             "seasonal_ranges": {
-              "status": "ok",
-              "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+              "status": "partial",
+              "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
               "period_basis": "union_span",
               "period_start": "2027-12-25",
               "period_end": "2028-05-29",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "coverage": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025,
-                "seasons_total": 26,
-                "seasons_evaluated": 26,
-                "seasons_excluded": 0
+                "seasons_total": 35,
+                "seasons_evaluated": 34,
+                "seasons_excluded": 1
               },
               "indicators": [
                 {
@@ -3534,12 +3793,12 @@
                   "unit": "C",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
                   "min": 22.826687898089173,
-                  "median": 25.013717948717947,
-                  "max": 26.409235668789808
+                  "median": 25.14775641025641,
+                  "max": 27.067452229299363
                 },
                 {
                   "variable": "PRECTOTCORR",
@@ -3547,11 +3806,11 @@
                   "unit": "mm",
                   "statistic": "per_season_total",
                   "coverage_rule": "warnings_100",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
-                  "min": 142.63,
-                  "median": 263.85,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
+                  "min": 41.44,
+                  "median": 230.69,
                   "max": 571.34
                 },
                 {
@@ -3560,11 +3819,11 @@
                   "unit": "1",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
-                  "min": 0.36980891719745224,
-                  "median": 0.4291346153846154,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
+                  "min": 0.17596153846153845,
+                  "median": 0.40146986771190596,
                   "max": 0.6047133757961783
                 }
               ],
@@ -3572,11 +3831,10 @@
               "warnings": [],
               "notes": [
                 "Seasonal ranges are historical ranges, not a forecast.",
-                "1991-1999 is excluded because the local precipitation series is invalid.",
                 "GWETTOP is MERRA-2 surface soil wetness, not SMAP."
               ],
               "source_ids": [
-                "local_power_2000_2026"
+                "nasa_power_daily"
               ]
             }
           }
@@ -3963,8 +4221,8 @@
           "max_realization": {
             "p1": "2026-12-25",
             "h1": "2027-05-14",
-            "p2": "2027-07-24",
-            "h2": "2027-12-16",
+            "p2": "2027-07-10",
+            "h2": "2027-12-02",
             "p3": "2028-01-10",
             "h3": "2028-05-29",
             "completion_days": 521
@@ -4164,15 +4422,1193 @@
           "reason": null,
           "reasons": [],
           "missing_evidence": []
+        },
+        "climate": {
+          "status": "ok",
+          "analysis_period": {
+            "start_year": 1991,
+            "end_year": 2025
+          },
+          "definitions": {
+            "temperature": {
+              "variable": "T2M",
+              "required_units": [
+                "C",
+                "degC",
+                "Celsius"
+              ],
+              "season_statistic": "median_daily_t2m",
+              "match": "distance from the crop profile's EcoCrop temperature optimum range; 0 when the seasonal median is inside the range",
+              "source": "FAO EcoCrop database, OpenCLIM mirror EcoCrop_DB.csv (https://github.com/OpenCLIM/ecocrop)",
+              "applicability": "published general species/crop-level EcoCrop range; not variety- or stage-specific",
+              "seasonal_matching": "project-defined median of daily T2M over the realized growing period",
+              "ordering": "lower median seasonal distance is closer to guidance",
+              "tolerance": "reported as context only; not used for ordering",
+              "scope": "general crop guidance, not variety- or stage-specific damage"
+            },
+            "dry_spell": {
+              "required_units": [
+                "mm/day"
+              ],
+              "dry_day": "PRECTOTCORR < 1 mm/day",
+              "statistic": "longest consecutive dry-day run within one crop period",
+              "ordering": "lower equal-crop-weighted median longest run",
+              "scope": "growing-period exposure, not inherent drought tolerance"
+            },
+            "heavy_rain": {
+              "required_units": [
+                "mm/day"
+              ],
+              "heavy_day": "PRECTOTCORR >= 20 mm/day (R20mm adaptation)",
+              "statistic": "heavy-rain days per valid growing day",
+              "ordering": "lower equal-crop-weighted frequency",
+              "scope": "meteorological exposure, not crop damage or waterlogging"
+            },
+            "common_seasons": "only seasons with complete daily T2M and PRECTOTCORR for every crop in both completion-optimized schedules",
+            "schedules": "min_realization and max_realization are completion-optimized examples; ordering uses the higher exposure of the two, not a worst-case bound over all possible schedules",
+            "equal_crop_weighting": true
+          },
+          "limitations": [
+            "Temperature uses general EcoCrop optimum/tolerance guidance; it is not a stage-specific daily damage threshold or a variety validation.",
+            "Dry spell and heavy rain are growing-period adaptations of meteorological indices, not standard annual Climdex outputs and not crop-damage predictions.",
+            "Rainfall totals are descriptive context; no irrigation demand is inferred and no rainfall-minus-demand calculation is made.",
+            "GWETTOP is regional MERRA-2 surface wetness context, not root-zone moisture or a crop threshold.",
+            "Equal weighting of the three crop summaries is a disclosed product convention, not proof of duration neutrality or agricultural suitability.",
+            "Missing days are excluded; they are never treated as zero rain or joined across gaps."
+          ],
+          "unit_validation": {
+            "T2M": {
+              "status": "ok",
+              "units": "C",
+              "reason": null
+            },
+            "PRECTOTCORR": {
+              "status": "ok",
+              "units": "mm/day",
+              "reason": null
+            }
+          },
+          "temperature_provenance": {
+            "boro_brri_dhan28": {
+              "source": "FAO EcoCrop database, OpenCLIM mirror EcoCrop_DB.csv (https://github.com/OpenCLIM/ecocrop)",
+              "eco_port_code": "1574",
+              "scientific_name": "Oryza sativa",
+              "applicability": "published general species/crop-level EcoCrop range; not a variety- or stage-specific damage threshold",
+              "seasonal_matching": "project-defined median of daily T2M over the realized growing period, compared with the published optimum range"
+            },
+            "aman_br11": {
+              "source": "FAO EcoCrop database, OpenCLIM mirror EcoCrop_DB.csv (https://github.com/OpenCLIM/ecocrop)",
+              "eco_port_code": "1574",
+              "scientific_name": "Oryza sativa",
+              "applicability": "published general species/crop-level EcoCrop range; not a variety- or stage-specific damage threshold",
+              "seasonal_matching": "project-defined median of daily T2M over the realized growing period, compared with the published optimum range"
+            }
+          },
+          "per_schedule": {
+            "min_realization": {
+              "status": "ok",
+              "crops": [
+                {
+                  "crop_id": "boro_brri_dhan28",
+                  "position": 1,
+                  "seasons": 35,
+                  "temperature_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024,
+                    2025
+                  ],
+                  "rain_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024,
+                    2025
+                  ],
+                  "temperature_range": {
+                    "optimum_min": 20.0,
+                    "optimum_max": 30.0,
+                    "tolerance_min": 10.0,
+                    "tolerance_max": 36.0,
+                    "optimum": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "temperature_provenance": {
+                    "source": "FAO EcoCrop database, OpenCLIM mirror EcoCrop_DB.csv (https://github.com/OpenCLIM/ecocrop)",
+                    "eco_port_code": "1574",
+                    "scientific_name": "Oryza sativa",
+                    "applicability": "published general species/crop-level EcoCrop range; not a variety- or stage-specific damage threshold",
+                    "seasonal_matching": "project-defined median of daily T2M over the realized growing period, compared with the published optimum range"
+                  },
+                  "status": "ok"
+                },
+                {
+                  "crop_id": "aman_br11",
+                  "position": 2,
+                  "seasons": 35,
+                  "temperature_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024,
+                    2025
+                  ],
+                  "rain_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024,
+                    2025
+                  ],
+                  "temperature_range": {
+                    "optimum_min": 20.0,
+                    "optimum_max": 30.0,
+                    "tolerance_min": 10.0,
+                    "tolerance_max": 36.0,
+                    "optimum": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "temperature_provenance": {
+                    "source": "FAO EcoCrop database, OpenCLIM mirror EcoCrop_DB.csv (https://github.com/OpenCLIM/ecocrop)",
+                    "eco_port_code": "1574",
+                    "scientific_name": "Oryza sativa",
+                    "applicability": "published general species/crop-level EcoCrop range; not a variety- or stage-specific damage threshold",
+                    "seasonal_matching": "project-defined median of daily T2M over the realized growing period, compared with the published optimum range"
+                  },
+                  "status": "ok"
+                },
+                {
+                  "crop_id": "boro_brri_dhan28",
+                  "position": 3,
+                  "seasons": 34,
+                  "temperature_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024
+                  ],
+                  "rain_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024
+                  ],
+                  "temperature_range": {
+                    "optimum_min": 20.0,
+                    "optimum_max": 30.0,
+                    "tolerance_min": 10.0,
+                    "tolerance_max": 36.0,
+                    "optimum": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "temperature_provenance": {
+                    "source": "FAO EcoCrop database, OpenCLIM mirror EcoCrop_DB.csv (https://github.com/OpenCLIM/ecocrop)",
+                    "eco_port_code": "1574",
+                    "scientific_name": "Oryza sativa",
+                    "applicability": "published general species/crop-level EcoCrop range; not a variety- or stage-specific damage threshold",
+                    "seasonal_matching": "project-defined median of daily T2M over the realized growing period, compared with the published optimum range"
+                  },
+                  "status": "ok"
+                }
+              ],
+              "temperature_complete_seasons": [
+                1991,
+                1992,
+                1993,
+                1994,
+                1995,
+                1996,
+                1997,
+                1998,
+                1999,
+                2000,
+                2001,
+                2002,
+                2003,
+                2004,
+                2005,
+                2006,
+                2007,
+                2008,
+                2009,
+                2010,
+                2011,
+                2012,
+                2013,
+                2014,
+                2015,
+                2016,
+                2017,
+                2018,
+                2019,
+                2020,
+                2021,
+                2022,
+                2023,
+                2024
+              ],
+              "rain_complete_seasons": [
+                1991,
+                1992,
+                1993,
+                1994,
+                1995,
+                1996,
+                1997,
+                1998,
+                1999,
+                2000,
+                2001,
+                2002,
+                2003,
+                2004,
+                2005,
+                2006,
+                2007,
+                2008,
+                2009,
+                2010,
+                2011,
+                2012,
+                2013,
+                2014,
+                2015,
+                2016,
+                2017,
+                2018,
+                2019,
+                2020,
+                2021,
+                2022,
+                2023,
+                2024
+              ],
+              "complete_seasons": [
+                1991,
+                1992,
+                1993,
+                1994,
+                1995,
+                1996,
+                1997,
+                1998,
+                1999,
+                2000,
+                2001,
+                2002,
+                2003,
+                2004,
+                2005,
+                2006,
+                2007,
+                2008,
+                2009,
+                2010,
+                2011,
+                2012,
+                2013,
+                2014,
+                2015,
+                2016,
+                2017,
+                2018,
+                2019,
+                2020,
+                2021,
+                2022,
+                2023,
+                2024
+              ]
+            },
+            "max_realization": {
+              "status": "ok",
+              "crops": [
+                {
+                  "crop_id": "boro_brri_dhan28",
+                  "position": 1,
+                  "seasons": 34,
+                  "temperature_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024
+                  ],
+                  "rain_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024
+                  ],
+                  "temperature_range": {
+                    "optimum_min": 20.0,
+                    "optimum_max": 30.0,
+                    "tolerance_min": 10.0,
+                    "tolerance_max": 36.0,
+                    "optimum": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "temperature_provenance": {
+                    "source": "FAO EcoCrop database, OpenCLIM mirror EcoCrop_DB.csv (https://github.com/OpenCLIM/ecocrop)",
+                    "eco_port_code": "1574",
+                    "scientific_name": "Oryza sativa",
+                    "applicability": "published general species/crop-level EcoCrop range; not a variety- or stage-specific damage threshold",
+                    "seasonal_matching": "project-defined median of daily T2M over the realized growing period, compared with the published optimum range"
+                  },
+                  "status": "ok"
+                },
+                {
+                  "crop_id": "aman_br11",
+                  "position": 2,
+                  "seasons": 35,
+                  "temperature_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024,
+                    2025
+                  ],
+                  "rain_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024,
+                    2025
+                  ],
+                  "temperature_range": {
+                    "optimum_min": 20.0,
+                    "optimum_max": 30.0,
+                    "tolerance_min": 10.0,
+                    "tolerance_max": 36.0,
+                    "optimum": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "temperature_provenance": {
+                    "source": "FAO EcoCrop database, OpenCLIM mirror EcoCrop_DB.csv (https://github.com/OpenCLIM/ecocrop)",
+                    "eco_port_code": "1574",
+                    "scientific_name": "Oryza sativa",
+                    "applicability": "published general species/crop-level EcoCrop range; not a variety- or stage-specific damage threshold",
+                    "seasonal_matching": "project-defined median of daily T2M over the realized growing period, compared with the published optimum range"
+                  },
+                  "status": "ok"
+                },
+                {
+                  "crop_id": "boro_brri_dhan28",
+                  "position": 3,
+                  "seasons": 35,
+                  "temperature_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024,
+                    2025
+                  ],
+                  "rain_seasons": [
+                    1991,
+                    1992,
+                    1993,
+                    1994,
+                    1995,
+                    1996,
+                    1997,
+                    1998,
+                    1999,
+                    2000,
+                    2001,
+                    2002,
+                    2003,
+                    2004,
+                    2005,
+                    2006,
+                    2007,
+                    2008,
+                    2009,
+                    2010,
+                    2011,
+                    2012,
+                    2013,
+                    2014,
+                    2015,
+                    2016,
+                    2017,
+                    2018,
+                    2019,
+                    2020,
+                    2021,
+                    2022,
+                    2023,
+                    2024,
+                    2025
+                  ],
+                  "temperature_range": {
+                    "optimum_min": 20.0,
+                    "optimum_max": 30.0,
+                    "tolerance_min": 10.0,
+                    "tolerance_max": 36.0,
+                    "optimum": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "temperature_provenance": {
+                    "source": "FAO EcoCrop database, OpenCLIM mirror EcoCrop_DB.csv (https://github.com/OpenCLIM/ecocrop)",
+                    "eco_port_code": "1574",
+                    "scientific_name": "Oryza sativa",
+                    "applicability": "published general species/crop-level EcoCrop range; not a variety- or stage-specific damage threshold",
+                    "seasonal_matching": "project-defined median of daily T2M over the realized growing period, compared with the published optimum range"
+                  },
+                  "status": "ok"
+                }
+              ],
+              "temperature_complete_seasons": [
+                1991,
+                1992,
+                1993,
+                1994,
+                1995,
+                1996,
+                1997,
+                1998,
+                1999,
+                2000,
+                2001,
+                2002,
+                2003,
+                2004,
+                2005,
+                2006,
+                2007,
+                2008,
+                2009,
+                2010,
+                2011,
+                2012,
+                2013,
+                2014,
+                2015,
+                2016,
+                2017,
+                2018,
+                2019,
+                2020,
+                2021,
+                2022,
+                2023,
+                2024
+              ],
+              "rain_complete_seasons": [
+                1991,
+                1992,
+                1993,
+                1994,
+                1995,
+                1996,
+                1997,
+                1998,
+                1999,
+                2000,
+                2001,
+                2002,
+                2003,
+                2004,
+                2005,
+                2006,
+                2007,
+                2008,
+                2009,
+                2010,
+                2011,
+                2012,
+                2013,
+                2014,
+                2015,
+                2016,
+                2017,
+                2018,
+                2019,
+                2020,
+                2021,
+                2022,
+                2023,
+                2024
+              ],
+              "complete_seasons": [
+                1991,
+                1992,
+                1993,
+                1994,
+                1995,
+                1996,
+                1997,
+                1998,
+                1999,
+                2000,
+                2001,
+                2002,
+                2003,
+                2004,
+                2005,
+                2006,
+                2007,
+                2008,
+                2009,
+                2010,
+                2011,
+                2012,
+                2013,
+                2014,
+                2015,
+                2016,
+                2017,
+                2018,
+                2019,
+                2020,
+                2021,
+                2022,
+                2023,
+                2024
+              ]
+            }
+          },
+          "summary": {
+            "min_realization": {
+              "status": "ok",
+              "seasons": 34,
+              "temperature_seasons": 34,
+              "rain_seasons": 34,
+              "per_crop": [
+                {
+                  "crop_id": "boro_brri_dhan28",
+                  "position": 1,
+                  "seasons": 34,
+                  "temperature_seasons": 34,
+                  "rain_seasons": 34,
+                  "temperature": {
+                    "median_distance_c": 0.0,
+                    "median_t2m_c": 27.520000000000003,
+                    "within_optimum_fraction": 0.9705882352941176,
+                    "within_tolerance_fraction": 1.0,
+                    "optimum_range": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance_range": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "dry_spell": {
+                    "median_longest_run_days": 36.5,
+                    "min_longest_run_days": 18,
+                    "max_longest_run_days": 81,
+                    "median_growing_days": 141.0
+                  },
+                  "heavy_rain": {
+                    "days": 60,
+                    "valid_days": 4803,
+                    "frequency": 0.012492192379762648
+                  },
+                  "rainfall": {
+                    "median_total_mm": 234.465,
+                    "iqr_total_mm": 157.815,
+                    "min_total_mm": 41.339999999999996,
+                    "max_total_mm": 546.7
+                  }
+                },
+                {
+                  "crop_id": "aman_br11",
+                  "position": 2,
+                  "seasons": 34,
+                  "temperature_seasons": 34,
+                  "rain_seasons": 34,
+                  "temperature": {
+                    "median_distance_c": 0.0,
+                    "median_t2m_c": 27.75,
+                    "within_optimum_fraction": 1.0,
+                    "within_tolerance_fraction": 1.0,
+                    "optimum_range": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance_range": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "dry_spell": {
+                    "median_longest_run_days": 29.5,
+                    "min_longest_run_days": 9,
+                    "max_longest_run_days": 55,
+                    "median_growing_days": 146.0
+                  },
+                  "heavy_rain": {
+                    "days": 278,
+                    "valid_days": 4964,
+                    "frequency": 0.05600322320709106
+                  },
+                  "rainfall": {
+                    "median_total_mm": 687.9300000000001,
+                    "iqr_total_mm": 295.5450000000001,
+                    "min_total_mm": 177.15,
+                    "max_total_mm": 1207.75
+                  }
+                },
+                {
+                  "crop_id": "boro_brri_dhan28",
+                  "position": 3,
+                  "seasons": 34,
+                  "temperature_seasons": 34,
+                  "rain_seasons": 34,
+                  "temperature": {
+                    "median_distance_c": 0.0,
+                    "median_t2m_c": 24.5175,
+                    "within_optimum_fraction": 1.0,
+                    "within_tolerance_fraction": 1.0,
+                    "optimum_range": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance_range": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "dry_spell": {
+                    "median_longest_run_days": 40.5,
+                    "min_longest_run_days": 21,
+                    "max_longest_run_days": 97,
+                    "median_growing_days": 140.0
+                  },
+                  "heavy_rain": {
+                    "days": 31,
+                    "valid_days": 4769,
+                    "frequency": 0.006500314531348291
+                  },
+                  "rainfall": {
+                    "median_total_mm": 147.25,
+                    "iqr_total_mm": 79.51000000000002,
+                    "min_total_mm": 23.86,
+                    "max_total_mm": 407.18
+                  }
+                }
+              ],
+              "temperature_distance_c": 0.0,
+              "dry_spell_days": 35.5,
+              "heavy_rain_frequency": 0.024998576706067335,
+              "rainfall_median_mm": 356.54833333333335,
+              "growing_days_median": 142.33333333333334
+            },
+            "max_realization": {
+              "status": "ok",
+              "seasons": 34,
+              "temperature_seasons": 34,
+              "rain_seasons": 34,
+              "per_crop": [
+                {
+                  "crop_id": "boro_brri_dhan28",
+                  "position": 1,
+                  "seasons": 34,
+                  "temperature_seasons": 34,
+                  "rain_seasons": 34,
+                  "temperature": {
+                    "median_distance_c": 0.0,
+                    "median_t2m_c": 24.62,
+                    "within_optimum_fraction": 1.0,
+                    "within_tolerance_fraction": 1.0,
+                    "optimum_range": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance_range": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "dry_spell": {
+                    "median_longest_run_days": 40.5,
+                    "min_longest_run_days": 21,
+                    "max_longest_run_days": 97,
+                    "median_growing_days": 141.0
+                  },
+                  "heavy_rain": {
+                    "days": 32,
+                    "valid_days": 4803,
+                    "frequency": 0.006662502602540079
+                  },
+                  "rainfall": {
+                    "median_total_mm": 147.58499999999998,
+                    "iqr_total_mm": 80.47749999999999,
+                    "min_total_mm": 24.15,
+                    "max_total_mm": 410.78
+                  }
+                },
+                {
+                  "crop_id": "aman_br11",
+                  "position": 2,
+                  "seasons": 34,
+                  "temperature_seasons": 34,
+                  "rain_seasons": 34,
+                  "temperature": {
+                    "median_distance_c": 0.0,
+                    "median_t2m_c": 27.75,
+                    "within_optimum_fraction": 1.0,
+                    "within_tolerance_fraction": 1.0,
+                    "optimum_range": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance_range": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "dry_spell": {
+                    "median_longest_run_days": 29.5,
+                    "min_longest_run_days": 9,
+                    "max_longest_run_days": 55,
+                    "median_growing_days": 146.0
+                  },
+                  "heavy_rain": {
+                    "days": 278,
+                    "valid_days": 4964,
+                    "frequency": 0.05600322320709106
+                  },
+                  "rainfall": {
+                    "median_total_mm": 687.9300000000001,
+                    "iqr_total_mm": 295.5450000000001,
+                    "min_total_mm": 177.15,
+                    "max_total_mm": 1207.75
+                  }
+                },
+                {
+                  "crop_id": "boro_brri_dhan28",
+                  "position": 3,
+                  "seasons": 34,
+                  "temperature_seasons": 34,
+                  "rain_seasons": 34,
+                  "temperature": {
+                    "median_distance_c": 0.0,
+                    "median_t2m_c": 27.505,
+                    "within_optimum_fraction": 0.9705882352941176,
+                    "within_tolerance_fraction": 1.0,
+                    "optimum_range": {
+                      "min": 20.0,
+                      "max": 30.0
+                    },
+                    "tolerance_range": {
+                      "min": 10.0,
+                      "max": 36.0
+                    }
+                  },
+                  "dry_spell": {
+                    "median_longest_run_days": 36.5,
+                    "min_longest_run_days": 18,
+                    "max_longest_run_days": 81,
+                    "median_growing_days": 140.0
+                  },
+                  "heavy_rain": {
+                    "days": 58,
+                    "valid_days": 4769,
+                    "frequency": 0.012161878800587125
+                  },
+                  "rainfall": {
+                    "median_total_mm": 225.565,
+                    "iqr_total_mm": 158.09499999999997,
+                    "min_total_mm": 41.13,
+                    "max_total_mm": 538.87
+                  }
+                }
+              ],
+              "temperature_distance_c": 0.0,
+              "dry_spell_days": 35.5,
+              "heavy_rain_frequency": 0.024942534870072752,
+              "rainfall_median_mm": 353.6933333333333,
+              "growing_days_median": 142.33333333333334
+            }
+          },
+          "views": {
+            "temperature": {
+              "status": "ok",
+              "reason": null
+            },
+            "rain": {
+              "status": "ok",
+              "reason": null
+            }
+          }
         }
       },
       "outlook": {
-        "status": "ok",
-        "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+        "status": "partial",
+        "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
         "indicators": [
           {
             "indicator": "temperature_statistics",
-            "status": "ok",
+            "status": "partial",
             "definition": {
               "variable": "T2M",
               "statistic": "pooled_daily",
@@ -4193,33 +5629,35 @@
               "period_start": "2026-12-25",
               "period_end": "2027-05-30",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "crosses_year": true,
               "coverage_rule": "stats_min_90"
             },
             "sample": {
-              "valid_days": 4088,
-              "seasons": 26,
-              "total_days": 4088
+              "valid_days": 5347,
+              "seasons": 34,
+              "total_days": 5347
             },
             "coverage": {
               "rule": "stats_min_90",
-              "valid_days": 4088,
-              "total_days": 4088,
+              "valid_days": 5347,
+              "total_days": 5347,
               "coverage_percent": 100.0,
-              "excluded_seasons": 0
+              "excluded_seasons": 1
             },
             "stats": {
-              "median": 26.185000000000002,
-              "iqr": 11.462500000000002,
-              "q1": 18.987499999999997,
-              "q3": 30.45,
+              "median": 26.2,
+              "iqr": 11.41,
+              "q1": 19.35,
+              "q3": 30.76,
               "min": 9.67,
-              "max": 36.84
+              "max": 37.75
             },
-            "notes": [],
+            "notes": [
+              "1 historical season(s) were excluded by the stats_min_90 coverage rule."
+            ],
             "source_ids": [
               "nasa_power_daily"
             ],
@@ -4227,7 +5665,7 @@
           },
           {
             "indicator": "precipitation_statistics",
-            "status": "ok",
+            "status": "partial",
             "definition": {
               "variable": "PRECTOTCORR",
               "statistic": "per_season_totals",
@@ -4248,24 +5686,96 @@
               "period_start": "2026-12-25",
               "period_end": "2027-05-30",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "crosses_year": true,
               "coverage_rule": "warnings_100"
             },
             "sample": {
-              "seasons": 26
+              "seasons": 34
             },
             "coverage": {
               "rule": "warnings_100",
-              "valid_days": 4088,
-              "total_days": 4088,
+              "valid_days": 5347,
+              "total_days": 5347,
               "coverage_percent": 100.0,
-              "seasons": 26,
-              "excluded_seasons": 0
+              "seasons": 34,
+              "excluded_seasons": 1
             },
             "per_season_totals": [
+              {
+                "season_start_year": 1991,
+                "start_date": "1991-12-25",
+                "end_date": "1992-05-30",
+                "total_mm": 86.55000000000003,
+                "valid_days": 158,
+                "total_days": 158
+              },
+              {
+                "season_start_year": 1992,
+                "start_date": "1992-12-25",
+                "end_date": "1993-05-30",
+                "total_mm": 158.74000000000004,
+                "valid_days": 157,
+                "total_days": 157
+              },
+              {
+                "season_start_year": 1993,
+                "start_date": "1993-12-25",
+                "end_date": "1994-05-30",
+                "total_mm": 69.53,
+                "valid_days": 157,
+                "total_days": 157
+              },
+              {
+                "season_start_year": 1994,
+                "start_date": "1994-12-25",
+                "end_date": "1995-05-30",
+                "total_mm": 41.650000000000006,
+                "valid_days": 157,
+                "total_days": 157
+              },
+              {
+                "season_start_year": 1995,
+                "start_date": "1995-12-25",
+                "end_date": "1996-05-30",
+                "total_mm": 66.07999999999997,
+                "valid_days": 158,
+                "total_days": 158
+              },
+              {
+                "season_start_year": 1996,
+                "start_date": "1996-12-25",
+                "end_date": "1997-05-30",
+                "total_mm": 175.07,
+                "valid_days": 157,
+                "total_days": 157
+              },
+              {
+                "season_start_year": 1997,
+                "start_date": "1997-12-25",
+                "end_date": "1998-05-30",
+                "total_mm": 287.8,
+                "valid_days": 157,
+                "total_days": 157
+              },
+              {
+                "season_start_year": 1998,
+                "start_date": "1998-12-25",
+                "end_date": "1999-05-30",
+                "total_mm": 168.14000000000001,
+                "valid_days": 157,
+                "total_days": 157
+              },
+              {
+                "season_start_year": 1999,
+                "start_date": "1999-12-25",
+                "end_date": "2000-05-30",
+                "total_mm": 377.6199999999999,
+                "valid_days": 158,
+                "total_days": 158
+              },
               {
                 "season_start_year": 2000,
                 "start_date": "2000-12-25",
@@ -4465,26 +5975,20 @@
                 "total_mm": 383.8099999999999,
                 "valid_days": 157,
                 "total_days": 157
-              },
-              {
-                "season_start_year": 2025,
-                "start_date": "2025-12-25",
-                "end_date": "2026-05-30",
-                "total_mm": 478.48,
-                "valid_days": 157,
-                "total_days": 157
               }
             ],
             "stats": {
-              "median": 265.84,
-              "iqr": 135.78750000000002,
-              "q1": 217.66250000000002,
-              "q3": 353.45000000000005,
-              "min": 144.61,
+              "median": 243.59499999999997,
+              "iqr": 156.035,
+              "q1": 175.2775,
+              "q3": 331.3125,
+              "min": 41.650000000000006,
               "max": 579.1700000000002
             },
             "unit": "mm",
-            "notes": [],
+            "notes": [
+              "1 historical season(s) were excluded by the warnings_100 coverage rule."
+            ],
             "source_ids": [
               "nasa_power_daily"
             ],
@@ -4513,31 +6017,31 @@
               "period_start": "2027-07-10",
               "period_end": "2027-12-16",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "crosses_year": false,
               "coverage_rule": "stats_min_90"
             },
             "sample": {
-              "valid_days": 4160,
-              "seasons": 26,
-              "total_days": 4160
+              "valid_days": 5600,
+              "seasons": 35,
+              "total_days": 5600
             },
             "coverage": {
               "rule": "stats_min_90",
-              "valid_days": 4160,
-              "total_days": 4160,
+              "valid_days": 5600,
+              "total_days": 5600,
               "coverage_percent": 100.0,
               "excluded_seasons": 0
             },
             "stats": {
-              "median": 27.455,
-              "iqr": 5.504999999999999,
-              "q1": 23.055,
-              "q3": 28.56,
+              "median": 27.55,
+              "iqr": 5.272499999999997,
+              "q1": 23.427500000000002,
+              "q3": 28.7,
               "min": 14.42,
-              "max": 31.7
+              "max": 33.41
             },
             "notes": [],
             "source_ids": [
@@ -4568,24 +6072,96 @@
               "period_start": "2027-07-10",
               "period_end": "2027-12-16",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "crosses_year": false,
               "coverage_rule": "warnings_100"
             },
             "sample": {
-              "seasons": 26
+              "seasons": 35
             },
             "coverage": {
               "rule": "warnings_100",
-              "valid_days": 4160,
-              "total_days": 4160,
+              "valid_days": 5600,
+              "total_days": 5600,
               "coverage_percent": 100.0,
-              "seasons": 26,
+              "seasons": 35,
               "excluded_seasons": 0
             },
             "per_season_totals": [
+              {
+                "season_start_year": 1991,
+                "start_date": "1991-07-10",
+                "end_date": "1991-12-16",
+                "total_mm": 369.88,
+                "valid_days": 160,
+                "total_days": 160
+              },
+              {
+                "season_start_year": 1992,
+                "start_date": "1992-07-10",
+                "end_date": "1992-12-16",
+                "total_mm": 194.2299999999999,
+                "valid_days": 160,
+                "total_days": 160
+              },
+              {
+                "season_start_year": 1993,
+                "start_date": "1993-07-10",
+                "end_date": "1993-12-16",
+                "total_mm": 255.16000000000014,
+                "valid_days": 160,
+                "total_days": 160
+              },
+              {
+                "season_start_year": 1994,
+                "start_date": "1994-07-10",
+                "end_date": "1994-12-16",
+                "total_mm": 177.15000000000006,
+                "valid_days": 160,
+                "total_days": 160
+              },
+              {
+                "season_start_year": 1995,
+                "start_date": "1995-07-10",
+                "end_date": "1995-12-16",
+                "total_mm": 392.89999999999986,
+                "valid_days": 160,
+                "total_days": 160
+              },
+              {
+                "season_start_year": 1996,
+                "start_date": "1996-07-10",
+                "end_date": "1996-12-16",
+                "total_mm": 296.96000000000004,
+                "valid_days": 160,
+                "total_days": 160
+              },
+              {
+                "season_start_year": 1997,
+                "start_date": "1997-07-10",
+                "end_date": "1997-12-16",
+                "total_mm": 645.8199999999999,
+                "valid_days": 160,
+                "total_days": 160
+              },
+              {
+                "season_start_year": 1998,
+                "start_date": "1998-07-10",
+                "end_date": "1998-12-16",
+                "total_mm": 930.69,
+                "valid_days": 160,
+                "total_days": 160
+              },
+              {
+                "season_start_year": 1999,
+                "start_date": "1999-07-10",
+                "end_date": "1999-12-16",
+                "total_mm": 779.7399999999999,
+                "valid_days": 160,
+                "total_days": 160
+              },
               {
                 "season_start_year": 2000,
                 "start_date": "2000-07-10",
@@ -4796,11 +6372,11 @@
               }
             ],
             "stats": {
-              "median": 790.5449999999997,
-              "iqr": 313.1175000000003,
-              "q1": 665.1550000000002,
-              "q3": 978.2725000000005,
-              "min": 576.56,
+              "median": 703.6399999999998,
+              "iqr": 310.4100000000001,
+              "q1": 602.355,
+              "q3": 912.7650000000001,
+              "min": 177.15000000000006,
               "max": 1246.3899999999994
             },
             "unit": "mm",
@@ -4812,7 +6388,7 @@
           },
           {
             "indicator": "temperature_statistics",
-            "status": "ok",
+            "status": "partial",
             "definition": {
               "variable": "T2M",
               "statistic": "pooled_daily",
@@ -4833,33 +6409,35 @@
               "period_start": "2027-12-25",
               "period_end": "2028-05-29",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "crosses_year": true,
               "coverage_rule": "stats_min_90"
             },
             "sample": {
-              "valid_days": 4062,
-              "seasons": 26,
-              "total_days": 4062
+              "valid_days": 5313,
+              "seasons": 34,
+              "total_days": 5313
             },
             "coverage": {
               "rule": "stats_min_90",
-              "valid_days": 4062,
-              "total_days": 4062,
+              "valid_days": 5313,
+              "total_days": 5313,
               "coverage_percent": 100.0,
-              "excluded_seasons": 0
+              "excluded_seasons": 1
             },
             "stats": {
               "median": 26.09,
-              "iqr": 11.46,
-              "q1": 18.97,
-              "q3": 30.43,
+              "iqr": 11.379999999999999,
+              "q1": 19.32,
+              "q3": 30.7,
               "min": 9.67,
-              "max": 36.84
+              "max": 37.75
             },
-            "notes": [],
+            "notes": [
+              "1 historical season(s) were excluded by the stats_min_90 coverage rule."
+            ],
             "source_ids": [
               "nasa_power_daily"
             ],
@@ -4867,7 +6445,7 @@
           },
           {
             "indicator": "precipitation_statistics",
-            "status": "ok",
+            "status": "partial",
             "definition": {
               "variable": "PRECTOTCORR",
               "statistic": "per_season_totals",
@@ -4888,24 +6466,96 @@
               "period_start": "2027-12-25",
               "period_end": "2028-05-29",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "crosses_year": true,
               "coverage_rule": "warnings_100"
             },
             "sample": {
-              "seasons": 26
+              "seasons": 34
             },
             "coverage": {
               "rule": "warnings_100",
-              "valid_days": 4062,
-              "total_days": 4062,
+              "valid_days": 5313,
+              "total_days": 5313,
               "coverage_percent": 100.0,
-              "seasons": 26,
-              "excluded_seasons": 0
+              "seasons": 34,
+              "excluded_seasons": 1
             },
             "per_season_totals": [
+              {
+                "season_start_year": 1991,
+                "start_date": "1991-12-25",
+                "end_date": "1992-05-29",
+                "total_mm": 86.53000000000003,
+                "valid_days": 157,
+                "total_days": 157
+              },
+              {
+                "season_start_year": 1992,
+                "start_date": "1992-12-25",
+                "end_date": "1993-05-29",
+                "total_mm": 142.72000000000003,
+                "valid_days": 156,
+                "total_days": 156
+              },
+              {
+                "season_start_year": 1993,
+                "start_date": "1993-12-25",
+                "end_date": "1994-05-29",
+                "total_mm": 69.37,
+                "valid_days": 156,
+                "total_days": 156
+              },
+              {
+                "season_start_year": 1994,
+                "start_date": "1994-12-25",
+                "end_date": "1995-05-29",
+                "total_mm": 41.440000000000005,
+                "valid_days": 156,
+                "total_days": 156
+              },
+              {
+                "season_start_year": 1995,
+                "start_date": "1995-12-25",
+                "end_date": "1996-05-29",
+                "total_mm": 60.70999999999997,
+                "valid_days": 157,
+                "total_days": 157
+              },
+              {
+                "season_start_year": 1996,
+                "start_date": "1996-12-25",
+                "end_date": "1997-05-29",
+                "total_mm": 171.95,
+                "valid_days": 156,
+                "total_days": 156
+              },
+              {
+                "season_start_year": 1997,
+                "start_date": "1997-12-25",
+                "end_date": "1998-05-29",
+                "total_mm": 285.45,
+                "valid_days": 156,
+                "total_days": 156
+              },
+              {
+                "season_start_year": 1998,
+                "start_date": "1998-12-25",
+                "end_date": "1999-05-29",
+                "total_mm": 161.9,
+                "valid_days": 156,
+                "total_days": 156
+              },
+              {
+                "season_start_year": 1999,
+                "start_date": "1999-12-25",
+                "end_date": "2000-05-29",
+                "total_mm": 368.4299999999999,
+                "valid_days": 157,
+                "total_days": 157
+              },
               {
                 "season_start_year": 2000,
                 "start_date": "2000-12-25",
@@ -5105,26 +6755,20 @@
                 "total_mm": 375.6799999999999,
                 "valid_days": 156,
                 "total_days": 156
-              },
-              {
-                "season_start_year": 2025,
-                "start_date": "2025-12-25",
-                "end_date": "2026-05-29",
-                "total_mm": 465.70000000000005,
-                "valid_days": 156,
-                "total_days": 156
               }
             ],
             "stats": {
-              "median": 263.84999999999997,
-              "iqr": 127.935,
-              "q1": 215.29500000000002,
-              "q3": 343.23,
-              "min": 142.63000000000002,
+              "median": 230.68999999999997,
+              "iqr": 153.25000000000006,
+              "q1": 172.69,
+              "q3": 325.94000000000005,
+              "min": 41.440000000000005,
               "max": 571.3400000000001
             },
             "unit": "mm",
-            "notes": [],
+            "notes": [
+              "1 historical season(s) were excluded by the warnings_100 coverage rule."
+            ],
             "source_ids": [
               "nasa_power_daily"
             ],
@@ -5133,13 +6777,13 @@
         ],
         "per_crop": [
           {
-            "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+            "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
             "crop_id": "boro_brri_dhan28",
-            "status": "ok",
+            "status": "partial",
             "period_basis": "union_span",
             "period_definition": "E6 union span from planting_range.earliest to harvest_range.latest; the end month-day maps to the next year when it precedes the start month-day.",
             "analysis_period": {
-              "start_year": 2000,
+              "start_year": 1991,
               "end_year": 2025
             },
             "coverage_rule": {
@@ -5147,15 +6791,34 @@
               "warnings": "required_100_percent_valid_days"
             },
             "season_coverage": {
-              "seasons_total": 26,
-              "seasons_evaluated_statistics": 26,
-              "seasons_evaluated_warnings": 26,
-              "excluded_seasons": []
+              "seasons_total": 35,
+              "seasons_evaluated_statistics": 34,
+              "seasons_evaluated_warnings": 34,
+              "excluded_seasons": [
+                {
+                  "season_start_year": 2025,
+                  "start_date": "2025-12-25",
+                  "end_date": "2026-05-30",
+                  "valid_days": 7,
+                  "total_days": 157,
+                  "coverage_fraction": 0.044586,
+                  "coverage_percent": 4.46,
+                  "included": false,
+                  "reason": "Mapped season end 2026-05-30 is after last_complete_data_date 2025-12-31.",
+                  "rules": [
+                    "statistics",
+                    "warnings"
+                  ],
+                  "reasons": [
+                    "Mapped season end 2026-05-30 is after last_complete_data_date 2025-12-31."
+                  ]
+                }
+              ]
             },
             "indicators": [
               {
                 "indicator": "temperature_statistics",
-                "status": "ok",
+                "status": "partial",
                 "definition": {
                   "variable": "T2M",
                   "statistic": "pooled_daily",
@@ -5176,40 +6839,42 @@
                   "period_start": "2026-12-25",
                   "period_end": "2027-05-30",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": true,
                   "coverage_rule": "stats_min_90"
                 },
                 "sample": {
-                  "valid_days": 4088,
-                  "seasons": 26,
-                  "total_days": 4088
+                  "valid_days": 5347,
+                  "seasons": 34,
+                  "total_days": 5347
                 },
                 "coverage": {
                   "rule": "stats_min_90",
-                  "valid_days": 4088,
-                  "total_days": 4088,
+                  "valid_days": 5347,
+                  "total_days": 5347,
                   "coverage_percent": 100.0,
-                  "excluded_seasons": 0
+                  "excluded_seasons": 1
                 },
                 "stats": {
-                  "median": 26.185000000000002,
-                  "iqr": 11.462500000000002,
-                  "q1": 18.987499999999997,
-                  "q3": 30.45,
+                  "median": 26.2,
+                  "iqr": 11.41,
+                  "q1": 19.35,
+                  "q3": 30.76,
                   "min": 9.67,
-                  "max": 36.84
+                  "max": 37.75
                 },
-                "notes": [],
+                "notes": [
+                  "1 historical season(s) were excluded by the stats_min_90 coverage rule."
+                ],
                 "source_ids": [
                   "nasa_power_daily"
                 ]
               },
               {
                 "indicator": "precipitation_statistics",
-                "status": "ok",
+                "status": "partial",
                 "definition": {
                   "variable": "PRECTOTCORR",
                   "statistic": "per_season_totals",
@@ -5230,24 +6895,96 @@
                   "period_start": "2026-12-25",
                   "period_end": "2027-05-30",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": true,
                   "coverage_rule": "warnings_100"
                 },
                 "sample": {
-                  "seasons": 26
+                  "seasons": 34
                 },
                 "coverage": {
                   "rule": "warnings_100",
-                  "valid_days": 4088,
-                  "total_days": 4088,
+                  "valid_days": 5347,
+                  "total_days": 5347,
                   "coverage_percent": 100.0,
-                  "seasons": 26,
-                  "excluded_seasons": 0
+                  "seasons": 34,
+                  "excluded_seasons": 1
                 },
                 "per_season_totals": [
+                  {
+                    "season_start_year": 1991,
+                    "start_date": "1991-12-25",
+                    "end_date": "1992-05-30",
+                    "total_mm": 86.55000000000003,
+                    "valid_days": 158,
+                    "total_days": 158
+                  },
+                  {
+                    "season_start_year": 1992,
+                    "start_date": "1992-12-25",
+                    "end_date": "1993-05-30",
+                    "total_mm": 158.74000000000004,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1993,
+                    "start_date": "1993-12-25",
+                    "end_date": "1994-05-30",
+                    "total_mm": 69.53,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1994,
+                    "start_date": "1994-12-25",
+                    "end_date": "1995-05-30",
+                    "total_mm": 41.650000000000006,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1995,
+                    "start_date": "1995-12-25",
+                    "end_date": "1996-05-30",
+                    "total_mm": 66.07999999999997,
+                    "valid_days": 158,
+                    "total_days": 158
+                  },
+                  {
+                    "season_start_year": 1996,
+                    "start_date": "1996-12-25",
+                    "end_date": "1997-05-30",
+                    "total_mm": 175.07,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1997,
+                    "start_date": "1997-12-25",
+                    "end_date": "1998-05-30",
+                    "total_mm": 287.8,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1998,
+                    "start_date": "1998-12-25",
+                    "end_date": "1999-05-30",
+                    "total_mm": 168.14000000000001,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1999,
+                    "start_date": "1999-12-25",
+                    "end_date": "2000-05-30",
+                    "total_mm": 377.6199999999999,
+                    "valid_days": 158,
+                    "total_days": 158
+                  },
                   {
                     "season_start_year": 2000,
                     "start_date": "2000-12-25",
@@ -5447,26 +7184,20 @@
                     "total_mm": 383.8099999999999,
                     "valid_days": 157,
                     "total_days": 157
-                  },
-                  {
-                    "season_start_year": 2025,
-                    "start_date": "2025-12-25",
-                    "end_date": "2026-05-30",
-                    "total_mm": 478.48,
-                    "valid_days": 157,
-                    "total_days": 157
                   }
                 ],
                 "stats": {
-                  "median": 265.84,
-                  "iqr": 135.78750000000002,
-                  "q1": 217.66250000000002,
-                  "q3": 353.45000000000005,
-                  "min": 144.61,
+                  "median": 243.59499999999997,
+                  "iqr": 156.035,
+                  "q1": 175.2775,
+                  "q3": 331.3125,
+                  "min": 41.650000000000006,
                   "max": 579.1700000000002
                 },
                 "unit": "mm",
-                "notes": [],
+                "notes": [
+                  "1 historical season(s) were excluded by the warnings_100 coverage rule."
+                ],
                 "source_ids": [
                   "nasa_power_daily"
                 ]
@@ -5474,49 +7205,51 @@
             ],
             "missing": {
               "fill_value": -999.0,
-              "missing_days": 0,
+              "missing_days": 300,
               "failed_requests": null
             },
             "sources": [
               {
                 "source_id": "nasa_power_daily",
-                "provider": "Local POWER CSV",
-                "product": "NASA POWER Daily Point (local subset)",
-                "version": "local_2000_2026",
+                "provider": "NASA POWER",
+                "product": "NASA POWER Daily Point",
+                "version": "v2.10.3",
                 "variables": [
                   "T2M",
                   "PRECTOTCORR"
                 ],
                 "coverage": {
-                  "observation_start": "2000-01-01",
-                  "observation_end": "2026-10-20",
-                  "seasons_total": 26,
-                  "seasons_evaluated_statistics": 26,
-                  "seasons_evaluated_warnings": 26
+                  "observation_start": "1991-01-01",
+                  "observation_end": "2025-12-31",
+                  "seasons_total": 35,
+                  "seasons_evaluated_statistics": 34,
+                  "seasons_evaluated_warnings": 34
                 },
-                "retrieved_at": null
+                "retrieved_at": "2026-11-12T12:13:00+00:00"
               }
             ],
             "notes": [
               "The union span from earliest planting to latest harvest is conservative; it may include days from alternative timing realizations rather than one actual crop.",
-              "Coverage counts only finite numeric observations; missing dates, None, non-finite values, and provider fill values are invalid."
+              "Coverage counts only finite numeric observations; missing dates, None, non-finite values, and provider fill values are invalid.",
+              "1 historical season(s) were excluded from statistics; see season_coverage.excluded_seasons.",
+              "1 historical season(s) were excluded from warnings; see season_coverage.excluded_seasons."
             ],
             "seasonal_ranges": {
-              "status": "ok",
-              "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+              "status": "partial",
+              "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
               "period_basis": "union_span",
               "period_start": "2026-12-25",
               "period_end": "2027-05-30",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "coverage": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025,
-                "seasons_total": 26,
-                "seasons_evaluated": 26,
-                "seasons_excluded": 0
+                "seasons_total": 35,
+                "seasons_evaluated": 34,
+                "seasons_excluded": 1
               },
               "indicators": [
                 {
@@ -5525,12 +7258,12 @@
                   "unit": "C",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
                   "min": 22.866645569620253,
-                  "median": 25.051305732484074,
-                  "max": 26.443291139240507
+                  "median": 25.18455414012739,
+                  "max": 27.115063291139244
                 },
                 {
                   "variable": "PRECTOTCORR",
@@ -5538,11 +7271,11 @@
                   "unit": "mm",
                   "statistic": "per_season_total",
                   "coverage_rule": "warnings_100",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
-                  "min": 144.61,
-                  "median": 265.84000000000003,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
+                  "min": 41.65,
+                  "median": 243.595,
                   "max": 579.17
                 },
                 {
@@ -5551,11 +7284,11 @@
                   "unit": "1",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
-                  "min": 0.36962025316455693,
-                  "median": 0.4292356687898089,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
+                  "min": 0.17605095541401275,
+                  "median": 0.402000524066758,
                   "max": 0.6055696202531646
                 }
               ],
@@ -5563,22 +7296,21 @@
               "warnings": [],
               "notes": [
                 "Seasonal ranges are historical ranges, not a forecast.",
-                "1991-1999 is excluded because the local precipitation series is invalid.",
                 "GWETTOP is MERRA-2 surface soil wetness, not SMAP."
               ],
               "source_ids": [
-                "local_power_2000_2026"
+                "nasa_power_daily"
               ]
             }
           },
           {
-            "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+            "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
             "crop_id": "aman_br11",
             "status": "ok",
             "period_basis": "union_span",
             "period_definition": "E6 union span from planting_range.earliest to harvest_range.latest; the end month-day maps to the next year when it precedes the start month-day.",
             "analysis_period": {
-              "start_year": 2000,
+              "start_year": 1991,
               "end_year": 2025
             },
             "coverage_rule": {
@@ -5586,9 +7318,9 @@
               "warnings": "required_100_percent_valid_days"
             },
             "season_coverage": {
-              "seasons_total": 26,
-              "seasons_evaluated_statistics": 26,
-              "seasons_evaluated_warnings": 26,
+              "seasons_total": 35,
+              "seasons_evaluated_statistics": 35,
+              "seasons_evaluated_warnings": 35,
               "excluded_seasons": []
             },
             "indicators": [
@@ -5615,31 +7347,31 @@
                   "period_start": "2027-07-10",
                   "period_end": "2027-12-16",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": false,
                   "coverage_rule": "stats_min_90"
                 },
                 "sample": {
-                  "valid_days": 4160,
-                  "seasons": 26,
-                  "total_days": 4160
+                  "valid_days": 5600,
+                  "seasons": 35,
+                  "total_days": 5600
                 },
                 "coverage": {
                   "rule": "stats_min_90",
-                  "valid_days": 4160,
-                  "total_days": 4160,
+                  "valid_days": 5600,
+                  "total_days": 5600,
                   "coverage_percent": 100.0,
                   "excluded_seasons": 0
                 },
                 "stats": {
-                  "median": 27.455,
-                  "iqr": 5.504999999999999,
-                  "q1": 23.055,
-                  "q3": 28.56,
+                  "median": 27.55,
+                  "iqr": 5.272499999999997,
+                  "q1": 23.427500000000002,
+                  "q3": 28.7,
                   "min": 14.42,
-                  "max": 31.7
+                  "max": 33.41
                 },
                 "notes": [],
                 "source_ids": [
@@ -5669,24 +7401,96 @@
                   "period_start": "2027-07-10",
                   "period_end": "2027-12-16",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": false,
                   "coverage_rule": "warnings_100"
                 },
                 "sample": {
-                  "seasons": 26
+                  "seasons": 35
                 },
                 "coverage": {
                   "rule": "warnings_100",
-                  "valid_days": 4160,
-                  "total_days": 4160,
+                  "valid_days": 5600,
+                  "total_days": 5600,
                   "coverage_percent": 100.0,
-                  "seasons": 26,
+                  "seasons": 35,
                   "excluded_seasons": 0
                 },
                 "per_season_totals": [
+                  {
+                    "season_start_year": 1991,
+                    "start_date": "1991-07-10",
+                    "end_date": "1991-12-16",
+                    "total_mm": 369.88,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1992,
+                    "start_date": "1992-07-10",
+                    "end_date": "1992-12-16",
+                    "total_mm": 194.2299999999999,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1993,
+                    "start_date": "1993-07-10",
+                    "end_date": "1993-12-16",
+                    "total_mm": 255.16000000000014,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1994,
+                    "start_date": "1994-07-10",
+                    "end_date": "1994-12-16",
+                    "total_mm": 177.15000000000006,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1995,
+                    "start_date": "1995-07-10",
+                    "end_date": "1995-12-16",
+                    "total_mm": 392.89999999999986,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1996,
+                    "start_date": "1996-07-10",
+                    "end_date": "1996-12-16",
+                    "total_mm": 296.96000000000004,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1997,
+                    "start_date": "1997-07-10",
+                    "end_date": "1997-12-16",
+                    "total_mm": 645.8199999999999,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1998,
+                    "start_date": "1998-07-10",
+                    "end_date": "1998-12-16",
+                    "total_mm": 930.69,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
+                  {
+                    "season_start_year": 1999,
+                    "start_date": "1999-07-10",
+                    "end_date": "1999-12-16",
+                    "total_mm": 779.7399999999999,
+                    "valid_days": 160,
+                    "total_days": 160
+                  },
                   {
                     "season_start_year": 2000,
                     "start_date": "2000-07-10",
@@ -5897,11 +7701,11 @@
                   }
                 ],
                 "stats": {
-                  "median": 790.5449999999997,
-                  "iqr": 313.1175000000003,
-                  "q1": 665.1550000000002,
-                  "q3": 978.2725000000005,
-                  "min": 576.56,
+                  "median": 703.6399999999998,
+                  "iqr": 310.4100000000001,
+                  "q1": 602.355,
+                  "q3": 912.7650000000001,
+                  "min": 177.15000000000006,
                   "max": 1246.3899999999994
                 },
                 "unit": "mm",
@@ -5919,21 +7723,21 @@
             "sources": [
               {
                 "source_id": "nasa_power_daily",
-                "provider": "Local POWER CSV",
-                "product": "NASA POWER Daily Point (local subset)",
-                "version": "local_2000_2026",
+                "provider": "NASA POWER",
+                "product": "NASA POWER Daily Point",
+                "version": "v2.10.3",
                 "variables": [
                   "T2M",
                   "PRECTOTCORR"
                 ],
                 "coverage": {
-                  "observation_start": "2000-01-01",
-                  "observation_end": "2026-10-20",
-                  "seasons_total": 26,
-                  "seasons_evaluated_statistics": 26,
-                  "seasons_evaluated_warnings": 26
+                  "observation_start": "1991-01-01",
+                  "observation_end": "2025-12-31",
+                  "seasons_total": 35,
+                  "seasons_evaluated_statistics": 35,
+                  "seasons_evaluated_warnings": 35
                 },
-                "retrieved_at": null
+                "retrieved_at": "2026-11-12T12:13:00+00:00"
               }
             ],
             "notes": [
@@ -5942,19 +7746,19 @@
             ],
             "seasonal_ranges": {
               "status": "ok",
-              "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+              "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
               "period_basis": "union_span",
               "period_start": "2027-07-10",
               "period_end": "2027-12-16",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "coverage": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025,
-                "seasons_total": 26,
-                "seasons_evaluated": 26,
+                "seasons_total": 35,
+                "seasons_evaluated": 35,
                 "seasons_excluded": 0
               },
               "indicators": [
@@ -5964,12 +7768,12 @@
                   "unit": "C",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 35,
                   "seasons_excluded": 0,
                   "min": 24.703,
-                  "median": 25.72959375,
-                  "max": 26.4801875
+                  "median": 25.784750000000003,
+                  "max": 28.05725
                 },
                 {
                   "variable": "PRECTOTCORR",
@@ -5977,11 +7781,11 @@
                   "unit": "mm",
                   "statistic": "per_season_total",
                   "coverage_rule": "warnings_100",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 35,
                   "seasons_excluded": 0,
-                  "min": 576.56,
-                  "median": 790.5450000000001,
+                  "min": 177.15,
+                  "median": 703.64,
                   "max": 1246.39
                 },
                 {
@@ -5990,11 +7794,11 @@
                   "unit": "1",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 35,
                   "seasons_excluded": 0,
-                  "min": 0.6361875,
-                  "median": 0.77215625,
+                  "min": 0.3510625,
+                  "median": 0.7623125,
                   "max": 0.8773125
                 }
               ],
@@ -6002,22 +7806,21 @@
               "warnings": [],
               "notes": [
                 "Seasonal ranges are historical ranges, not a forecast.",
-                "1991-1999 is excluded because the local precipitation series is invalid.",
                 "GWETTOP is MERRA-2 surface soil wetness, not SMAP."
               ],
               "source_ids": [
-                "local_power_2000_2026"
+                "nasa_power_daily"
               ]
             }
           },
           {
-            "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+            "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
             "crop_id": "boro_brri_dhan28",
-            "status": "ok",
+            "status": "partial",
             "period_basis": "union_span",
             "period_definition": "E6 union span from planting_range.earliest to harvest_range.latest; the end month-day maps to the next year when it precedes the start month-day.",
             "analysis_period": {
-              "start_year": 2000,
+              "start_year": 1991,
               "end_year": 2025
             },
             "coverage_rule": {
@@ -6025,15 +7828,34 @@
               "warnings": "required_100_percent_valid_days"
             },
             "season_coverage": {
-              "seasons_total": 26,
-              "seasons_evaluated_statistics": 26,
-              "seasons_evaluated_warnings": 26,
-              "excluded_seasons": []
+              "seasons_total": 35,
+              "seasons_evaluated_statistics": 34,
+              "seasons_evaluated_warnings": 34,
+              "excluded_seasons": [
+                {
+                  "season_start_year": 2025,
+                  "start_date": "2025-12-25",
+                  "end_date": "2026-05-29",
+                  "valid_days": 7,
+                  "total_days": 156,
+                  "coverage_fraction": 0.044872,
+                  "coverage_percent": 4.49,
+                  "included": false,
+                  "reason": "Mapped season end 2026-05-29 is after last_complete_data_date 2025-12-31.",
+                  "rules": [
+                    "statistics",
+                    "warnings"
+                  ],
+                  "reasons": [
+                    "Mapped season end 2026-05-29 is after last_complete_data_date 2025-12-31."
+                  ]
+                }
+              ]
             },
             "indicators": [
               {
                 "indicator": "temperature_statistics",
-                "status": "ok",
+                "status": "partial",
                 "definition": {
                   "variable": "T2M",
                   "statistic": "pooled_daily",
@@ -6054,40 +7876,42 @@
                   "period_start": "2027-12-25",
                   "period_end": "2028-05-29",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": true,
                   "coverage_rule": "stats_min_90"
                 },
                 "sample": {
-                  "valid_days": 4062,
-                  "seasons": 26,
-                  "total_days": 4062
+                  "valid_days": 5313,
+                  "seasons": 34,
+                  "total_days": 5313
                 },
                 "coverage": {
                   "rule": "stats_min_90",
-                  "valid_days": 4062,
-                  "total_days": 4062,
+                  "valid_days": 5313,
+                  "total_days": 5313,
                   "coverage_percent": 100.0,
-                  "excluded_seasons": 0
+                  "excluded_seasons": 1
                 },
                 "stats": {
                   "median": 26.09,
-                  "iqr": 11.46,
-                  "q1": 18.97,
-                  "q3": 30.43,
+                  "iqr": 11.379999999999999,
+                  "q1": 19.32,
+                  "q3": 30.7,
                   "min": 9.67,
-                  "max": 36.84
+                  "max": 37.75
                 },
-                "notes": [],
+                "notes": [
+                  "1 historical season(s) were excluded by the stats_min_90 coverage rule."
+                ],
                 "source_ids": [
                   "nasa_power_daily"
                 ]
               },
               {
                 "indicator": "precipitation_statistics",
-                "status": "ok",
+                "status": "partial",
                 "definition": {
                   "variable": "PRECTOTCORR",
                   "statistic": "per_season_totals",
@@ -6108,24 +7932,96 @@
                   "period_start": "2027-12-25",
                   "period_end": "2028-05-29",
                   "analysis_period": {
-                    "start_year": 2000,
+                    "start_year": 1991,
                     "end_year": 2025
                   },
                   "crosses_year": true,
                   "coverage_rule": "warnings_100"
                 },
                 "sample": {
-                  "seasons": 26
+                  "seasons": 34
                 },
                 "coverage": {
                   "rule": "warnings_100",
-                  "valid_days": 4062,
-                  "total_days": 4062,
+                  "valid_days": 5313,
+                  "total_days": 5313,
                   "coverage_percent": 100.0,
-                  "seasons": 26,
-                  "excluded_seasons": 0
+                  "seasons": 34,
+                  "excluded_seasons": 1
                 },
                 "per_season_totals": [
+                  {
+                    "season_start_year": 1991,
+                    "start_date": "1991-12-25",
+                    "end_date": "1992-05-29",
+                    "total_mm": 86.53000000000003,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1992,
+                    "start_date": "1992-12-25",
+                    "end_date": "1993-05-29",
+                    "total_mm": 142.72000000000003,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1993,
+                    "start_date": "1993-12-25",
+                    "end_date": "1994-05-29",
+                    "total_mm": 69.37,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1994,
+                    "start_date": "1994-12-25",
+                    "end_date": "1995-05-29",
+                    "total_mm": 41.440000000000005,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1995,
+                    "start_date": "1995-12-25",
+                    "end_date": "1996-05-29",
+                    "total_mm": 60.70999999999997,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
+                  {
+                    "season_start_year": 1996,
+                    "start_date": "1996-12-25",
+                    "end_date": "1997-05-29",
+                    "total_mm": 171.95,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1997,
+                    "start_date": "1997-12-25",
+                    "end_date": "1998-05-29",
+                    "total_mm": 285.45,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1998,
+                    "start_date": "1998-12-25",
+                    "end_date": "1999-05-29",
+                    "total_mm": 161.9,
+                    "valid_days": 156,
+                    "total_days": 156
+                  },
+                  {
+                    "season_start_year": 1999,
+                    "start_date": "1999-12-25",
+                    "end_date": "2000-05-29",
+                    "total_mm": 368.4299999999999,
+                    "valid_days": 157,
+                    "total_days": 157
+                  },
                   {
                     "season_start_year": 2000,
                     "start_date": "2000-12-25",
@@ -6325,26 +8221,20 @@
                     "total_mm": 375.6799999999999,
                     "valid_days": 156,
                     "total_days": 156
-                  },
-                  {
-                    "season_start_year": 2025,
-                    "start_date": "2025-12-25",
-                    "end_date": "2026-05-29",
-                    "total_mm": 465.70000000000005,
-                    "valid_days": 156,
-                    "total_days": 156
                   }
                 ],
                 "stats": {
-                  "median": 263.84999999999997,
-                  "iqr": 127.935,
-                  "q1": 215.29500000000002,
-                  "q3": 343.23,
-                  "min": 142.63000000000002,
+                  "median": 230.68999999999997,
+                  "iqr": 153.25000000000006,
+                  "q1": 172.69,
+                  "q3": 325.94000000000005,
+                  "min": 41.440000000000005,
                   "max": 571.3400000000001
                 },
                 "unit": "mm",
-                "notes": [],
+                "notes": [
+                  "1 historical season(s) were excluded by the warnings_100 coverage rule."
+                ],
                 "source_ids": [
                   "nasa_power_daily"
                 ]
@@ -6352,49 +8242,51 @@
             ],
             "missing": {
               "fill_value": -999.0,
-              "missing_days": 0,
+              "missing_days": 298,
               "failed_requests": null
             },
             "sources": [
               {
                 "source_id": "nasa_power_daily",
-                "provider": "Local POWER CSV",
-                "product": "NASA POWER Daily Point (local subset)",
-                "version": "local_2000_2026",
+                "provider": "NASA POWER",
+                "product": "NASA POWER Daily Point",
+                "version": "v2.10.3",
                 "variables": [
                   "T2M",
                   "PRECTOTCORR"
                 ],
                 "coverage": {
-                  "observation_start": "2000-01-01",
-                  "observation_end": "2026-10-20",
-                  "seasons_total": 26,
-                  "seasons_evaluated_statistics": 26,
-                  "seasons_evaluated_warnings": 26
+                  "observation_start": "1991-01-01",
+                  "observation_end": "2025-12-31",
+                  "seasons_total": 35,
+                  "seasons_evaluated_statistics": 34,
+                  "seasons_evaluated_warnings": 34
                 },
-                "retrieved_at": null
+                "retrieved_at": "2026-11-12T12:13:00+00:00"
               }
             ],
             "notes": [
               "The union span from earliest planting to latest harvest is conservative; it may include days from alternative timing realizations rather than one actual crop.",
-              "Coverage counts only finite numeric observations; missing dates, None, non-finite values, and provider fill values are invalid."
+              "Coverage counts only finite numeric observations; missing dates, None, non-finite values, and provider fill values are invalid.",
+              "1 historical season(s) were excluded from statistics; see season_coverage.excluded_seasons.",
+              "1 historical season(s) were excluded from warnings; see season_coverage.excluded_seasons."
             ],
             "seasonal_ranges": {
-              "status": "ok",
-              "label": "Seasonal outlook \u2014 based on historical conditions, not a weather forecast.",
+              "status": "partial",
+              "label": "Seasonal outlook — based on historical conditions, not a weather forecast.",
               "period_basis": "union_span",
               "period_start": "2027-12-25",
               "period_end": "2028-05-29",
               "analysis_period": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025
               },
               "coverage": {
-                "start_year": 2000,
+                "start_year": 1991,
                 "end_year": 2025,
-                "seasons_total": 26,
-                "seasons_evaluated": 26,
-                "seasons_excluded": 0
+                "seasons_total": 35,
+                "seasons_evaluated": 34,
+                "seasons_excluded": 1
               },
               "indicators": [
                 {
@@ -6403,12 +8295,12 @@
                   "unit": "C",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
                   "min": 22.826687898089173,
-                  "median": 25.013717948717947,
-                  "max": 26.409235668789808
+                  "median": 25.14775641025641,
+                  "max": 27.067452229299363
                 },
                 {
                   "variable": "PRECTOTCORR",
@@ -6416,11 +8308,11 @@
                   "unit": "mm",
                   "statistic": "per_season_total",
                   "coverage_rule": "warnings_100",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
-                  "min": 142.63,
-                  "median": 263.85,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
+                  "min": 41.44,
+                  "median": 230.69,
                   "max": 571.34
                 },
                 {
@@ -6429,11 +8321,11 @@
                   "unit": "1",
                   "statistic": "per_season_mean",
                   "coverage_rule": "stats_min_90",
-                  "seasons_total": 26,
-                  "seasons_evaluated": 26,
-                  "seasons_excluded": 0,
-                  "min": 0.36980891719745224,
-                  "median": 0.4291346153846154,
+                  "seasons_total": 35,
+                  "seasons_evaluated": 34,
+                  "seasons_excluded": 1,
+                  "min": 0.17596153846153845,
+                  "median": 0.40146986771190596,
                   "max": 0.6047133757961783
                 }
               ],
@@ -6441,11 +8333,10 @@
               "warnings": [],
               "notes": [
                 "Seasonal ranges are historical ranges, not a forecast.",
-                "1991-1999 is excluded because the local precipitation series is invalid.",
                 "GWETTOP is MERRA-2 surface soil wetness, not SMAP."
               ],
               "source_ids": [
-                "local_power_2000_2026"
+                "nasa_power_daily"
               ]
             }
           }
@@ -6508,7 +8399,7 @@
   "warnings": [
     {
       "code": "CLIMATE_EXPOSURE_DEFERRED",
-      "message": "Current-season climate exposure (\u00a76.2) is deferred; no climate evidence is applied to this option."
+      "message": "Current-season climate exposure (§6.2) is deferred; no climate evidence is applied to this option."
     },
     {
       "code": "ECONOMICS_UNAVAILABLE",
@@ -6655,7 +8546,7 @@
     ],
     "observation_start": "2025-01-01T01:30:00+00:00",
     "observation_end": "2025-01-03T22:30:00+00:00",
-    "retrieved_at": "2026-11-09T12:00:00+00:00",
+    "retrieved_at": "2026-11-12T12:00:00+00:00",
     "label": "Context only - no effect on status or ranking",
     "warnings": [],
     "status": "available"

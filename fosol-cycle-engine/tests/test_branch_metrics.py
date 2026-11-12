@@ -66,8 +66,56 @@ def _real_branches():
     return profiles, branches
 
 
+def _real_branches_295():
+    profiles = load_crop_profiles(DATA_CSV)
+    branches = expand_branches(
+        profiles,
+        "2026-11-06",
+        max_initial_wait_days=180,
+        max_waiting_days=None,
+    )["branches"]
+    return profiles, branches
+
+
 def _random_date(rng: random.Random, start: dt.date, end: dt.date) -> dt.date:
     return start + dt.timedelta(days=rng.randint(0, (end - start).days))
+
+
+def _feasible_completion_sample(branch: dict, rng: random.Random) -> int | None:
+    """Return a completion sample that follows every intermediate harvest."""
+    crops = branch["crops"]
+    p1 = _random_date(
+        rng,
+        dt.date.fromisoformat(crops[0]["planting_range"]["earliest"]),
+        dt.date.fromisoformat(crops[0]["planting_range"]["latest"]),
+    )
+    d1 = rng.randint(
+        crops[0]["duration"]["min_days"], crops[0]["duration"]["max_days"]
+    )
+    h1 = p1 + dt.timedelta(days=d1)
+
+    second_start = dt.date.fromisoformat(crops[1]["planting_range"]["earliest"])
+    second_end = dt.date.fromisoformat(crops[1]["planting_range"]["latest"])
+    p2_start = max(second_start, h1)
+    if p2_start > second_end:
+        return None
+    p2 = _random_date(rng, p2_start, second_end)
+    d2 = rng.randint(
+        crops[1]["duration"]["min_days"], crops[1]["duration"]["max_days"]
+    )
+    h2 = p2 + dt.timedelta(days=d2)
+
+    third_start = dt.date.fromisoformat(crops[2]["planting_range"]["earliest"])
+    third_end = dt.date.fromisoformat(crops[2]["planting_range"]["latest"])
+    p3_start = max(third_start, h2)
+    if p3_start > third_end:
+        return None
+    p3 = _random_date(rng, p3_start, third_end)
+    d3 = rng.randint(
+        crops[2]["duration"]["min_days"], crops[2]["duration"]["max_days"]
+    )
+    h3 = p3 + dt.timedelta(days=d3)
+    return (h3 - p1).days
 
 
 def _prep_known_branch() -> dict:
@@ -196,21 +244,38 @@ def _ranking_branch(
     )
     crops = []
     for index, (family, flag) in enumerate(zip(families, legume_flags)):
+        if index == 0:
+            planting = first
+            harvest = _shift_range(first, 2)
+            duration = {"min_days": 2, "max_days": 2}
+        elif index == 1:
+            planting = {"earliest": "2026-01-11", "latest": "2026-01-12"}
+            harvest = _shift_range(planting, 2)
+            duration = {"min_days": 2, "max_days": 2}
+        else:
+            planting = {"earliest": "2026-01-21", "latest": "2026-01-22"}
+            harvest = third
+            try:
+                duration = {
+                    "min_days": (
+                        dt.date.fromisoformat(third["earliest"])
+                        - dt.date.fromisoformat(planting["earliest"])
+                    ).days,
+                    "max_days": (
+                        dt.date.fromisoformat(third["latest"])
+                        - dt.date.fromisoformat(planting["latest"])
+                    ).days,
+                }
+            except (KeyError, TypeError, ValueError):
+                duration = None
         crops.append(
             {
                 "crop_id": f"{branch_id}_crop_{index}",
                 "family": family,
                 "is_legume_n_fixing": flag,
-                "planting_range": (
-                    first
-                    if index == 0
-                    else {"earliest": "2026-01-03", "latest": "2026-01-04"}
-                ),
-                "harvest_range": (
-                    third
-                    if index == 2
-                    else {"earliest": "2026-02-01", "latest": "2026-02-02"}
-                ),
+                "planting_range": planting,
+                "harvest_range": harvest,
+                "duration": duration,
             }
         )
     return {
@@ -223,44 +288,207 @@ def _ranking_branch(
     }
 
 
+def _shift_range(value: dict, days: int) -> dict:
+    return {
+        "earliest": (
+            dt.date.fromisoformat(value["earliest"]) + dt.timedelta(days=days)
+        ).isoformat(),
+        "latest": (
+            dt.date.fromisoformat(value["latest"]) + dt.timedelta(days=days)
+        ).isoformat(),
+    }
+
+
+def _custom_branch(
+    first: tuple[str, str],
+    second: tuple[str, str],
+    third: tuple[str, str],
+    durations: tuple[tuple[int, int], tuple[int, int], tuple[int, int]],
+    *,
+    prep2: dict | None = None,
+    prep3: dict | None = None,
+) -> dict:
+    crops = []
+    for planting, duration in zip((first, second, third), durations):
+        crops.append(
+            {
+                "planting_range": {
+                    "earliest": planting[0],
+                    "latest": planting[1],
+                },
+                "harvest_range": {
+                    "earliest": (
+                        dt.date.fromisoformat(planting[0])
+                        + dt.timedelta(days=duration[0])
+                    ).isoformat(),
+                    "latest": (
+                        dt.date.fromisoformat(planting[1])
+                        + dt.timedelta(days=duration[1])
+                    ).isoformat(),
+                },
+                "duration": {
+                    "min_days": duration[0],
+                    "max_days": duration[1],
+                },
+            }
+        )
+    transitions = []
+    for prep in (prep2, prep3):
+        transition = {"preparation_known": prep is not None}
+        if prep is not None:
+            transition["preparation_range"] = prep
+        transitions.append(transition)
+    return {"crops": crops, "transitions": transitions}
+
+
+def _oracle_completion(branch: dict) -> tuple[int, int, int] | None:
+    """Exhaustively enumerate tiny schedules without calling production search."""
+
+    def parse_range(value: dict) -> tuple[dt.date, dt.date]:
+        return (
+            dt.date.fromisoformat(value["earliest"]),
+            dt.date.fromisoformat(value["latest"]),
+        )
+
+    def dates(value: tuple[dt.date, dt.date]):
+        current, end = value
+        while current <= end:
+            yield current
+            current += dt.timedelta(days=1)
+
+    def limits(crop: dict, transition: dict) -> tuple[dt.date, dt.date]:
+        low, high = parse_range(crop["planting_range"])
+        window = transition.get("window")
+        if isinstance(window, dict):
+            start = window.get("window_start") or window.get("preferred_start")
+            end = window.get("supported_late_end") or window.get("preferred_end")
+            if start is not None:
+                low = max(low, dt.date.fromisoformat(start))
+            if end is not None:
+                high = min(high, dt.date.fromisoformat(end))
+        return low, high
+
+    def prep_min(transition: dict) -> int:
+        if not transition.get("preparation_known"):
+            return 0
+        return transition["preparation_range"]["min_days"]
+
+    crops = branch["crops"]
+    transitions = branch["transitions"]
+    first_range = parse_range(crops[0]["planting_range"])
+    second_range = limits(crops[1], transitions[0])
+    third_range = limits(crops[2], transitions[1])
+    durations = [
+        (
+            crop["duration"]["min_days"],
+            crop["duration"]["max_days"],
+        )
+        for crop in crops
+    ]
+    prep2 = prep_min(transitions[0])
+    prep3 = prep_min(transitions[1])
+    found = []
+
+    for p1 in dates(first_range):
+        for d1 in range(durations[0][0], durations[0][1] + 1):
+            h1 = p1 + dt.timedelta(days=d1)
+            for p2 in dates(second_range):
+                if p2 < h1 + dt.timedelta(days=prep2):
+                    continue
+                for d2 in range(durations[1][0], durations[1][1] + 1):
+                    h2 = p2 + dt.timedelta(days=d2)
+                    for p3 in dates(third_range):
+                        if p3 < h2 + dt.timedelta(days=prep3):
+                            continue
+                        for d3 in range(
+                            durations[2][0], durations[2][1] + 1
+                        ):
+                            h3 = p3 + dt.timedelta(days=d3)
+                            found.append((h3 - p1).days)
+    if not found:
+        return None
+    return min(found), max(found), len(found)
+
+
 def _branch(
     first_planting: object = _MISSING,
     third_harvest: object = _MISSING,
     crop_count: int = 3,
     transition_count: int = 2,
 ) -> dict:
-    default_planting = {"earliest": "2026-01-01", "latest": "2026-01-02"}
-    default_harvest = {"earliest": "2026-01-03", "latest": "2026-01-04"}
-    first_p = default_planting if first_planting is _MISSING else first_planting
-    third_h = default_harvest if third_harvest is _MISSING else third_harvest
-    third_duration = None
-    if isinstance(third_h, dict):
+    """Build a chronologically ordered synthetic branch.
+
+    Each default crop follows the previous harvest. Custom third-harvest dates
+    are paired with a ten-day third-crop duration; if those dates cannot follow
+    the first two crops, completion must fail rather than be invented.
+    """
+    default_first = {"earliest": "2026-01-01", "latest": "2026-01-10"}
+    first_p = default_first if first_planting is _MISSING else first_planting
+    try:
+        first_h = _shift_range(first_p, 2) if isinstance(first_p, dict) else None
+    except (KeyError, TypeError, ValueError):
+        first_h = None
+    second_p = (
+        {
+            "earliest": (
+                dt.date.fromisoformat(first_h["earliest"])
+                + dt.timedelta(days=1)
+            ).isoformat(),
+            "latest": (
+                dt.date.fromisoformat(first_h["latest"])
+                + dt.timedelta(days=10)
+            ).isoformat(),
+        }
+        if first_h is not None
+        else default_first
+    )
+    second_h = _shift_range(second_p, 2)
+    if third_harvest is _MISSING:
+        third_p = {
+            "earliest": (
+                dt.date.fromisoformat(second_h["earliest"])
+                + dt.timedelta(days=1)
+            ).isoformat(),
+            "latest": (
+                dt.date.fromisoformat(second_h["latest"])
+                + dt.timedelta(days=10)
+            ).isoformat(),
+        }
+        third_h = _shift_range(third_p, 10)
+        third_duration = {"min_days": 10, "max_days": 10}
+    elif third_harvest is None:
+        third_p = second_p
+        third_h = None
+        third_duration = None
+    else:
+        third_h = third_harvest
         try:
-            harvest_earliest = dt.date.fromisoformat(third_h["earliest"])
-            harvest_latest = dt.date.fromisoformat(third_h["latest"])
-            planting_earliest = dt.date.fromisoformat(
-                default_planting["earliest"]
+            third_p = (
+                _shift_range(third_h, -10)
+                if isinstance(third_h, dict)
+                else second_p
             )
-            planting_latest = dt.date.fromisoformat(default_planting["latest"])
-            third_duration = {
-                "min_days": (harvest_earliest - planting_earliest).days,
-                "max_days": (harvest_latest - planting_latest).days,
-            }
+            third_duration = (
+                {"min_days": 10, "max_days": 10}
+                if isinstance(third_h, dict)
+                else None
+            )
         except (KeyError, TypeError, ValueError):
+            third_p = second_p
             third_duration = None
     crops = [
         {
             "planting_range": first_p,
-            "harvest_range": default_harvest,
+            "harvest_range": first_h,
             "duration": {"min_days": 2, "max_days": 2},
         },
         {
-            "planting_range": default_planting,
-            "harvest_range": default_harvest,
+            "planting_range": second_p,
+            "harvest_range": second_h,
             "duration": {"min_days": 2, "max_days": 2},
         },
         {
-            "planting_range": default_planting,
+            "planting_range": third_p,
             "harvest_range": third_h,
             "duration": third_duration,
         },
@@ -272,8 +500,8 @@ def _branch(
 
 
 class CompletionTimeTests(unittest.TestCase):
-    def test_known_ranges_use_earliest_and_latest_pairing(self) -> None:
-        """Spec §12.1 | Bug it catches: completion endpoints are averaged or mis-paired."""
+    def test_known_ranges_use_valid_realized_schedules(self) -> None:
+        """Spec §12.1 | Bug it catches: completion endpoints are averaged or paired across an invalid intermediate crop."""
         result = calculate_completion_time(
             _branch(
                 first_planting={
@@ -300,9 +528,9 @@ class CompletionTimeTests(unittest.TestCase):
             {
                 "p1": "2026-01-10",
                 "h1": "2026-01-12",
-                "p2": "2026-01-01",
-                "h2": "2026-01-03",
-                "p3": "2026-01-01",
+                "p2": "2026-01-12",
+                "h2": "2026-01-14",
+                "p3": "2026-03-22",
                 "h3": "2026-04-01",
                 "completion_days": 81,
             },
@@ -312,13 +540,19 @@ class CompletionTimeTests(unittest.TestCase):
             {
                 "p1": "2026-01-01",
                 "h1": "2026-01-03",
-                "p2": "2026-01-02",
-                "h2": "2026-01-04",
-                "p3": "2026-01-02",
+                "p2": "2026-01-04",
+                "h2": "2026-01-06",
+                "p3": "2026-04-10",
                 "h3": "2026-04-20",
                 "completion_days": 109,
             },
         )
+        for realization in (result["min_realization"], result["max_realization"]):
+            self.assertLessEqual(realization["p1"], realization["h1"])
+            self.assertLessEqual(realization["h1"], realization["p2"])
+            self.assertLessEqual(realization["p2"], realization["h2"])
+            self.assertLessEqual(realization["h2"], realization["p3"])
+            self.assertLessEqual(realization["p3"], realization["h3"])
         self.assertEqual(
             result["first_planting_range"],
             {"earliest": "2026-01-01", "latest": "2026-01-10"},
@@ -396,8 +630,8 @@ class CompletionTimeTests(unittest.TestCase):
                 self.assertIsNone(result["completion_days"])
                 self.assertEqual(result["reason"], "INVALID_BRANCH_SHAPE")
 
-    def test_previous_max_below_min_case_uses_corner_extremes(self) -> None:
-        """Spec §12.1 | Bug it catches: corner extremes are not used for an inverted A range."""
+    def test_short_third_window_uses_valid_schedules(self) -> None:
+        """Spec §12.1 | Bug it catches: an inverted corner range is reported instead of valid schedules."""
         result = calculate_completion_time(
             _branch(
                 first_planting={
@@ -411,18 +645,18 @@ class CompletionTimeTests(unittest.TestCase):
             )
         )
         self.assertEqual(result["status"], "ok")
-        self.assertEqual(result["completion_days"], {"min": 10, "max": 24})
+        self.assertEqual(result["completion_days"], {"min": 14, "max": 24})
         self.assertEqual(result["range_basis"], "realized_corners")
         self.assertEqual(
             result["min_realization"],
             {
-                "p1": "2026-01-10",
-                "h1": "2026-01-12",
-                "p2": "2026-01-01",
-                "h2": "2026-01-03",
-                "p3": "2026-01-01",
+                "p1": "2026-01-06",
+                "h1": "2026-01-08",
+                "p2": "2026-01-08",
+                "h2": "2026-01-10",
+                "p3": "2026-01-10",
                 "h3": "2026-01-20",
-                "completion_days": 10,
+                "completion_days": 14,
             },
         )
         self.assertEqual(
@@ -430,25 +664,25 @@ class CompletionTimeTests(unittest.TestCase):
             {
                 "p1": "2026-01-01",
                 "h1": "2026-01-03",
-                "p2": "2026-01-02",
-                "h2": "2026-01-04",
-                "p3": "2026-01-02",
+                "p2": "2026-01-04",
+                "h2": "2026-01-06",
+                "p3": "2026-01-15",
                 "h3": "2026-01-25",
                 "completion_days": 24,
             },
         )
 
-    def test_negative_corner_min_is_unavailable(self) -> None:
-        """Spec §12.1 | Bug it catches: a negative fastest completion is returned as valid."""
+    def test_no_feasible_chain_is_unavailable(self) -> None:
+        """Spec §12.1 | Bug it catches: a negative endpoint-only range is returned as valid."""
         result = calculate_completion_time(
             _branch(
                 first_planting={
-                    "earliest": "2027-01-01",
+                    "earliest": "2027-08-01",
                     "latest": "2027-12-31",
                 },
                 third_harvest={
-                    "earliest": "2027-06-01",
-                    "latest": "2027-07-01",
+                    "earliest": "2027-01-01",
+                    "latest": "2027-02-01",
                 },
             )
         )
@@ -457,16 +691,16 @@ class CompletionTimeTests(unittest.TestCase):
         self.assertIsNone(result["ranking_value_days"])
         self.assertEqual(result["reason"], "COMPLETION_RANGE_INVALID")
 
-    def test_negative_corner_enumeration_is_unavailable(self) -> None:
-        """Spec §12.1 | Bug it catches: enumeration returns a negative range as ok."""
+    def test_no_feasible_chain_enumeration_is_unavailable(self) -> None:
+        """Spec §12.1 | Bug it catches: enumeration turns an infeasible chain into ok."""
         branch = _branch(
             first_planting={
-                "earliest": "2027-01-01",
+                "earliest": "2027-08-01",
                 "latest": "2027-12-31",
             },
             third_harvest={
-                "earliest": "2027-06-01",
-                "latest": "2027-07-01",
+                "earliest": "2027-01-01",
+                "latest": "2027-02-01",
             },
         )
         result = enumerate_completion_range(branch)
@@ -496,40 +730,202 @@ class CompletionTimeTests(unittest.TestCase):
         self.assertEqual(len(branches), 420)
         for branch in branches:
             result = calculate_completion_time(branch)
-            crops = branch["crops"]
-            p1_fast = dt.date.fromisoformat(
-                crops[0]["planting_range"]["latest"]
-            )
-            p1_slow = dt.date.fromisoformat(
-                crops[0]["planting_range"]["earliest"]
-            )
-            h3_fast = dt.date.fromisoformat(
-                crops[2]["planting_range"]["earliest"]
-            ) + dt.timedelta(days=crops[2]["duration"]["min_days"])
-            h3_slow = dt.date.fromisoformat(
-                crops[2]["planting_range"]["latest"]
-            ) + dt.timedelta(days=crops[2]["duration"]["max_days"])
             self.assertEqual(result["status"], "ok", branch["branch_id"])
-            self.assertEqual(
-                result["completion_days"],
-                {
-                    "min": (h3_fast - p1_fast).days,
-                    "max": (h3_slow - p1_slow).days,
-                },
+            self.assertLessEqual(
+                result["completion_days"]["min"],
+                result["completion_days"]["max"],
             )
-            self.assertEqual(
-                result["min_realization"]["p1"], p1_fast.isoformat()
-            )
-            self.assertEqual(
-                result["min_realization"]["h3"], h3_fast.isoformat()
-            )
-            self.assertEqual(
-                result["max_realization"]["p1"], p1_slow.isoformat()
-            )
-            self.assertEqual(
-                result["max_realization"]["h3"], h3_slow.isoformat()
-            )
+            for name in ("min_realization", "max_realization"):
+                realization = result[name]
+                dates = [
+                    dt.date.fromisoformat(realization[key])
+                    for key in ("p1", "h1", "p2", "h2", "p3", "h3")
+                ]
+                self.assertEqual(dates, sorted(dates), branch["branch_id"])
+                for index, crop in enumerate(branch["crops"]):
+                    planting = dates[index * 2]
+                    harvest = dates[index * 2 + 1]
+                    planting_range = crop["planting_range"]
+                    harvest_range = crop["harvest_range"]
+                    self.assertGreaterEqual(
+                        planting, dt.date.fromisoformat(planting_range["earliest"])
+                    )
+                    self.assertLessEqual(
+                        planting, dt.date.fromisoformat(planting_range["latest"])
+                    )
+                    self.assertGreaterEqual(
+                        harvest, dt.date.fromisoformat(harvest_range["earliest"])
+                    )
+                    self.assertLessEqual(
+                        harvest, dt.date.fromisoformat(harvest_range["latest"])
+                    )
+                    duration = crop["duration"]
+                    self.assertGreaterEqual(
+                        (harvest - planting).days, duration["min_days"]
+                    )
+                    self.assertLessEqual(
+                        (harvest - planting).days, duration["max_days"]
+                    )
+                if branch["transitions"][0]["preparation_known"]:
+                    self.assertGreaterEqual(
+                        (dates[2] - dates[1]).days,
+                        branch["transitions"][0]["preparation_range"]["min_days"],
+                    )
+                if branch["transitions"][1]["preparation_known"]:
+                    self.assertGreaterEqual(
+                        (dates[4] - dates[3]).days,
+                        branch["transitions"][1]["preparation_range"]["min_days"],
+                    )
+                self.assertEqual(
+                    (dates[5] - dates[0]).days,
+                    realization["completion_days"],
+                )
             self.assertEqual(result["range_basis"], "realized_corners")
+
+    def test_real_branch_49429_overlap_regression(self) -> None:
+        """Spec §12.1 | Bug it catches: lentil harvest 2027-02-22 followed by Boro planting 2027-02-14."""
+        _, branches = _real_branches_295()
+        branch = next(
+            item for item in branches if item["branch_id"] == "b_49429e0d044b"
+        )
+        result = calculate_completion_time(branch)
+        self.assertEqual(result["status"], "ok")
+        for name in ("min_realization", "max_realization"):
+            realization = result[name]
+            self.assertLessEqual(realization["p1"], realization["h1"])
+            self.assertLessEqual(realization["h1"], realization["p2"])
+            self.assertLessEqual(realization["p2"], realization["h2"])
+            self.assertLessEqual(realization["h2"], realization["p3"])
+            self.assertLessEqual(realization["p3"], realization["h3"])
+        self.assertGreaterEqual(
+            result["min_realization"]["p2"], result["min_realization"]["h1"]
+        )
+        self.assertEqual(result["completion_days"]["min"], 385)
+
+    def test_known_preparation_sequence_is_chronological(self) -> None:
+        """Spec §12.1 | Bug it catches: known preparation bounds are ignored by completion."""
+        branch = _prep_known_branch()
+        result = calculate_completion_time(branch)
+        self.assertEqual(result["status"], "ok")
+        for name in ("min_realization", "max_realization"):
+            realization = result[name]
+            self.assertLessEqual(realization["p1"], realization["h1"])
+            self.assertLessEqual(realization["h1"], realization["p2"])
+            self.assertLessEqual(realization["p2"], realization["h2"])
+            self.assertLessEqual(realization["h2"], realization["p3"])
+            self.assertLessEqual(realization["p3"], realization["h3"])
+            self.assertGreaterEqual(
+                (dt.date.fromisoformat(realization["p2"])
+                 - dt.date.fromisoformat(realization["h1"])).days,
+                5,
+            )
+            self.assertGreaterEqual(
+                (dt.date.fromisoformat(realization["p3"])
+                 - dt.date.fromisoformat(realization["h2"])).days,
+                5,
+            )
+
+    def test_feasible_shorter_duration_beats_infeasible_maximum(self) -> None:
+        """Spec §12.1 | Bug it catches: maximum durations hide a valid shorter schedule."""
+        branch = _custom_branch(
+            ("2026-01-01", "2026-01-01"),
+            ("2026-01-03", "2026-01-03"),
+            ("2026-01-05", "2026-01-05"),
+            ((1, 10), (1, 1), (1, 1)),
+        )
+        result = calculate_completion_time(branch)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["completion_days"], {"min": 5, "max": 5})
+        self.assertEqual(_oracle_completion(branch), (5, 5, 2))
+
+    def test_completion_bounds_match_exhaustive_tiny_oracle(self) -> None:
+        """Spec §12.1 | Bug it catches: production min/max differs from exhaustive feasible schedules."""
+        branch = _custom_branch(
+            ("2026-01-01", "2026-01-02"),
+            ("2026-01-03", "2026-01-05"),
+            ("2026-01-06", "2026-01-08"),
+            ((1, 2), (1, 2), (1, 2)),
+            prep2={
+                "min_days": 1,
+                "max_days": 3,
+                "source_ids": ["test://prep"],
+            },
+        )
+        oracle = _oracle_completion(branch)
+        self.assertIsNotNone(oracle)
+        result = calculate_completion_time(branch)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(
+            result["completion_days"],
+            {"min": oracle[0], "max": oracle[1]},
+        )
+        self.assertGreater(oracle[2], 1)
+
+    def test_completion_bounds_match_oracle_across_tiny_random_cases(self) -> None:
+        """Spec §12.1 | Bug it catches: a duration/window corner disagrees with exhaustive feasible schedules."""
+        rng = random.Random(42)
+        base = dt.date(2026, 1, 1)
+
+        def random_range(offset):
+            start = base + dt.timedelta(days=offset + rng.randint(0, 3))
+            end = start + dt.timedelta(days=rng.randint(0, 3))
+            return (start.isoformat(), end.isoformat())
+
+        for _ in range(100):
+            durations = []
+            for _ in range(3):
+                low = rng.randint(1, 3)
+                high = rng.randint(3, 5)
+                durations.append((low, high) if low <= high else (high, low))
+            prep2 = (
+                {
+                    "min_days": rng.randint(0, 2),
+                    "max_days": 3,
+                    "source_ids": ["test://prep"],
+                }
+                if rng.random() < 0.5
+                else None
+            )
+            prep3 = (
+                {
+                    "min_days": rng.randint(0, 2),
+                    "max_days": 3,
+                    "source_ids": ["test://prep"],
+                }
+                if rng.random() < 0.5
+                else None
+            )
+            branch = _custom_branch(
+                random_range(0),
+                random_range(rng.randint(0, 6)),
+                random_range(rng.randint(0, 10)),
+                tuple(durations),
+                prep2=prep2,
+                prep3=prep3,
+            )
+            oracle = _oracle_completion(branch)
+            result = calculate_completion_time(branch)
+            if oracle is None:
+                self.assertEqual(result["status"], "unavailable")
+            else:
+                self.assertEqual(result["status"], "ok")
+                self.assertEqual(
+                    result["completion_days"],
+                    {"min": oracle[0], "max": oracle[1]},
+                )
+
+    def test_impossible_sequence_matches_exhaustive_tiny_oracle(self) -> None:
+        """Spec §12.1 | Bug it catches: an impossible chain is reported as feasible."""
+        branch = _custom_branch(
+            ("2026-01-05", "2026-01-05"),
+            ("2026-01-01", "2026-01-02"),
+            ("2026-01-01", "2026-01-02"),
+            ((1, 1), (1, 1), (1, 1)),
+        )
+        self.assertIsNone(_oracle_completion(branch))
+        result = calculate_completion_time(branch)
+        self.assertEqual(result["status"], "unavailable")
+        self.assertEqual(result["reason"], "COMPLETION_RANGE_INVALID")
 
     def test_previously_inverted_branches_are_now_valid(self) -> None:
         """Spec §12.1 | Bug it catches: the 57 decision-A inversions remain unranked."""
@@ -593,104 +989,54 @@ class CompletionTimeTests(unittest.TestCase):
         )
         self.assertLess(result["completion_days"]["max"], 129)
 
-    def test_sampling_min_max_equal_realized_corners(self) -> None:
-        """Spec §12.1 | Bug it catches: sampled extremes differ from realized corners."""
+    def test_sampling_within_realized_bounds(self) -> None:
+        """Spec §12.1 | Bug it catches: a feasible sampled schedule falls outside the reported range."""
         _, branches = _real_branches()
         rng = random.Random(20261108)
         for branch in rng.sample(branches, 10):
             result = calculate_completion_time(branch)
-            fastest = realize_completion(branch, "fastest")
-            slowest = realize_completion(branch, "slowest")
-            days = [fastest["completion_days"], slowest["completion_days"]]
-            crops = branch["crops"]
+            days = []
             for _ in range(30):
-                p1 = _random_date(
-                    rng,
-                    dt.date.fromisoformat(crops[0]["planting_range"]["earliest"]),
-                    dt.date.fromisoformat(crops[0]["planting_range"]["latest"]),
-                )
-                d1 = rng.randint(
-                    crops[0]["duration"]["min_days"],
-                    crops[0]["duration"]["max_days"],
-                )
-                p2 = _random_date(
-                    rng,
-                    dt.date.fromisoformat(crops[1]["planting_range"]["earliest"]),
-                    dt.date.fromisoformat(crops[1]["planting_range"]["latest"]),
-                )
-                d2 = rng.randint(
-                    crops[1]["duration"]["min_days"],
-                    crops[1]["duration"]["max_days"],
-                )
-                p3 = _random_date(
-                    rng,
-                    dt.date.fromisoformat(crops[2]["planting_range"]["earliest"]),
-                    dt.date.fromisoformat(crops[2]["planting_range"]["latest"]),
-                )
-                d3 = rng.randint(
-                    crops[2]["duration"]["min_days"],
-                    crops[2]["duration"]["max_days"],
-                )
-                del d1, d2
-                days.append(
-                    (p3 + dt.timedelta(days=d3) - p1).days
-                )
-            self.assertEqual(min(days), result["completion_days"]["min"])
-            self.assertEqual(max(days), result["completion_days"]["max"])
+                sample = _feasible_completion_sample(branch, rng)
+                if sample is not None:
+                    days.append(sample)
+            self.assertTrue(days, branch["branch_id"])
+            self.assertGreaterEqual(min(days), result["completion_days"]["min"])
+            self.assertLessEqual(max(days), result["completion_days"]["max"])
 
-    def test_prep_known_infeasible_corner_falls_back_to_enumeration(self) -> None:
-        """Spec §12.1 | Bug it catches: an infeasible prep corner is forced into a range."""
+    def test_infeasible_known_preparation_is_unavailable(self) -> None:
+        """Spec §12.1 | Bug it catches: an infeasible prep bound is bypassed by enumeration."""
         branch = _prep_known_branch()
         branch["transitions"][0]["preparation_range"]["min_days"] = 100
         branch["transitions"][0]["preparation_range"]["max_days"] = 100
         result = calculate_completion_time(branch)
-        self.assertEqual(result["status"], "ok")
-        self.assertTrue(result["enumeration_used"])
-        self.assertEqual(result["range_basis"], "enumerated_realizations")
+        self.assertEqual(result["status"], "unavailable")
+        self.assertIsNone(result["completion_days"])
+        self.assertEqual(result["reason"], "COMPLETION_RANGE_INVALID")
+        self.assertFalse(result["enumeration_used"])
 
-    def test_completion_property_300_random_realizations(self) -> None:
-        """Spec §12.1 | Bug it catches: a realizable date pair falls outside the corner range."""
+    def test_completion_property_300_feasible_realizations(self) -> None:
+        """Spec §12.1 | Bug it catches: a feasible schedule falls outside the reported completion range."""
         _, branches = _real_branches()
         rng = random.Random(20261107)
         cache = {}
-        fallback_used = False
+        sampled = 0
         for _ in range(300):
             branch = rng.choice(branches)
-            planting_range = branch["crops"][0]["planting_range"]
-            harvest_range = branch["crops"][2]["harvest_range"]
-            planting = _random_date(
-                rng,
-                dt.date.fromisoformat(planting_range["earliest"]),
-                dt.date.fromisoformat(planting_range["latest"]),
-            )
-            harvest = _random_date(
-                rng,
-                dt.date.fromisoformat(harvest_range["earliest"]),
-                dt.date.fromisoformat(harvest_range["latest"]),
-            )
+            days = _feasible_completion_sample(branch, rng)
+            if days is None:
+                continue
+            sampled += 1
             result = cache.get(branch["branch_id"])
             if result is None:
                 result = calculate_completion_time(branch)
                 cache[branch["branch_id"]] = result
-            days = (harvest - planting).days
-            if not (
-                result["completion_days"]["min"]
-                <= days
-                <= result["completion_days"]["max"]
-            ):
-                fallback_used = True
-                enumerated = enumerate_completion_range(branch)
-                self.assertTrue(enumerated["enumeration_used"])
-                self.assertLessEqual(
-                    enumerated["completion_days"]["min"], days
-                )
-                self.assertGreaterEqual(
-                    enumerated["completion_days"]["max"], days
-                )
-        self.assertFalse(fallback_used)
+            self.assertGreaterEqual(days, result["completion_days"]["min"])
+            self.assertLessEqual(days, result["completion_days"]["max"])
+        self.assertGreaterEqual(sampled, 250)
 
-    def test_enumerate_completion_range_matches_corner_extremes(self) -> None:
-        """Spec §12.1 | Bug it catches: the enumeration fallback returns a different range."""
+    def test_enumerate_completion_range_matches_realized_schedules(self) -> None:
+        """Spec §12.1 | Bug it catches: the compatibility enumeration returns a different range."""
         branch = _branch(
             first_planting={
                 "earliest": "2026-01-01",
